@@ -1,0 +1,7 @@
+{
+    "base_url": "http://192.168.68.60/",
+    "endpoints": {
+        "api": "/api",
+        "login": "/login",
+    } 
+}
