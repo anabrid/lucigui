@@ -1,5 +1,7 @@
 <script>
    import {fade} from 'svelte/transition'
+
+   export const title = "Starting"
 </script>
 
 <main in:fade="{{duration: 100}}">

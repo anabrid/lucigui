@@ -2,6 +2,8 @@
   import Router, {link, querystring} from 'svelte-spa-router'
   import active from 'svelte-spa-router/active'
 
+  import Status from './lib/Status.svelte'
+
   import Home from './routes/Home.svelte'
   import Starting from './routes/Starting.svelte'
   import Demo from './routes/Demo.svelte'
@@ -10,6 +12,15 @@
     '/': Home,
     '/starting': Starting,
     '/demo': Demo
+  }
+
+  // treat document title at navigation
+  function routeLoaded(event) {
+    if("title" in event.detail.component) {
+      document.title = event.detail.component.title
+    } else {
+      document.title = "reasonable default"
+    }
   }
 </script>
 
@@ -20,5 +31,6 @@
 </nav>
 
 <section>
-  <Router {routes}/>
+  <Router {routes}
+    on:routeLoaded={routeLoaded}/>
 </section>

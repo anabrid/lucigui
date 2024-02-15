@@ -4,6 +4,8 @@
     import Counter from '../lib/Counter.svelte'
 
     import {fade} from 'svelte/transition'
+
+    export const title = "Demo"
 </script>
   
   <main in:fade="{{duration: 100}}">

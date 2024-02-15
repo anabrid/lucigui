@@ -1,6 +1,14 @@
 <script>
     import { query } from '../lib/HybridController.js'
     const status_promise = query("status")
+
+    // a few helpful names here that will be populated later 
+    export let hostname = "lucidac"
+
+    status_promise.then((ident) => {
+        hostname = ident.ethernet.otp_mac
+    })
+
   </script>
 
   <div class="status">

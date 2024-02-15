@@ -3,6 +3,7 @@
   import DeviceTree from '../lib/DeviceTree.svelte'
   import {fade} from 'svelte/transition'
 
+  // export const title = "Home" // leave empty
 </script>
 <main in:fade="{{duration: 100}}">
     <h1>LUCIDAC Home</h1>
