@@ -18,6 +18,8 @@
     {:then entities}
         <!-- cannot bind to awaited, therefore subblock; https://stackoverflow.com/a/76525573 -->
         <MultiView {entities} />
+    {:catch error}
+    <p>Could not load content: {error.message}</p>
     {/await}
   
 </main>

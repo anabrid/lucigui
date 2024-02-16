@@ -25,7 +25,7 @@
 
     // map crosslanes into their input meaning
     // Todo, HML
-    const Mname = (clane) => (clane <= 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane-8}</sub>`
+    export const Mname = (clane) => (clane <= 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane-8}</sub>`
 
     
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
@@ -54,17 +54,17 @@
       "/M1": {},
     } }
     function matrix2entities(matrix) {
-      console.log("matrix2entities starting with ", matrix, cluster_config)
-      cluster_config["/0"]["/U"] = matrix.u
-      cluster_config["/0"]["/I"] = matrix.i
-      cluster_config["/0"]["/C"] = matrix.c
+      //console.log("matrix2entities starting with ", matrix, cluster_config)
+      cluster_config["/0"]["/U"]["outputs"] = matrix.u
+      cluster_config["/0"]["/I"]["outputs"] = matrix.i
+      cluster_config["/0"]["/C"]["elements"] = matrix.c
     }
     function entities2matrix(cluster_config) {
       try {
-        matrix.u = cluster_config["/0"]["/U"]
-        matrix.i = cluster_config["/0"]["/I"]
-        matrix.c = cluster_config["/0"]["/C"]
-        console.log("entities2matrix: Success")
+        matrix.u = cluster_config["/0"]["/U"]["outputs"]
+        matrix.i = cluster_config["/0"]["/I"]["outputs"]
+        matrix.c = cluster_config["/0"]["/C"]["elements"]
+        //console.log("entities2matrix: Success")
       } catch(err) {
         console.error("entities2matrix: Cluster Config is still unreadable")
       }

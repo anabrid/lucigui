@@ -35,3 +35,24 @@ export async function query(msg_type, msg={}) {
         return envelope_recv
     }
 }
+
+// Routines for computing the UCI matrix from a list of routes
+
+const xrange = (N) => Array(N).keys() // iterator
+const range = (N) => [...xrange(N)] // array
+
+// 4-tuple defining a route: { lane, uin, cval, iout }
+// with lane:[0,32], uin:[0,16], iou:[0,16] and cval:[-20.0, 20.0]
+
+export function routes2matrix(routes) {
+  let matrix = {}
+  matrix["u"] = range(32).map(lane => )
+
+}
+
+/*
+$cluster_config["/0"]["/U"] = range(32).map(lane => { const r=routes.find(r => r.lane == lane); return R===undefined?[]:r.uin; })
+cluster_config["/0"]["/I"] = range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane))
+$cluster_config["/0"]["/C"] = range(32).map(lane => { routes.find(r => r.lane == lane).cval }))
+
+*/
