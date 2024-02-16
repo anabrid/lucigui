@@ -7,11 +7,13 @@
   import Home from './routes/Home.svelte'
   import Starting from './routes/Starting.svelte'
   import Demo from './routes/Demo.svelte'
+  import Connectome from './routes/Connectome.svelte'
 
   const routes = {
     '/': Home,
     '/starting': Starting,
-    '/demo': Demo
+    '/demo': Demo,
+    '/connectome': Connectome
   }
 
   // treat document title at navigation
