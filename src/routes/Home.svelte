@@ -5,6 +5,9 @@
   import {fade} from 'svelte/transition'
 
   // export const title = "Home" // leave empty
+
+  let matrix = BlockView.default_matrix
+
 </script>
 <main in:fade="{{duration: 100}}">
     <h1>LUCIDAC Home</h1>
@@ -18,6 +21,7 @@
 -->
 
     <h2>Matrix View</h2>
-    <BlockView/>
+    <BlockView bind:matrix={matrix} />
+    <BlockView bind:matrix={matrix} />
 
 </main>

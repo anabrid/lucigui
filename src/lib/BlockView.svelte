@@ -1,4 +1,11 @@
+<script context="module">
+    // HTML ids must be unique. Iff multiple instances of this component are embedded,
+    // ensure that they remain unique with the htmlid_prefix.
+    let component_instance_counter = 0
+</script>
 <script>
+    const htmlid_prefix = `BlockView${component_instance_counter++}`
+
     import { query } from './HybridController.js'
     const entities_promise = query("get_config")
 
@@ -16,10 +23,58 @@
     const shallowcopy = (obj) => Object.assign({}, obj)
     const clone = deepcopy
 
+    // map crosslanes into their input meaning
+    // Todo, HML
+    const Mname = (clane) => (clane <= 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane-8}</sub>`
+
+    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.
-    // The reactive code basically emulates a radio button group
-    let matrix = { "u": times(nlanes, []), "c":times(nlanes, 0), "i":times(nlanes, []) }
+    // The Matrix representation is the data model directly mapped to the view,
+    // however it is not the data model used by the LUCIDAC jsonl protocol.
+    // This requires a transformation when using two way data binding.
+    export const default_matrix = { "u": times(nlanes, []), "c":times(nlanes, 0), "i":times(nlanes, []) }
+    export let matrix = clone(default_matrix)
+
+    // LUCIDAC transformation, looks something like
+    /* 
+    config: Object { "/0": {…} }
+​​      "/0": Object { "/M0": {…}, "/M1": {}, "/U": {…}, … }
+​​​         "/C": Object { elements: (32) […] }
+​​​         "/I": Object { outputs: (16) […] }
+​​​         "/M0": Object { elements: (8) […] }
+​​​         "/M1": Object {  }
+​​​         "/U": Object { outputs: (32) […] }
+​​​    */
+    export let cluster_config = {  "/0": {
+      "/C":  times(nlanes, 0),
+      "/I":  times(ncrosslanes, null),
+      "/U":  times(nlanes, null),
+      "/M0": times(nMout, { "ic": 0, "k": 1000 }),
+      "/M1": {},
+    } }
+    function matrix2entities(matrix) {
+      console.log("matrix2entities starting with ", matrix, cluster_config)
+      cluster_config["/0"]["/U"] = matrix.u
+      cluster_config["/0"]["/I"] = matrix.i
+      cluster_config["/0"]["/C"] = matrix.c
+    }
+    function entities2matrix(cluster_config) {
+      try {
+        matrix.u = cluster_config["/0"]["/U"]
+        matrix.i = cluster_config["/0"]["/I"]
+        matrix.c = cluster_config["/0"]["/C"]
+        console.log("entities2matrix: Success")
+      } catch(err) {
+        console.error("entities2matrix: Cluster Config is still unreadable")
+      }
+    }
+    // https://stackoverflow.com/a/72418699
+    $: matrix2entities(matrix)
+    $: entities2matrix(cluster_config)
+
+
+    // Emulate the radio button group
     let prev = clone(matrix)
     $: {
         for(const ui of "ui") {
@@ -41,57 +96,37 @@
   </script>
 
   <div class="entities">
-      {#await entities_promise}
+      <!--{#await entities_promise}
       <p>Loading entities...</p>
-      {:then entities}
+      {:then entities}-->
           <table>
-            {#each "uci" as uci}<!-- either u, c or i block-->
-            <tr>
-              <th colspan=2>
-                {#if uci == "u"}
-                LUCIDAC Matrix Chart
+            {#each xrange(nlanes) as lane}
+              <tr class:active={matrix.c[lane]!=0}>
+              {#each "uci" as uci}
+                {#if uci == "u" || uci == "i"}
+                  {#each xrange(ncrosslanes) as clane}
+                    <td>
+                      <input type="checkbox" name="{uci}_lane_{lane}"
+                        bind:group={matrix[uci][lane]}
+                        id="{htmlid_prefix}_{uci}_{lane}_{clane}"
+                        value={clane}>
+                      <label for="{htmlid_prefix}_{uci}_{lane}_{clane}">{@html Mname(clane)}</label>
+                    </td>
+                  {/each}
+                {:else}
+                  <td><input type="number" id="c_{lane}" bind:value={matrix[uci][lane]} min="-20" max="20"/></td>
                 {/if}
-              </th>
-              <th colspan={nlanes}>{uci} Block</th>
-            </tr>
-
-            {#if uci == "u" || uci == "i"}
-            {#each Array(nMblock).keys() as m}<!-- either M0 or M1 block-->
-            {#each Array(nMout).keys() as i}<!-- rows -->
-            {#if uci == "u" || uci == "i"}
-            <tr>
-              {#if i==0 }
-              <th rowspan={nMout}>M{m}</th>
-              {/if}
-              <td>M{m}_{i}</td>
-              {#each Array(nlanes).keys() as j}<!-- columns or lanes -->
-              <td>
-                <!-- Could not use radios because it is hard to uncheck a complete radio group -->
-                <input type="checkbox" name="{uci}_ONE_{j}"
-                  bind:group={matrix[uci][j]}
-                  id="{uci}_{nMout*m+i}_{j}" value={nMout*m+i}>
-                <label for="{uci}_{nMout*m+i}_{j}">{nMout*m+i}</label>
-              </td>
               {/each}
-            </tr>
-            {/if}
-            {/each}
-            {/each}
-            {:else}<!-- c block -->
-            <tr>
-              <td colspan=2><!-- empty --></td>
-              {#each Array(nlanes).keys() as lane}
-                <td><input type="number" id="c_{lane}" bind:value={matrix[uci][lane]} min="-20" max="20"/></td>
-              {/each}
-            </tr>
-            {/if}
+              </tr>
             {/each}
           </table>
-      {/await}
   </div>
 
 <style lang="scss">
-  table { border-collapse: collapse; }
+  table {
+    border-collapse: collapse;
+    line-height: 1.3em;
+  }
   td, th {
     border: 1px solid #dedede;
     padding: 0;
@@ -103,6 +138,8 @@
     display: block;
     text-align: center;
     color: #fff;
+    width: 1.3em;
+    height: 1.3em;
   
     &:hover {
       background-color: #c0d8ff;
@@ -111,14 +148,17 @@
   }
 
   input[type=number] {
-    width: 3em;
+    width: 6em;
+    text-align: right; /* Would be nice to be comma aligned! */
+    border: none;
   }
 
   input[type=checkbox] {
     display: none;
 
     &:checked + label {
-      background-color: green;
+      background-color: #bfc1d7;
+      color: #2b307b;
     }
   }
 
@@ -129,7 +169,7 @@
   td:hover::after {
     content: "";
     position: absolute;
-    background-color: #ffa;
+    background-color: #fefedb;
     left: 0;
     top: -5000px;
     height: 10000px;
@@ -137,5 +177,35 @@
     z-index: -1;
   }
 
+  /* regular row hovering */
+  tr:hover {
+    &, label {
+      background-color: #fefedb;
+    }
+  }
+
+  tr.active {
+    background-color: #eaeaf2;
+    label { color: #eaeaf2; }
+    input[type=number] {
+      color: #2b307b;
+      background-color: #bfc1d7;
+    }
+  }
+
+
+  /* No spin button */
+  /* Chrome, Safari, Edge, Opera */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
 
 </style>

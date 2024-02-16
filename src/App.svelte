@@ -29,7 +29,8 @@
 <nav>
   <a href="/" use:link use:active>Home</a> |
   <a href="/starting" use:link use:active>Starting</a> |
-  <a href="/demo" use:link use:active>Demo</a>
+  <a href="/demo" use:link use:active>Demo</a> | 
+  <a href="/connectome" use:link use:active>Connectome</a>
 </nav>
 
 <section>
