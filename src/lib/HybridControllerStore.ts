@@ -2,6 +2,8 @@ import { onMount } from 'svelte';
 import { readable, writable, get, derived } from 'svelte/store';
 import { HybridController, output2reduced, reduced2output } from './HybridController.ts'
 
+import default_messages from './default_messages.json'
+
 // This is basically a svelte kind of interface to the HybridController class,
 // where the store is basically synced with the XHR endpoint.
 
@@ -9,17 +11,30 @@ import { HybridController, output2reduced, reduced2output } from './HybridContro
 export let hc = new HybridController()
 
 export const endpoint = writable(globals.default_lucidac_endpoint)
+type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
+export const endpoint_reachable = readable<endpoint_reachability>("offline",
+    (set) => {
+        if (hc.connected()) set("online")
+        else {
+            set("connecting")
+            hc.connect(get(endpoint)).then(() => set("online"))
+                .catch(() => set("failed"))
+        }
+    })
+
+// Device settings are only a mockup so far
+export const settings = writable(default_messages.get_settings)
 
 // basically hc.get_entities(), is only write for being updated
 export const entities_loaded = writable(false)
-export const entities = writable({})
+export const entities = writable(default_messages.get_entities)
 
 // basically get_status()
 export const status_loaded = writable(false)
-export const status = writable({})
+export const status = writable(default_messages.status)
 export function onmount_fetch_status() {
     onMount(async () => {
-        if(!hc.connected()) await hc.connect(get(endpoint))
+        if (!hc.connected()) await hc.connect(get(endpoint))
         status.set(await hc.query("status"))
         status_loaded.set(true)
     })
@@ -27,16 +42,16 @@ export function onmount_fetch_status() {
 
 // basically get_config() and set_config() in OutputCentricFormat format
 export const config_loaded = writable(false)
-export const config = writable({})
-export function onmount_fetch_config(callback=null) {
+export const config = writable(default_messages.get_config)
+export function onmount_fetch_config(callback = null) {
     onMount(async () => {
         console.log("onmount_fetch_config starting")
-        if(!hc.connected()) await hc.connect(get(endpoint))
+        if (!hc.connected()) await hc.connect(get(endpoint))
         console.log("onmount_fetch_config connected")
         config.set(await hc.get_config())
         console.log("set config to", get(config))
         config_loaded.set(true)
-        if(callback) {
+        if (callback) {
             callback(get(config))
         }
     })
@@ -50,4 +65,4 @@ export const cluster = writable({})
 
 
 
-    // https://stackoverflow.com/a/72418699
+// https://stackoverflow.com/a/72418699

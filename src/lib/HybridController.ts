@@ -121,10 +121,12 @@ export class HybridController {
     }
     */
 
+    /// raises error if connection fails
     async connect(endpoint: URL) {
         this.endpoint = endpoint
-        await this.get_entities()
+        return this.get_entities()
     }
+
     connected() { return Boolean(this.endpoint); }
 
 

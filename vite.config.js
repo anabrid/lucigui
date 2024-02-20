@@ -19,7 +19,8 @@ export default defineConfig({
   define: {
     globals: {
       lucidac_gui_version: pkg.version,
-      default_lucidac_endpoint:  "http://192.168.150.113/api"
+      default_lucidac_endpoint:  "http://192.168.150.113/api",
+      application_name: "Lucidac-GUI"
     }
   }
 })

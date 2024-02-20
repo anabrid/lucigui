@@ -47,8 +47,8 @@
 
 <div class="entities">
   {#if !$config_loaded}
-    <p>Loading entities...</p>
-  {:else}
+    <p>Attention, working with defaults, will be overwritten when loading from server</p>
+  {/if}
     <table>
       {#each xrange(nlanes) as lane}
         <tr class:active={$cluster.c[lane] != 0}>
@@ -97,7 +97,6 @@
         </tr>
       {/each}
     </table>
-  {/if}
 </div>
 
 <style lang="scss">

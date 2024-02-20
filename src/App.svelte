@@ -2,40 +2,58 @@
   import Router, {link, querystring} from 'svelte-spa-router'
   import active from 'svelte-spa-router/active'
 
-//  import Status from './lib/Status.svelte'
+  import { endpoint, endpoint_reachable } from './lib/HybridControllerStore.ts'
+  //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from './routes/Home.svelte'
-  //import Starting from './routes/Starting.svelte'
-  //import Demo from './routes/Demo.svelte_disabled'
-  import Connectome from './routes/Connectome.svelte'
+  import Starting from './routes/Starting.svelte'
+  import Settings from './routes/Settings.svelte'
+  import Editor from './routes/Editor.svelte'
 
-  const routes = {
-    '/': Home,
-//    '/starting': Starting,
-    //'/demo': Demo,
-    '/connectome': Connectome
-  }
+  const nav = [ Home, Settings, Editor, Starting ]
+  const urls = ["/", "/settings", "/editor", "/starting"]
+  const titles = [ "Home", "Settings", "Editor", "Getting Started" ]
+
+  const zip = rows=>rows[0].map((_,c)=>rows.map(row=>row[c]))
+  const routes = Object.fromEntries(zip([urls, nav]))
+  console.log("routes", routes)
 
   // treat document title at navigation
   function routeLoaded(event) {
-    if("title" in event.detail.component) {
-      document.title = event.detail.component.title
-    } else {
-      document.title = "reasonable default"
-    }
+    const route_id = urls.findIndex(e => e == event.detail.route)
+    if(route_id == -1) return
+    // inserting the device name would also be handy
+    document.title = titles[route_id] + " (" + globals.application_name + ")"
   }
 </script>
 
-<nav>
-  <a href="/" use:link use:active>Home</a> |
-  <a href="/starting" use:link use:active>Starting</a> |
-  <!--
-  <a href="/demo" use:link use:active>Demo</a> | 
-  -->
-  <a href="/connectome" use:link use:active>Connectome</a>
-</nav>
+<menu>
+  <div class="left side">
+    <b>LUCIDAC:</b>
+    {$endpoint_reachable}
+  </div>
+    
+  <nav>
+    {#each zip([urls, titles]) as [href, title] }
+      <a {href} use:link use:active>{title}</a>
+    {/each}
+  </nav>
+
+  <div class="right side">
+    Endpoint: {$endpoint}
+    (User)
+  </div>
+</menu>
 
 <section>
   <Router {routes}
     on:routeLoaded={routeLoaded}/>
 </section>
+
+<style type="scss">
+  menu { display: flex; flex-direction: row; padding: 0; }
+  menu nav { flex-grow: 1; text-align: center; }
+  menu nav a:not(:last-child)::after {
+    content: " - "
+  }
+</style>

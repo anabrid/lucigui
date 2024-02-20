@@ -2,8 +2,6 @@
    import {fade} from 'svelte/transition'
 
    import MultiView from '../lib/MultiView.svelte'
-
-   export const title = "Connectome"
 </script>
 
 <main in:fade="{{duration: 100}}">

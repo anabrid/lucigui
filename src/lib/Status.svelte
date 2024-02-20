@@ -2,7 +2,7 @@
     import { status, onmount_fetch_status } from "./HybridControllerStore.ts";
     onmount_fetch_status();
 
-        // a few helpful names here that will be populated later 
+    // a few helpful names here that will be populated later 
     /*
     export let hostname = "lucidac"
 

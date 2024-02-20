@@ -1,0 +1,272 @@
+{
+    "get_entities": {
+        "id": "null",
+        "type": "get_entities",
+        "msg": {
+            "entities": {
+                "AA-BB-CC-DD-EE-FF": {
+                    "/0": {
+                        "/M0": {
+                            "class": 2,
+                            "type": 0,
+                            "variant": 0,
+                            "version": 0
+                        },
+                        "/M1": {
+                            "class": 2,
+                            "type": 1,
+                            "variant": 0,
+                            "version": 0
+                        },
+                        "/U": {
+                            "class": 3,
+                            "type": 0,
+                            "variant": 0,
+                            "version": 0
+                        },
+                        "/C": {
+                            "class": 4,
+                            "type": 0,
+                            "variant": 0,
+                            "version": 0
+                        },
+                        "/I": {
+                            "class": 5,
+                            "type": 0,
+                            "variant": 0,
+                            "version": 0
+                        },
+                        "class": 1,
+                        "type": 3,
+                        "variant": 0,
+                        "version": 0
+                    },
+                    "class": 0,
+                    "type": 0,
+                    "variant": 0,
+                    "version": 0
+                }
+            }
+        },
+        "success": true
+    },
+    "get_config": {
+        "id": "null",
+        "type": "get_config",
+        "msg": {
+            "entity": null,
+            "config": {
+                "/0": {
+                    "/M0": {
+                        "elements": [
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            },
+                            {
+                                "ic": -1,
+                                "k": 10000
+                            }
+                        ]
+                    },
+                    "/M1": {},
+                    "/U": {
+                        "outputs": [
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        ]
+                    },
+                    "/C": {
+                        "elements": [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    "/I": {
+                        "outputs": [
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        ]
+                    }
+                }
+            }
+        },
+        "success": true
+    },
+    "status": {
+        "id": "null",
+        "type": "status",
+        "msg": {
+            "time": {
+                "uptime_millis": 1234
+            },
+            "dist": {
+                "OEM": "anabrid",
+                "OEM_MODEL_NAME": "LUCIDAC",
+                "OEM_HARDWARE_REVISION": "LUCIDAC-v1.2.3",
+                "BUILD_SYSTEM_NAME": "pio",
+                "BUILD_SYSTEM_BOARD": "teensy41",
+                "BUILD_SYSTEM_BOARD_MCU": "imxrt1062",
+                "BUILD_SYSTEM_BUILD_TYPE": "release",
+                "BUILD_SYSTEM_UPLOAD_PROTOCOL": "teensy-cli",
+                "BUILD_FLAGS": "-DANABRID_DEBUG_INIT -DANABRID_UNSAFE_INTERNET -DANABRID_ENABLE_GLOBAL_PLUGIN_LOADER",
+                "DEVICE_SERIAL_NUMBER": "123",
+                "SENSITIVE_FIELDS": "DEVICE_SERIAL_UUID DEVICE_SERIAL_REGISTRATION_LINK DEFAULT_ADMIN_PASSWORD",
+                "FIRMWARE_VERSION": "1.2-3-g1234567",
+                "FIRMWARE_DATE": "2024-02-19T10:34:54",
+                "PROTOCOL_VERSION": "1.2.3",
+                "PROTOCOL_DATE": "2024-02-19T10:34:54"
+            },
+            "flashimage": {
+                "size": 328704,
+                "sha256sum": "e7f80cb85bf89eb1e2c5f35865633c6093282df7b38cc04ff5f87320ef9af630"
+            },
+            "auth": {
+                "enabled": false,
+                "users": []
+            },
+            "ethernet": {
+                "interfaceStatus": true,
+                "otp_mac": "AA-BB-CC-DD-EE-FF",
+                "ip": {
+                    "local": "0.0.0.0",
+                    "broadcast": "255.255.255.255",
+                    "gateway": "0.0.0.0"
+                },
+                "dhcp": {
+                    "active": true,
+                    "enabled": true
+                },
+                "link": {
+                    "state": false,
+                    "speed": 100,
+                    "isCrossover": false,
+                    "isFullDuplex": false
+                }
+            },
+            "plugin": {
+                "loaders": [
+                    {
+                        "type": "GlobalPluginLoader",
+                        "load_addr": 536924056,
+                        "memsize": 1024,
+                        "can_load": true,
+                        "is_loaded": false
+                    }
+                ]
+            },
+            "flasher": {
+                "disabled": "OTA flashing is disabled due to absence of firmware build flag ANABRID_ENABLE_OTA_FLASHING"
+            }
+        },
+        "success": true
+    },
+    "get_settings": {
+        "placeholder": "Hans Peter",
+        "use_dhcp": false,
+        "some_password": "HideMe",
+        "something": {
+            "nested": {
+                "myname": "1.2.3.4"
+            }
+        }
+    }
+}
