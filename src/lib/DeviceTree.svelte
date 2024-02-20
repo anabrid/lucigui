@@ -1,15 +1,13 @@
 <script>
     import Tree from './Tree.svelte'
 
-    export let entities;
-/*
-    import { query } from '../lib/HybridController.js'
-    const entities_promise = query("get_config")
-*/
+    import { config, onmount_fetch_config } from "./HybridControllerStore.ts";
+    onmount_fetch_config();
+    
   </script>
 
   <div class="entities">
           <ul>
-            <Tree k="DeviceTree" v={entities} />
+            <Tree k="DeviceTree" v={$config} />
           </ul>
   </div>

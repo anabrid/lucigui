@@ -3,9 +3,6 @@
 
    import MultiView from '../lib/MultiView.svelte'
 
-   import { query } from '../lib/HybridController.js'
-   const entities_promise = query("get_config")
-
    export const title = "Connectome"
 </script>
 
@@ -13,13 +10,7 @@
     <h1>Analog Programming</h1>
     <p>Hier geht es um getting started und sowas.
 
-    {#await entities_promise}
-    <p>Loading entities...</p>
-    {:then entities}
-        <!-- cannot bind to awaited, therefore subblock; https://stackoverflow.com/a/76525573 -->
-        <MultiView {entities} />
-    {:catch error}
-    <p>Could not load content: {error.message}</p>
-    {/await}
+    <!-- cannot bind to awaited, therefore subblock; https://stackoverflow.com/a/76525573 -->
+    <MultiView />
   
 </main>

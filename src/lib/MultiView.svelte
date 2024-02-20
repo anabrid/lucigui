@@ -5,15 +5,17 @@
 
    // required for ... well just required.
    import { SvelteFlowProvider } from '@xyflow/svelte';
-
-   export let entities;
 </script>
 
 <table><tr><td>
-    <!--<DeviceTree bind:entities={entities} />-->
+    <!--
+    <DeviceTree />
+    -->
+
     <SvelteFlowProvider>
-        <FlowView bind:cluster_config={entities.config} />
+        <FlowView />
     </SvelteFlowProvider>
+
 </td><td>
-    <BlockView bind:cluster_config={entities.config} />
+    <BlockView />
 </td></tr></table>

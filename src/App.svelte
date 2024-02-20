@@ -2,17 +2,17 @@
   import Router, {link, querystring} from 'svelte-spa-router'
   import active from 'svelte-spa-router/active'
 
-  import Status from './lib/Status.svelte'
+//  import Status from './lib/Status.svelte'
 
   import Home from './routes/Home.svelte'
-  import Starting from './routes/Starting.svelte'
-  import Demo from './routes/Demo.svelte'
+  //import Starting from './routes/Starting.svelte'
+  //import Demo from './routes/Demo.svelte_disabled'
   import Connectome from './routes/Connectome.svelte'
 
   const routes = {
     '/': Home,
-    '/starting': Starting,
-    '/demo': Demo,
+//    '/starting': Starting,
+    //'/demo': Demo,
     '/connectome': Connectome
   }
 
@@ -29,7 +29,9 @@
 <nav>
   <a href="/" use:link use:active>Home</a> |
   <a href="/starting" use:link use:active>Starting</a> |
+  <!--
   <a href="/demo" use:link use:active>Demo</a> | 
+  -->
   <a href="/connectome" use:link use:active>Connectome</a>
 </nav>
 

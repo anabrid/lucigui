@@ -17,3 +17,12 @@
     {/if}
   </li>
 
+<!--
+  <style lang="scss">
+    ul, b {
+      display: flex;
+      flex-direction: column;
+    }
+
+  </style>
+-->
