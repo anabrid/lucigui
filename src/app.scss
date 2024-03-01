@@ -1,3 +1,33 @@
+@charset "utf-8";
+
+// anabrid colors
+$astronaut: #2b307b;
+$electric-green: #00ff55;
+$vivid-violet: #b805c1;
+$daisy-bush: #5b1aae;
+$laser-lemon: #fcff5a;
+
+// Bulma's global variables
+$primary: $astronaut;
+
+@import 'font-awesome/css/font-awesome.css';
+@import 'bulma/bulma.sass';
+
+main.wrapper {
+  padding: 4%;
+}
+
+nav .active {
+  color: $astronaut;
+  text-decoration: underline;
+}
+
+button.is-selected {
+  background-color: $electric-green;
+  color: $astronaut;
+}
+
+/*
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -72,3 +102,5 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+*/
