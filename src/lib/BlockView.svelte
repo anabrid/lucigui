@@ -10,7 +10,7 @@
     //import { query } from './HybridController.js'
     //const entities_promise = query("get_config")
 
-    import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStore.ts";
+    import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores.ts";
     import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, Mname } from "./HybridController.ts";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]

@@ -15,7 +15,7 @@
   import AnalogNode from './FlowViewNode.svelte'
 
   import { routes2matrix } from './HybridController.ts'
-  import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStore.ts";
+  import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores";
 
   export let cluster_config;
 

@@ -1,11 +1,17 @@
 import { onMount } from 'svelte';
 import { readable, writable, get, derived } from 'svelte/store';
-import { HybridController, output2reduced, reduced2output } from './HybridController.ts'
 
+import { HybridController, type Route, output2reduced, reduced2output } from './HybridController.ts'
 import default_messages from './default_messages.json'
 
-// This is basically a svelte kind of interface to the HybridController class,
-// where the store is basically synced with the XHR endpoint.
+/// \file
+/// This module is basically a svelte kind of interface to the HybridController class.
+/// Most stores are synced with the XHR endpoint. There are also a number of derived
+/// stores and standard data types.
+///
+/// Data types and functions which are *not* dependant on svelte (and in particular
+/// non-trivial algorithsm) shall go into HybridController.ts while everything else
+/// goes here.
 
 // this is just global but not a store variable
 export let hc = new HybridController()
@@ -63,6 +69,8 @@ export function onmount_fetch_config(callback = null) {
 // config in ReducedConfig Format
 export const cluster = writable({})
 
+// TODO implement me with route2cluster and cluster2router
+export const routes = writable<Route[]>([])
 
 
 // https://stackoverflow.com/a/72418699

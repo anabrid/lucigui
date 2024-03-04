@@ -2,7 +2,7 @@
   import Router, { link, querystring } from "svelte-spa-router";
   import active from "svelte-spa-router/active";
 
-  import { endpoint, endpoint_reachable } from "./lib/HybridControllerStore.ts";
+  import { endpoint, endpoint_reachable } from "./lib/HybridControllerStores.ts";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from "./routes/Home.svelte";

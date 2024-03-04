@@ -4,7 +4,7 @@
   import BlockView from '../lib/BlockView.svelte'
   import {fade} from 'svelte/transition'
 
-  import { endpoint, endpoint_reachable } from '../lib/HybridControllerStore.ts'
+  import { endpoint, endpoint_reachable } from '../lib/HybridControllerStores'
 </script>
 <main in:fade="{{duration: 100}}">
 

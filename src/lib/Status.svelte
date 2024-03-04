@@ -1,5 +1,5 @@
 <script>
-    import { status, onmount_fetch_status } from "./HybridControllerStore.ts";
+    import { status, onmount_fetch_status } from "./HybridControllerStores.ts";
     onmount_fetch_status();
 
     // a few helpful names here that will be populated later 

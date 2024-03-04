@@ -1,7 +1,7 @@
 <script>
     import DeviceTreeNode from './DeviceTreeNode.svelte'
 
-    import { config, onmount_fetch_config } from "./HybridControllerStore.ts";
+    import { config, onmount_fetch_config } from "./HybridControllerStores";
     onmount_fetch_config();
     
   </script>

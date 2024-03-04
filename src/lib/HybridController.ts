@@ -22,6 +22,13 @@ export const clone = deepcopy
 // map crosslanes into their input meaning
 export const Mname = (clane) => (clane < 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane-8}</sub>`
 
+/// Just a counter
+export class UniqueCounter {
+    count: number;
+    constructor(init=0) { this.count = init }
+    next = (): number => this.count++
+}
+
 /**
  * This is the type returned by HybridController.get_config() and also suitable for HybridController.set_config().
  *
@@ -87,11 +94,62 @@ export function reduced2output(matrix: ReducedConfig): OutputCentricConfig {
 }
 
 /**
- * This 4-tuple defines a route: [ lane, uin, cval, iout ]
+ * This 4-tuple defines a physical route: [ lane, uin, cval, iout ]
  * with lane:[0,32], uin:[0,16], iou:[0,16] and cval:[-20.0, 20.0]
  * This typescript type misses all that semantics.
  **/
 export type Route = { "lane": number, "uin": number, "cval": number, "iout": number }
+
+/**
+ * Logical Compute Element (=unrouted unphysical computing element)
+ **/
+export class LogicalComputeElement {
+    type :  "Mul" | "Int" | "Extin" | "Extout" | "Const";
+    id : number;
+
+    static strStructure = /(?<type>[a-zA-Z]+)(?<id>\d+)/;
+
+    // destruct a node id string to their parts
+    static fromString(s: string): LogicalComputeElement {
+        const r = this.strStructure.exec(s)
+        if(!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid LogicalComputeElement identifier, does not match strStructure") }
+        else return { type: r.groups.type, id: Number(r.groups.id) } as LogicalComputeElement
+    }
+
+    toString() : string { return `${this.type}${this.id}` }
+}
+
+/// A named input or output from a LogicalComputeElement
+type InputOutputName = string
+
+
+/// Unrouted lane which can probably be mapped to a physical one.
+export class LogicalLane {
+    id: number
+    static strStructure = /lane(?<lane>\d+)/
+    static fromString(s: string) : LogicalLane {
+        const r = this.strStructure.exec(s)
+        if(!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid LogicalLane identifier, does not match strStructure") }
+        else return { id: Number(r.groups.lane) } as LogicalLane
+    }
+
+    // "just give me some lane" kind of call
+    static unassignedCounter = new UniqueCounter(1000)
+    static any = () : LogicalLane => ({id: this.unassignedCounter.next() })
+}
+
+/**
+ * This is a logical route
+ */
+export type LogicalRoute = {
+    source: LogicalComputeElement,
+    target: LogicalComputeElement,
+    source_output?: InputOutputName,
+    target_input?: InputOutputName,
+    coeff: number, ///< coefficient weight on the lane
+    lane?: LogicalLane, ///< lane id
+}
+
 
 // Routine for computing the UCI matrix from a list of routes.
 export const routes2matrix = (routes: Array<Route>): ReducedConfig => ({
