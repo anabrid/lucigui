@@ -1,21 +1,25 @@
 <script lang="ts">
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
 
-    import { Mname } from "./HybridController";
+    import { Mname, LogicalComputeElement } from "./HybridController";
+    import { node2logical } from './FlowViewStore.ts'
 
-    type $$Propos = NodeProps;
+    type $$Props = NodeProps;
 
     export let id: $$Props["id"];
-    id;
-    export let data: $$Propos["data"];
+    //export let data: $$Props["data"];
     export let isConnectable: $$Props["isConnectable"];
 
-    const { clane, valid } = data;
+    const logicalElement = LogicalComputeElement.fromString(id);
+
+    // TODO: Mark invalid elements, ie. not mappable on physical elements
+    const valid = true
 </script>
 
 <div class="node-container" class:invalid={!valid}>
     <div class="node">
-        {@html Mname(clane)}
+        <i>{ logicalElement.type }</i>
+        <sub>{ logicalElement.id }</sub>
     </div>
 
     <Handle

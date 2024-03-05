@@ -1,8 +1,11 @@
-import { type Route, LogicalComputeElement, LogicalLane, type LogicalRoute, UniqueCounter } from './HybridController.ts'
+import { type PhysicalRoute, LogicalComputeElement, LogicalLane,
+  type LogicalRoute, UniqueCounter, type LogicalComputingElementType,
+  range, next_free, tryOr } from './HybridController.ts'
 import { config, routes } from './HybridControllerStores.ts'
 
 import { type Writable } from 'svelte/store'
-import { type Node, type Edge } from '@xyflow/svelte'
+import svelteflow from '@xyflow/svelte'
+
 
 // 3rd party: https://www.npmjs.com/package/svelte-writable-derived
 import { writableDerived, propertyStore } from 'svelte-writable-derived'
@@ -13,12 +16,12 @@ import { writableDerived, propertyStore } from 'svelte-writable-derived'
  * string. This way, no aux data is required and thus NodeData={}.
  */
 export type NodeData = null
-export type CircuitNode = Node<NodeData, "analog">
+export type CircuitNode = svelteflow.Node<NodeData, "analog">
 
 const default_position = { x: 0, y: 0 }
 
-const node2logical = (c: CircuitNode) : LogicalComputeElement => LogicalComputeElement.fromString(c.id)
-const logical2node = (l: LogicalComputeElement) : CircuitNode => ({
+export const node2logical = (c: CircuitNode): LogicalComputeElement => LogicalComputeElement.fromString(c.id)
+export const logical2node = (l: LogicalComputeElement): CircuitNode => ({
   id: l.toString(),
   position: default_position,
   data: null,
@@ -40,39 +43,59 @@ const logical2node = (l: LogicalComputeElement) : CircuitNode => ({
  * 
  **/
 export type EdgeData = {
-    weight: number ///< Coefficient within the C block, float range [-20, +20]
+  weight: number ///< Coefficient within the C block, float range [-20, +20]
 
-    // this is encoded in the id:
-    //lane: number, ///< Lane within the C block, int range [0..31]
+  // this is encoded in the id:
+  //lane: number, ///< Lane within the C block, int range [0..31]
 }
-export type CircuitEdge = Edge<EdgeData>
+export type CircuitEdge = svelteflow.Edge<EdgeData>
 
 let global_next_edge_counter = new UniqueCounter()
 
-const edge2logical = (e: CircuitEdge) : LogicalRoute => ({
+const edge2logical = (e: CircuitEdge): LogicalRoute => ({
   source: LogicalComputeElement.fromString(e.source),
   target: LogicalComputeElement.fromString(e.target),
   source_output: e.sourceHandle,
   target_input: e.targetHandle,
-  coeff: e.data.weight,
-  lane: LogicalLane.fromString(e.id)
+  coeff: e.data ? e.data.weight : undefined,
+  lane: LogicalLane.fromString(e.id) ?? undefined
 })
-const logical2edge = (l: LogicalRoute) : CircuitEdge => ({
+
+const logical2edge = (l: LogicalRoute): CircuitEdge => ({
   id: LogicalLane.any().toString(),
   source: l.source.toString(),
   target: l.target.toString(),
   sourceHandle: l.source_output,
   targetHandle: l.target_input,
-  data: { weight: l.coeff }
+  data: { weight: l.coeff },
+  type: "analog"
 })
 
 type CircuitStore = { nodes: CircuitNode[], edges: CircuitEdge[] }
 
-export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore) : CircuitStore {
+/// Retrieves next free id in a list of nodes.
+/// This will always return an id, even if it is bigger then the number of clanes,
+/// as we argue in the logical compute element space which is of infinite size.
+export function next_free_logical_clane(nodes: CircuitNode[], type: LogicalComputingElementType): number {
+  const occupied_clanes = nodes.map(node2logical)
+    .filter(lc => lc.type == type)
+    .map(lc => lc.id)
+  //return new LogicalComputeElement(type, /* id: */ next_free(occupied_clanes))
+  return next_free(occupied_clanes)
+}
+
+export function next_free_logical_lane(edges: CircuitEdge[]) : number {
+  const occupied_lanes = edges.map(edge2logical).filter(e => e.lane !== undefined).map(e => e.lane.id)
+  //return { id: next_free(occupied_lanes), data: { weight: 1 } } as CircuitEdge
+  return next_free(occupied_lanes)
+}
+
+export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore): CircuitStore {
   console.log("lucidac2graph starting with ", routes);
+  const prev_nodes = prev ? prev.nodes : [];
   try {
     // A Set of node ids, such as "Mul0"
-    const existing_nodes = new Set(prev.nodes.map(n => n.id))
+    const existing_nodes = new Set(prev_nodes.map(n => n.id))
 
     const new_nodes = routes.filter(r => r.coeff > 0)
       .flatMap((/*element*/logical_route, /*idx*/lane) => {
@@ -86,46 +109,33 @@ export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore) : Circ
       .filter((k) => k !== undefined);
 
     const ret_val = {
-      nodes: prev.nodes.concat(new_nodes),
+      nodes: prev_nodes.concat(new_nodes),
       edges: routes.map(logical2edge)
     }
     console.info("lucidac2graph success: ", ret_val)
     return ret_val
   } catch (err) {
-    console.error("lucidac2graph: ", err, routes, prev);
+    console.error("lucidac2graph failure: ", err, routes, prev);
     throw err
   }
 }
 
-////////////////////////// WORK UNTIL HERE //////////////////////////////
-
-function graph2lucidac(graph: CircuitStore) : Route[] {
+function graph2lucidac(graph: CircuitStore): LogicalRoute[] {
   // This is also called when dragging stuff.
   // Should probably debounce in order to reduce load
-
-  console.log("graph2lucidac starting with ", $nodes, $edges);
-  const routes = $edges.map((e, edge_idx) => {
-    let laneid_matches = e.id.match(/lane(\d+)/);
-    if (!laneid_matches) {
-      console.error("edge=", e)
-      throw Error(`Unknown edge id: ${e.id}`)
-    }
-
-    // The 4-tuple defining a route
-    const lane = Number(laneid_matches[1]);
-    const uin = Mname2clane(e.source);
-    const cval = 1.0;
-    const iout = Mname2clane(e.target);
-
-    return { lane, uin, cval, iout };
-  });
-
-  $cluster = routes2matrix(routes)
-  console.log("Routes, Matrix: ", routes, $cluster);
+  const routes = graph.edges.map(edge2logical)
+  console.info("graph2lucidac:", graph, routes);
+  return routes
 }
 
-export const circuit = writableDerived<Writable<Route[]>, CircuitStore>(
-  routes,
-  (base, set, update) => update(cur_derived => lucidac2graph(base, cur_derived)),
-  graph2lucidac
+export const circuit = writableDerived<Writable<LogicalRoute[]>, CircuitStore>(
+  /* base    */ routes,
+  /* derive  */(base, set, update) => update(cur_derived => lucidac2graph(base, cur_derived)),
+  /* reflect */ graph2lucidac,
+  /* default */ null
 )
+
+// stores to be used by SvelteFlow
+export const edges = propertyStore(circuit, "edges")
+export const nodes = propertyStore(circuit, "nodes")
+

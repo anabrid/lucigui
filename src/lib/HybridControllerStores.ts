@@ -1,7 +1,7 @@
 import { onMount } from 'svelte';
 import { readable, writable, get, derived } from 'svelte/store';
 
-import { HybridController, type Route, output2reduced, reduced2output } from './HybridController.ts'
+import { HybridController, type PhysicalRoute, type LogicalRoute, output2reduced, reduced2output } from './HybridController.ts'
 import default_messages from './default_messages.json'
 
 /// \file
@@ -70,7 +70,9 @@ export function onmount_fetch_config(callback = null) {
 export const cluster = writable({})
 
 // TODO implement me with route2cluster and cluster2router
-export const routes = writable<Route[]>([])
+export const routes = writable<LogicalRoute[]>([])
+
+// two way data binding: https://stackoverflow.com/a/72418699
 
 
-// https://stackoverflow.com/a/72418699
+// physical routes

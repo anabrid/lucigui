@@ -24,7 +24,7 @@ You can load the JavaScript HybridController client directly into the browser co
 how replies look like:
 
 ```
-var hc; import("http://localhost:5173/src/lib/HybridController.js").then(module => { hc = module; })
+var hc; import("http://localhost:5173/src/lib/HybridController.ts").then(module => { hc = module; })
 await hc.query("status)
 ```
 

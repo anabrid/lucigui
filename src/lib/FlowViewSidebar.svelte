@@ -1,5 +1,7 @@
 <script lang="ts">
-    const onDragStart = (event: DragEvent, nodeType: string) => {
+    import { type LogicalComputingElementType } from './FlowViewStore.ts'
+
+    const onDragStart = (event: DragEvent, nodeType: LogicalComputingElementType) => {
         if (!event.dataTransfer) {
             return null;
         }
@@ -15,7 +17,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             class="input-node node"
-            on:dragstart={(event) => onDragStart(event, "I")}
+            on:dragstart={(event) => onDragStart(event, "Int")}
             draggable={true}
         >
             Integrator
@@ -23,7 +25,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             class="default-node node"
-            on:dragstart={(event) => onDragStart(event, "M")}
+            on:dragstart={(event) => onDragStart(event, "Mul")}
             draggable={true}
         >
             Multiplier
