@@ -1,6 +1,12 @@
 /**
  * A lean and mean minimal asynchronous LUCIDAC HybridController client
  * library in modern ECMAScript.
+ * 
+ * This file is written in TypeScript but contains *no* dependency to any Svelte
+ * code. It is *standalone* with minimal dependencies to nodejs.
+ * 
+ * A number of stores depend on codes written in this file, for instance the
+ * HybridControllerStores.ts or the FlowViewStore.ts.
  **/
 
 import { v4 as uuid } from 'uuid';
@@ -17,12 +23,19 @@ export const nlanes = 32
 
 export const xrange = (N) => Array(N).keys() // iterator
 export const range = (N) => [...xrange(N)] // array
+export type span = [number,number]
+export const inrange = (needle : number, range : span) => (needle >= range[0] && needle <= range[1])
 export const times = (N, val) => Array.from({ length: N }, (v, i) => val)
 // slow but safe. The clone shall not be reactive or so.
 // Maybe use sructured clone instead.
 export const deepcopy = (obj) => JSON.parse(JSON.stringify(obj))
 export const shallowcopy = (obj) => Object.assign({}, obj)
 export const clone = deepcopy
+
+// TypeScript zip implementation: zip("abc", "def") = [["a","d"], ["b","e"], ["c","f"]]
+export const zip = (...arr) => Array(Math.max(...arr.map(a => a.length))).fill().map((_,i) => arr.map(a => a[i]));  
+
+export function enumerate<T>(ary:T[]) : Array<[T,number]> { return ary.map((x,idx)=>[x,idx]) }
 
 // map crosslanes into their input meaning
 export const Mname = (clane) => (clane < 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane - 8}</sub>`
@@ -41,45 +54,65 @@ export const next_free = (occupied_numbers: number[]): number => {
     const candidates = free_ids.filter(x => !occupied_numbers.includes(x))
     if(candidates.length < 1) throw new Error("next_free_id: Assumption failed.")
     return candidates[0]
-}  
-
-/**
- * This is the type returned by HybridController.get_config() and also suitable for HybridController.set_config().
- *
-* We call this an *output centric representation*, where U and I matrices look differently because
- * the one has 32 (fan-out) outputs and the other only 16 (fan-in) outputs. This representation is
- * not chosen in the internal one
- **/
-export interface OutputCentricConfig {
-    "entity": any, /* the MAC or [MAC, Carrier]; don't care */
-    "config": {
-        "/0": {
-            "/M0": {
-                "elements": Array<{ "ic": number, "k": number }>  /* fixed size: 8 */
-            },
-            "/M1": {},
-            "/U": {
-                "outputs": Array<number | null> /* fixed size: 32 */
-            },
-            "/C": {
-                "elements": Array<number> /* fixed size: 32 */
-            },
-            "/I": {
-                "outputs": Array<Array<number> | null> /* fixed size: 16 */
-            }
-        }
-    }
 }
+
+/// Internal Configuration for an Int M-Block
+type MIntConfig = Array<{ "ic": number, "k": number }>  /* fixed size: 8 */
+
+/// Auxiliary Internal Configuration for an U-Block
+type UBlockAltSignals = Array<number> | null /* fixed size 8 */
 
 /**
  * This representation is used internally in the HybridController javascript library or the
  * associated GUI.
+ * 
+ * @todo: rename u/c/i to U/C/I
  */
 export interface ReducedConfig {
     "u": Array<number>, /* 32 numbers where each is in range [0,15] and defines the input crosslane for the given output lane */
     "c": Array<number>, /* 32 coefficients in value [-20,+20] */
     "i": Array<number>, /* 32 numbers where each is in range [0,15] and defines the output crosslane for the given input lane */
 }
+
+/**
+ * This representation is used internally in the HybridController javascript library
+ * and closely resembles the part ["config"]["/0"] in the OutputCentricConfig.
+ **/
+type ClusterConfig = ReducedConfig & {
+    MInt: MIntConfig,
+    Ualt: UBlockAltSignals
+}
+
+/**
+ * This is the type returned by HybridController.get_config() and also suitable for HybridController.set_config().
+ *
+ * We call this an *output centric representation*, where U and I matrices look differently because
+ * the one has 32 (fan-out) outputs and the other only 16 (fan-in) outputs. This representation is
+ * easily transformed to/from the ClusterConfig.
+ **/
+export interface OutputCentricConfig {
+    "entity": any, /* the MAC or [MAC, Carrier]; don't care */
+    "config": {
+        "/0": {
+            "/M0": {
+                "elements": MIntConfig
+            },
+            "/M1": {},
+            "/U": {
+                "outputs": Array<number | null>, /* fixed size: 32 */
+                "alt_signals": UBlockAltSignals
+            },
+            "/C": {
+                "elements": Array<number> /* fixed size: 32 */
+            },
+            "/I": {
+                // note how this describes the output where ReducedConfig "i" is defined by the inputs!
+                "outputs": Array<Array<number> | null> /* fixed size: 16 */
+            }
+        }
+    }
+}
+
 
 export function output2reduced(cluster_config: OutputCentricConfig): ReducedConfig {
     console.log("output2reduced: ", cluster_config)
@@ -116,14 +149,24 @@ export type PhysicalRoute = {
     lane: number,
     uin: number,
     cval: number,
-    iout: number
+    iout: number|undefined, // I matrix does not need to be connected, for instance in ADC and ACL_OUT use
+    pinned_lane?: boolean // whether the lane is pinned within a compilation process
 }
 
 /// Basically a type enum covering the supported logical compute elements in this code
-export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Const"
+// @TODO: Rename to something more sensible.
+export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
 /// virtual elements which have M-block equivalent
 const virtual_elements = new Set(["Extin", "Extout", "Const"])
+
+/// lane ranges where logical elements can connect to.
+/// The ranges include the beginning and end of the tuple.
+type rangeMap = { [id: LogicalComputeElement]: span }
+const valid_lane_range : rangeMap = { "Mul": [0,31], "Int": [0,31], "Extin": [16,31], "Extout": [8,15], "Daq": [0,7], "Const": [0,31] }
+
+/// A named input or output from a LogicalComputeElement
+type InputOutputName = string|null
 
 /**
  * Logical Compute Element (=unrouted unphysical computing element)
@@ -185,11 +228,26 @@ export class LogicalComputeElement {
                 throw new Error("Unexpected type of LogicalComputeElement")
         }
     }
+
+    /// Inverse of mblock_output_clane. Exploiting the mblock output layout
+    /// [int0,...int7,mul0,...mul3,ref,ref,ref,ref]
+    static from_mblock_output_clane(number) : LogicalComputeElement {
+        if(number < 0) throw new Error("Expecting number to be greater equal 0")
+        if(number < 8) return new LogicalComputeElement("Int", number)
+        if(number < 8+4) return new LogicalComputeElement("Mul", number-4)
+        if(number < 16) return new LogicalComputeElement("Const", number-8-4) // Mul outputs currently can serve as constants.
+        else throw new Error("Expecting number to be smaller 16")
+    }
+
+    /// Inverse of mblock_input_clane. Exploiting the mblock input layout
+    /// [int0,...int7,mul0a,mul0b,...mul3a,mul3b]
+    static from_mblock_input_clane(number) : [LogicalComputeElement,InputOutputName] {
+        if(number < 0) throw new Error("Expecting number to be greater equal 0")
+        if(number < 8) return [new LogicalComputeElement("Int", number), undefined]
+        if(number < 16) return [new LogicalComputeElement("Mul", Math.floor((number-8)/2)), number%2==0 ? "a" : "b" ]
+        else throw new Error("Expecting number to be smaller 16")
+    }
 }
-
-/// A named input or output from a LogicalComputeElement
-type InputOutputName = string
-
 
 /// Unrouted lane which can probably be mapped to a physical one.
 export class LogicalLane {
@@ -215,7 +273,7 @@ export class LogicalLane {
 }
 
 /**
- * This is a logical route
+ * This is a logical route, i.e. a connection between two logical computing elements.
  */
 export type LogicalRoute = {
     source: LogicalComputeElement,
@@ -228,18 +286,49 @@ export type LogicalRoute = {
 
 const is_non_virtual = (lr:LogicalRoute) : boolean => !virtual_elements.has(lr.source.type) && !virtual_elements.has(lr.target.type)
 
-
-// Routine for computing the UCI matrix from a list of routes.
+/// Routine for computing the UCI matrix from a list of physical routes.
+/// This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
 export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
     u: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.uin)).flat(),
     i: range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane)).flat(),
     c: range(32).map(lane => { const c = routes.find(r => r.lane == lane); return c ? c.cval : 0; })
 });
 
-// Transformations between Logical and Physical Routes, i.e. a simple "Pick & Place"
-export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRoute[] => {
+/// Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion.
+export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
+    zip(matrix.u, matrix.i, matrix.c)
+    .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
+    .filter(r => r.cval != 0);
+
+/// Compute the set of logical routes given a physical setup
+//
+// Note that we can ONLY add values covered by the alt signals, these are: Extin and Const.
+// In contrast, Extout as well as Adc usage is not directly visible in the ClusterConfig, i.e.
+// a PhysicalRoute{ uin=0, cval=0 } indicates the usage of ADC0 but any physical route which
+// incidentally also allows ADC0 to listen can not be encoded in the ClusterConfig or PhysicalRoute[].
+export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAltSignals) : LogicalRoute[] => {
+    const candidates = routes.map(pr => {
+        const source = 
+            (alt_signals && alt_signals.length >= 8 && alt_signals[pr.uin]) ?
+            new LogicalComputeElement("Extin", pr.uin - 8) : (
+                (alt_signals && alt_signals.length > 8 && alt_signals[8] && pr.uin == 8) ?
+                new LogicalComputeElement("Const", 8) :
+                LogicalComputeElement.from_mblock_output_clane(pr.uin)
+            );
+        const [target, target_input] = LogicalComputeElement.from_mblock_input_clane(pr.iout)
+        return {
+            source, target, target_input,
+            coeff: pr.cval,
+            lane: new LogicalLane(pr.lane)
+        }
+    })
+    return candidates
+}
+
+// Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place"
+export const logical2physical = (unrouted: LogicalRoute[]): [PhysicalRoute[],UBlockAltSignals] => {
     // First handle only real elements, i.e. real routes
-    const candidates = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
+    let candidates = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
         lane: ctr,
         uin: lr.source.mblock_output_clane(),
         cval: lr.coeff,
@@ -247,10 +336,71 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRoute[] => {
     } as PhysicalRoute))
 
     // Second handle virtual elements by rearranging lanes.
+    unrouted.filter(lr => !is_non_virtual(lr)).forEach((lr, ctr) => {
+        // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
+        if(lr.target.type == "Daq" || lr.target.type == "Extout") {
+            if(virtual_elements.has(lr.source.type))
+                throw new Error("Cannot connect virtual element input with virtual element output.") // should collect errors instead
+            // target lane is fixed by the sink
+            const target_lane = valid_lane_range[lr.target.type][0] + lr.target.id
 
-    // TODO continue here
+            const occupant_route_idx = candidates.findIndex(pr => pr.lane == target_lane)
 
-    return candidates
+            const source_clane = lr.source.mblock_output_clane() as number
+            // The index of a first lane in the routing list where the source element is connected to
+            const candidate_lane_idx = candidates.findIndex(pr => pr.uin == source_clane)
+            const unpinned_candidate_lane_idx = candidates.findIndex(pr => pr.uin == source_clane && !Object.hasOwn(pr, "pinned_lane"))
+
+            let route : PhysicalRoute;
+            if(candidate_lane_idx < 0 /* && therefore also unpinned_candidate_lane_idx < 0 */) {
+                // lane is free, not connected anywhere, add a route
+                route = { lane: target_lane, pinned_lane: true, uin: source_clane, cval: 0, iout: undefined }
+            } else if(unpinned_candidate_lane_idx >= 0) {
+                // take first connection where we will enforce the fixed lr.target lane
+                route = candidates[unpinned_candidate_lane_idx]
+                route.lane = target_lane
+                route.pinned_lane = true
+                candidates.splice(unpinned_candidate_lane_idx, 1) // remove element from list
+            } else if(candidate_lane_idx >= 0 && unpinned_candidate_lane_idx < 0) {
+                throw new Error("logical2physical, Daq/Extout swapping: Found no unpinned route")
+            }
+
+            /// CONTINUE HERE
+
+            if(occupant_route_idx >= 0) {
+                // target lane is already occupied, need to move it
+                const next_free_lane = next_free(candidates.map(pr => pr.lane))
+                candidates[occupant_route_idx].lane = next_free_lane
+            }
+
+            candidates.push(route)
+        } else if(lr.source.type == "Extin") {
+            // ACL_IN can be fed at lanes 16..31
+            if(virtual_elements.has(lr.target.type))
+                throw new Error("Cannot connect virtual element output with virtual element input.")
+
+            const possible_lanes = valid_lane_range[lr.source.type] as span // only lanes where ACL_IN can feed in
+            const source_clane = 8 + lr.target.id // only clane where ACL_IN[id] can feed in.
+
+            // check for conflicts on the clane, try to move them out of the possible_lanes range.
+            enumerate(candidates).filter(([pr,idx]) => pr.uin == source_clane).map(([pr,idx])=> {
+                if(inrange(pr.lane, possible_lanes)) {
+
+                }
+            })
+
+
+        } else if(lr.source.type == "Const") {
+            // Can get consts either from MMul OUT4..7 (=no alt signal) or from REF0.5 (=alt signal)
+
+        } else {
+            // should collect these errors somewhere instead.
+            throw new Error("logical2physical: Illegal use of virtual elements (Daq/Extout are sinks, Extin/Const sources.)")
+        }
+    })
+
+    const default_empty_ublock_alt_signals = times(8, 0)
+    return [ candidates, default_empty_ublock_alt_signals ]
 }
 
 

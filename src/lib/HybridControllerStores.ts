@@ -1,8 +1,10 @@
 import { onMount } from 'svelte';
-import { readable, writable, get, derived } from 'svelte/store';
+import { readable, writable, get, derived, type Writable } from 'svelte/store';
 
-import { HybridController, type PhysicalRoute, type LogicalRoute, output2reduced, reduced2output } from './HybridController.ts'
+import { HybridController, type LogicalRoute, 
+    type ReducedConfig } from './HybridController.ts'
 import default_messages from './default_messages.json'
+import writableDerived from 'svelte-writable-derived';
 
 /// \file
 /// This module is basically a svelte kind of interface to the HybridController class.
@@ -67,10 +69,17 @@ export function onmount_fetch_config(callback = null) {
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))
 
 // config in ReducedConfig Format
-export const cluster = writable({})
+export const cluster = writable<ReducedConfig>({ u: [], c: [], i: [] })
 
-// TODO implement me with route2cluster and cluster2router
-export const routes = writable<LogicalRoute[]>([])
+
+// export const routes = writable<LogicalRoute[]>([])
+
+export const routes = writableDerived<Writable<ReducedConfig[]>, LogicalRoute[]>(
+    /* base    */ cluster,
+    /* derive  */ matrix2routes,
+    /* reflect */ routes2matrix,
+    /* default */ null
+  )
 
 // two way data binding: https://stackoverflow.com/a/72418699
 

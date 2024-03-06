@@ -1,4 +1,4 @@
-import { type PhysicalRoute, LogicalComputeElement, LogicalLane,
+import { LogicalComputeElement, LogicalLane,
   type LogicalRoute, UniqueCounter, type LogicalComputingElementType,
   range, next_free, tryOr } from './HybridController.ts'
 import { config, routes } from './HybridControllerStores.ts'
