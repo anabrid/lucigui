@@ -1,6 +1,7 @@
 <script>
   import Router, { link, querystring } from "svelte-spa-router";
   import active from "svelte-spa-router/active";
+  import * as Sentry from "@sentry/svelte"
 
   import { endpoint, endpoint_reachable } from "./lib/HybridControllerStores.ts";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
@@ -16,7 +17,6 @@
 
   const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
   const routes = Object.fromEntries(zip([urls, nav]));
-  console.log("routes", routes);
 
   // treat document title at navigation
   function routeLoaded(event) {
@@ -27,6 +27,29 @@
   }
 
   var endpoint_dropdown_active = false;
+  
+  Sentry.init({
+    dsn: globals.senitry_dsn,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: false,
+        blockAllMedia: false,
+      }),
+      Sentry.feedbackIntegration({
+        colorScheme: "system"
+      })
+    ],
+  
+    // Performance Monitoring
+    tracesSampleRate: 0.2, // 1.0, //  Capture 100% of the transactions
+    // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["*"], // ["localhost", /^https:\/\/anabrid\.dev/, /^((\d+)\.?){4}/],
+    // Session Replay
+    replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+    replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+});
+
 </script>
 
 <nav class="navbar" role="navigation" aria-label="main navigation">

@@ -158,7 +158,10 @@ export type PhysicalRoute = {
 export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
 /// virtual elements which have M-block equivalent
-const virtual_elements = new Set(["Extin", "Extout", "Const"])
+type VirtualElementDirection = "Sink"|"Source"
+const virtual_elements = {"Extin": "Source", "Extout": "Sink", "Const": "Source", "Daq": "Sink"}
+
+const is_non_virtual = (lr:LogicalRoute) : boolean => !(lr.source.type in virtual_elements) && !(lr.target.type in virtual_elements)
 
 /// lane ranges where logical elements can connect to.
 /// The ranges include the beginning and end of the tuple.
@@ -212,6 +215,7 @@ export class LogicalComputeElement {
     /// Same as mblock_output_lane but the input, suitable for I-block output
     mblock_input_clane(port?: string): number | "NotAssignable" {
         if (virtual_elements.has(this.type)) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
+
         if (this.id < 0) throw new Error("Expecting id to be greater equal 0")
         switch (this.type) {
             case "Int":
@@ -284,8 +288,6 @@ export type LogicalRoute = {
     lane?: LogicalLane ///< lane id
 }
 
-const is_non_virtual = (lr:LogicalRoute) : boolean => !virtual_elements.has(lr.source.type) && !virtual_elements.has(lr.target.type)
-
 /// Routine for computing the UCI matrix from a list of physical routes.
 /// This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
 export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
@@ -327,6 +329,11 @@ export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAl
 
 // Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place"
 export const logical2physical = (unrouted: LogicalRoute[]): [PhysicalRoute[],UBlockAltSignals] => {
+    // First handle virtual elements which require certain lanes or cross lanes
+    let pinned = unrouted.filter(lr => !is_non_virtual(lr)).map({
+    })
+
+
     // First handle only real elements, i.e. real routes
     let candidates = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
         lane: ctr,

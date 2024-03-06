@@ -1,0 +1,15 @@
+[
+    {
+        "name": "senitry_opt_out",
+        "default": false,
+        "title": "Performance Metrics and User Feedback: Opt-Out",
+        "desc": "Enable this option to deactivate the Sentry Performance Metrics and User Feedback application"
+    },
+    {
+        "name": "debounce_flow_view_ms",
+        "default": 200,
+        "advanced": true,
+        "title": "Debouncing/UI Latency",
+        "desc": "Debouncing updates from the Flow View GUI towards other stores"
+    }
+]

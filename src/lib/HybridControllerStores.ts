@@ -72,14 +72,14 @@ export function onmount_fetch_config(callback = null) {
 export const cluster = writable<ReducedConfig>({ u: [], c: [], i: [] })
 
 
-// export const routes = writable<LogicalRoute[]>([])
+export const routes = writable<LogicalRoute[]>([])
 
-export const routes = writableDerived<Writable<ReducedConfig[]>, LogicalRoute[]>(
-    /* base    */ cluster,
-    /* derive  */ matrix2routes,
-    /* reflect */ routes2matrix,
-    /* default */ null
-  )
+//export const routes = writableDerived<Writable<ReducedConfig[]>, LogicalRoute[]>(
+    ///* base    */ cluster,
+    ///* derive  */ matrix2routes,
+    ///* reflect */ routes2matrix,
+    ///* default */ null
+  //)
 
 // two way data binding: https://stackoverflow.com/a/72418699
 

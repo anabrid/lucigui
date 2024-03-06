@@ -30,7 +30,10 @@ const globals = {
   application_name: "LUCIDAC-GUI",
 
   // Fully qualified application name including version
-  application_name_and_version: `LUCIDAC-GUI/${pkg.version}-${githash}`
+  application_name_and_version: `LUCIDAC-GUI/${pkg.version}-${githash}`,
+
+  // Data source name for Senitry performance monitor
+  senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
 }
 
 // https://vitejs.dev/config/
