@@ -112,7 +112,7 @@ export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore): Circu
       nodes: prev_nodes.concat(new_nodes),
       edges: routes.map(logical2edge)
     }
-    console.info("lucidac2graph success: ", ret_val)
+    //console.info("lucidac2graph success: ", ret_val)
     return ret_val
   } catch (err) {
     console.error("lucidac2graph failure: ", err, routes, prev);
@@ -124,7 +124,7 @@ function graph2lucidac(graph: CircuitStore): LogicalRoute[] {
   // This is also called when dragging stuff.
   // Should probably debounce in order to reduce load
   const routes = graph.edges.map(edge2logical)
-  console.info("graph2lucidac:", graph, routes);
+  //console.info("graph2lucidac:", graph, routes);
   return routes
 }
 

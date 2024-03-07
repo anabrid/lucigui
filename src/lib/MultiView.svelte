@@ -7,7 +7,7 @@
    // required for ... well just required.
    import { SvelteFlowProvider } from '@xyflow/svelte';
 
-   import { routes } from './HybridControllerStores'
+   import { routes, physical_routes } from './HybridControllerStores'
    import { edges, nodes, circuit } from './FlowViewStore.ts'
 </script>
 
@@ -22,12 +22,16 @@
 
 </td><td>
     <!-- <BlockView /> -->
-    <h2>Edges</h2>
+<!--    <h2>Edges</h2>
     <DebugView bind:view={$edges} />
 </td><td>
     <h2>Nodes</h2>
     <DebugView bind:view={$nodes} />
 </td><td>
-    <h2>Routes</h2>
+-->
+    <h2>Logical Routes</h2>
     <DebugView bind:view={$routes} />
+</td><td>
+    <h2>Physical Routes</h2>
+    <DebugView view={$physical_routes} />
 </td></tr></table>

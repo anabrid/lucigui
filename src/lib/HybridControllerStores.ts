@@ -1,8 +1,9 @@
 import { onMount } from 'svelte';
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
 
-import { HybridController, type LogicalRoute, 
-    type ReducedConfig } from './HybridController.ts'
+import { HybridController, type OutputCentricConfig, type LogicalRoute, 
+    type ReducedConfig, 
+    logical2physical} from './HybridController.ts'
 import default_messages from './default_messages.json'
 import writableDerived from 'svelte-writable-derived';
 
@@ -50,7 +51,7 @@ export function onmount_fetch_status() {
 
 // basically get_config() and set_config() in OutputCentricFormat format
 export const config_loaded = writable(false)
-export const config = writable(default_messages.get_config)
+export const config = writable<OutputCentricConfig>(default_messages.get_config)
 export function onmount_fetch_config(callback = null) {
     onMount(async () => {
         console.log("onmount_fetch_config starting")
@@ -83,5 +84,8 @@ export const routes = writable<LogicalRoute[]>([])
 
 // two way data binding: https://stackoverflow.com/a/72418699
 
-
 // physical routes
+export const physical_routes = derived(routes, lrs => logical2physical(lrs))
+
+
+

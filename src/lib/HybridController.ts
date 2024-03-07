@@ -10,6 +10,7 @@
  **/
 
 import { v4 as uuid } from 'uuid';
+import array from 'lodash'
 
 // abbreveating exceptions
 // tryOr(()=>something, )
@@ -36,19 +37,20 @@ export const clone = deepcopy
 export const zip = (...arr) => Array(Math.max(...arr.map(a => a.length))).fill().map((_,i) => arr.map(a => a[i]));  
 
 export function enumerate<T>(ary:T[]) : Array<[T,number]> { return ary.map((x,idx)=>[x,idx]) }
+export const duplicates = (array) => array.filter((e, i, a) => a.indexOf(e) !== i)
+const union = array.union // lodash
 
 // map crosslanes into their input meaning
 export const Mname = (clane) => (clane < 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane - 8}</sub>`
 
-/// Just a counter
 export class UniqueCounter {
     count: number;
     constructor(init = 0) { this.count = init }
     next = (): number => this.count++
 }
 
-/// Retrieves next free number in a list of numbers. This will also exploit
-/// gaps in non-continous input lists.
+/** Retrieves next free number in a list of numbers. This will also exploit
+    gaps in non-continous input lists. */
 export const next_free = (occupied_numbers: number[]): number => {
     const free_ids = range(occupied_numbers.length + 1)
     const candidates = free_ids.filter(x => !occupied_numbers.includes(x))
@@ -56,11 +58,31 @@ export const next_free = (occupied_numbers: number[]): number => {
     return candidates[0]
 }
 
-/// Internal Configuration for an Int M-Block
+/** Internal Configuration for an Int M-Block */
 type MIntConfig = Array<{ "ic": number, "k": number }>  /* fixed size: 8 */
 
-/// Auxiliary Internal Configuration for an U-Block
-type UBlockAltSignals = Array<number> | null /* fixed size 8 */
+/** Auxiliary Internal Configuration for an U-Block */
+class UBlockAltSignals {
+    signals: Array<boolean> | null /* fixed size 9 */
+    constructor() { this.signals = times(9, false) }
+    
+    /// Enable or disable the ALT_SIGNAL_ACL[idx], i.e. the External input
+    set_acl(acl_idx:number, enable:boolean=true) {
+        if(acl_idx < 0 || acl_idx > 7) throw new TypeError(`Expected Extin ACL index in [0,7] but got ${acl_idx}.`)
+        this.signals[acl_idx] = enable
+    }
+    has_acl = (acl_idx:number) => this.signals[acl_idx]
+
+    acl2clane = (acl_idx:number) => acl_idx + 8 // ACL_IN[idx] is on clane idx+8
+    clane2acl = (clane:number) => clane - 8
+
+    /// Enable or disable the constant input on clane 7
+    set_alt_signal_ref_half = (enable:boolean=true) => this.signals[8] = enable
+    has_alt_signal_ref_halt = () => this.signals[8]
+
+    static ref_halt_clane = 7 // ref halt is on clane 7
+}
+// type UBlockAltSignals = Array<number> | null /* fixed size 9 */
 
 /**
  * This representation is used internally in the HybridController javascript library or the
@@ -157,19 +179,37 @@ export type PhysicalRoute = {
 // @TODO: Rename to something more sensible.
 export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
-/// virtual elements which have M-block equivalent
 type VirtualElementDirection = "Sink"|"Source"
-const virtual_elements = {"Extin": "Source", "Extout": "Sink", "Const": "Source", "Daq": "Sink"}
+type targetMap = { [id: LogicalComputeElement]: VirtualElementDirection }
+/** virtual elements which have M-block equivalent */
+const virtual_elements : targetMap = {"Extin": "Source", "Extout": "Sink", "Const": "Source", "Daq": "Sink"}
 
-const is_non_virtual = (lr:LogicalRoute) : boolean => !(lr.source.type in virtual_elements) && !(lr.target.type in virtual_elements)
+const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() && !lr.target.is_virtual()
 
-/// lane ranges where logical elements can connect to.
-/// The ranges include the beginning and end of the tuple.
 type rangeMap = { [id: LogicalComputeElement]: span }
+/** lane ranges where logical elements can connect to.
+    The ranges include the beginning and end of the tuple. */
 const valid_lane_range : rangeMap = { "Mul": [0,31], "Int": [0,31], "Extin": [16,31], "Extout": [8,15], "Daq": [0,7], "Const": [0,31] }
 
-/// A named input or output from a LogicalComputeElement
+/** A named input or output from a LogicalComputeElement */
 type InputOutputName = string|null
+
+type ComputeElementDescription = {
+    name: string,
+    inputs: string[],
+    outputs: string[]
+}
+
+const Mul = <ComputeElementDescription> { name: "Mul", inputs: ["a", "b"], outputs: ["out"] }
+const Int = <ComputeElementDescription> { name: "Int", inputs: ["in"], outputs: ["out"] }
+
+type VirtualComputeElementDescription = ComputeElementDescription & {
+    virtual: true,
+    direction: VirtualElementDirection,
+    valid_lane_range: rangeMap
+}
+
+// const Extin = <VirtualComputeElementDescription>
 
 /**
  * Logical Compute Element (=unrouted unphysical computing element)
@@ -193,11 +233,13 @@ export class LogicalComputeElement {
 
     toString(): string { return `${this.type}${this.id}` }
 
-    /// Simple Pick&Place assignment of a logical computing element to a cross lane,
-    /// straight using the id requested in the type.
-    /// This will return the mblock output crosslane suitable for U-block input
+    is_virtual = () => this.type in virtual_elements
+
+    /** Simple Pick&Place assignment of a logical computing element to a cross lane,
+     *  straight using the id requested in the type.
+     *  This will return the mblock output crosslane suitable for U-block input */
     mblock_output_clane(): number | "NotAssignable" {
-        if (virtual_elements.has(this.type)) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
+        if (this.type in virtual_elements) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
         if (this.id < 0) throw new Error("Expecting id to be greater equal 0")
         switch (this.type) {
             case "Int":
@@ -212,9 +254,9 @@ export class LogicalComputeElement {
         }
     }
 
-    /// Same as mblock_output_lane but the input, suitable for I-block output
+    /** Same as mblock_output_lane but the input, suitable for I-block output */
     mblock_input_clane(port?: string): number | "NotAssignable" {
-        if (virtual_elements.has(this.type)) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
+        if (this.type in virtual_elements) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
 
         if (this.id < 0) throw new Error("Expecting id to be greater equal 0")
         switch (this.type) {
@@ -233,8 +275,8 @@ export class LogicalComputeElement {
         }
     }
 
-    /// Inverse of mblock_output_clane. Exploiting the mblock output layout
-    /// [int0,...int7,mul0,...mul3,ref,ref,ref,ref]
+    /** Inverse of mblock_output_clane. Exploiting the mblock output layout
+        [int0,...int7,mul0,...mul3,ref,ref,ref,ref] */
     static from_mblock_output_clane(number) : LogicalComputeElement {
         if(number < 0) throw new Error("Expecting number to be greater equal 0")
         if(number < 8) return new LogicalComputeElement("Int", number)
@@ -243,8 +285,8 @@ export class LogicalComputeElement {
         else throw new Error("Expecting number to be smaller 16")
     }
 
-    /// Inverse of mblock_input_clane. Exploiting the mblock input layout
-    /// [int0,...int7,mul0a,mul0b,...mul3a,mul3b]
+    /** Inverse of mblock_input_clane. Exploiting the mblock input layout
+        [int0,...int7,mul0a,mul0b,...mul3a,mul3b] */
     static from_mblock_input_clane(number) : [LogicalComputeElement,InputOutputName] {
         if(number < 0) throw new Error("Expecting number to be greater equal 0")
         if(number < 8) return [new LogicalComputeElement("Int", number), undefined]
@@ -253,7 +295,7 @@ export class LogicalComputeElement {
     }
 }
 
-/// Unrouted lane which can probably be mapped to a physical one.
+/** Unrouted lane which can probably be mapped to a physical one. */
 export class LogicalLane {
     id: number
 
@@ -288,33 +330,36 @@ export type LogicalRoute = {
     lane?: LogicalLane ///< lane id
 }
 
-/// Routine for computing the UCI matrix from a list of physical routes.
-/// This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
+/** Routine for computing the UCI matrix from a list of physical routes.
+ *  This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
+ **/
 export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
     u: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.uin)).flat(),
     i: range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane)).flat(),
     c: range(32).map(lane => { const c = routes.find(r => r.lane == lane); return c ? c.cval : 0; })
 });
 
-/// Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion.
+/** Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion. */
 export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
     zip(matrix.u, matrix.i, matrix.c)
     .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
     .filter(r => r.cval != 0);
 
-/// Compute the set of logical routes given a physical setup
-//
-// Note that we can ONLY add values covered by the alt signals, these are: Extin and Const.
-// In contrast, Extout as well as Adc usage is not directly visible in the ClusterConfig, i.e.
-// a PhysicalRoute{ uin=0, cval=0 } indicates the usage of ADC0 but any physical route which
-// incidentally also allows ADC0 to listen can not be encoded in the ClusterConfig or PhysicalRoute[].
+/** Compute the set of logical routes given a physical setup
+ *
+ * Note that we can ONLY add values covered by the alt signals, these are: Extin and Const.
+ * In contrast, Extout as well as Adc usage is not directly visible in the ClusterConfig, i.e.
+ * a PhysicalRoute{ uin=0, cval=0 } indicates the usage of ADC0 but any physical route which
+ * incidentally also allows ADC0 to listen can not be encoded in the ClusterConfig or PhysicalRoute[].
+ **/
 export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAltSignals) : LogicalRoute[] => {
+    let const_counter = 0
     const candidates = routes.map(pr => {
         const source = 
-            (alt_signals && alt_signals.length >= 8 && alt_signals[pr.uin]) ?
-            new LogicalComputeElement("Extin", pr.uin - 8) : (
-                (alt_signals && alt_signals.length > 8 && alt_signals[8] && pr.uin == 8) ?
-                new LogicalComputeElement("Const", 8) :
+            alt_signals && alt_signals.has_acl(alt_signals.clane2acl(pr.uin)) ?
+            new LogicalComputeElement("Extin", alt_signals.clane2acl(pr.uin)) : (
+                (alt_signals && alt_signals.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane) ?
+                new LogicalComputeElement("Const", const_counter++) :
                 LogicalComputeElement.from_mblock_output_clane(pr.uin)
             );
         const [target, target_input] = LogicalComputeElement.from_mblock_input_clane(pr.iout)
@@ -327,88 +372,125 @@ export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAl
     return candidates
 }
 
-// Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place"
-export const logical2physical = (unrouted: LogicalRoute[]): [PhysicalRoute[],UBlockAltSignals] => {
+export type RoutingError = { msg: string, lr: LogicalRoute }
+export type PhysicalRouteOrError = PhysicalRoute | RoutingError
+export const is_routing_error = (roe : PhysicalRouteOrError) : boolean => "msg" in roe
+
+export type PhysicalRouting = {
+    routes : PhysicalRoute[],
+    errors: RoutingError[],
+    alt_signals: UBlockAltSignals
+}
+
+/**Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place" */
+export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
+    let alt_signals = new UBlockAltSignals()
+    let errors : RoutingError[]
+    const strip_off_routing_errors = (lst : PhysicalRouteOrError[]) =>
+        lst.filter(roe => {
+            if(is_routing_error(roe)) errors.push(roe)
+            return !is_routing_error(roe)
+        }) as PhysicalRoute[]
+    const lane = (pr : PhysicalRoute) => pr.lane // handy shorthand in .map(lane)
+
     // First handle virtual elements which require certain lanes or cross lanes
-    let pinned = unrouted.filter(lr => !is_non_virtual(lr)).map({
+    let pinned = strip_off_routing_errors(unrouted.filter(lr => !is_non_virtual(lr)).map(lr => {
+        if(lr.source.type in virtual_elements && virtual_elements[lr.source.type] == "Sink")
+            return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a source since it is a Sink`, lr }
+        if(lr.target.type in virtual_elements && virtual_elements[lr.target.type] == "Source")
+            return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a target since it is a Source`, lr }
+        if(lr.source.type in virtual_elements && lr.target.type in virtual_elements)
+            return <RoutingError> { msg: `Cannot connect two virtual elements ${lr.source} and ${lr.target}.`, lr }
+
+        if(lr.target.type == "Daq" || lr.target.type == "Extout") {
+            // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
+
+            if(lr.coeff) {
+                throw new Error(`Expecting virtual sinks (routing target) without coefficient: ${lr}`)
+            }
+
+            // target lane is fixed (pinned) by the sink
+            const lane = valid_lane_range[lr.target.type][0] + lr.target.id
+            // source clane is determined by the physical element output
+            const source_clane = lr.source.mblock_output_clane() as number
+
+            // The route determines the U block but not the I block.
+            return <PhysicalRoute> {
+                lane,
+                uin: source_clane,
+                cval: 0,
+                iout: undefined
+            }
+        } else if(lr.source.type == "Extin") {
+            // Second, handle source type: Extin
+
+            // ACL_IN can be fed at lanes 16..31.
+            //const possible_lanes = valid_lane_range[lr.source.type] as span // only lanes where ACL_IN can feed in
+
+            alt_signals.set_acl(lr.source.id)
+
+            return <PhysicalRoute> {
+                // As we start with an empty U matrix, we are free to choose by convention always a fixed lane
+                // for a given ACL_IN[id]
+                lane: 16 + lr.source.id,
+                // In contrast, this is the only clane where ACL_IN[id] can feed in. No choice here.
+                uin:  8 + lr.source.id,
+                cval: lr.coeff,
+                iout: lr.target.mblock_input_clane(lr.target_input)
+            }
+        } else if(lr.source.type == "Const") {
+            // Third, handle source type: Const
+
+            // By choice, we always choose the alt_signal 8 to get the constant
+            // on clane 7. We don't exploit the 4 const refs on the MMul block in order
+            // to remain free in choice for future alternative M blocks.
+
+            alt_signals.set_alt_signal_ref_half()
+
+            return <PhysicalRoute> {
+                lane: lr.lane ? lr.lane.id : undefined,
+                uin: 7, // ALT Signal Ref 0.5 clane
+                cval: lr.coeff,
+                iout: lr.target.mblock_input_clane(lr.target_input)
+            }            
+        } else {
+            return <RoutingError> { msg: `Illegal virtual element type ${lr.source} or ${lr.target}.`, lr }
+        }
+    }))
+
+    // Correction step: need to check for the lanes in pinned: No overlap and if all lanes are defined.
+    let valid_pinned_lanes = pinned.filter(pr => pr !== undefined).map(lane)
+    pinned.forEach((pr,idx)=> {
+        if(pr.lane === undefined || // happens with logical source lane "Const"
+           duplicates(pinned.map(lane)).includes(pr.lane)
+        )  pinned[idx].lane = next_free(valid_pinned_lanes)
     })
 
-
-    // First handle only real elements, i.e. real routes
-    let candidates = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
-        lane: ctr,
+    // Second, handle the real elements, i.e. real routes.
+    let flexible = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
+        lane: lr.lane ? lr.lane.id : ctr,
         uin: lr.source.mblock_output_clane(),
         cval: lr.coeff,
         iout: lr.target.mblock_input_clane(lr.target_input)
     } as PhysicalRoute))
 
-    // Second handle virtual elements by rearranging lanes.
-    unrouted.filter(lr => !is_non_virtual(lr)).forEach((lr, ctr) => {
-        // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
-        if(lr.target.type == "Daq" || lr.target.type == "Extout") {
-            if(virtual_elements.has(lr.source.type))
-                throw new Error("Cannot connect virtual element input with virtual element output.") // should collect errors instead
-            // target lane is fixed by the sink
-            const target_lane = valid_lane_range[lr.target.type][0] + lr.target.id
-
-            const occupant_route_idx = candidates.findIndex(pr => pr.lane == target_lane)
-
-            const source_clane = lr.source.mblock_output_clane() as number
-            // The index of a first lane in the routing list where the source element is connected to
-            const candidate_lane_idx = candidates.findIndex(pr => pr.uin == source_clane)
-            const unpinned_candidate_lane_idx = candidates.findIndex(pr => pr.uin == source_clane && !Object.hasOwn(pr, "pinned_lane"))
-
-            let route : PhysicalRoute;
-            if(candidate_lane_idx < 0 /* && therefore also unpinned_candidate_lane_idx < 0 */) {
-                // lane is free, not connected anywhere, add a route
-                route = { lane: target_lane, pinned_lane: true, uin: source_clane, cval: 0, iout: undefined }
-            } else if(unpinned_candidate_lane_idx >= 0) {
-                // take first connection where we will enforce the fixed lr.target lane
-                route = candidates[unpinned_candidate_lane_idx]
-                route.lane = target_lane
-                route.pinned_lane = true
-                candidates.splice(unpinned_candidate_lane_idx, 1) // remove element from list
-            } else if(candidate_lane_idx >= 0 && unpinned_candidate_lane_idx < 0) {
-                throw new Error("logical2physical, Daq/Extout swapping: Found no unpinned route")
-            }
-
-            /// CONTINUE HERE
-
-            if(occupant_route_idx >= 0) {
-                // target lane is already occupied, need to move it
-                const next_free_lane = next_free(candidates.map(pr => pr.lane))
-                candidates[occupant_route_idx].lane = next_free_lane
-            }
-
-            candidates.push(route)
-        } else if(lr.source.type == "Extin") {
-            // ACL_IN can be fed at lanes 16..31
-            if(virtual_elements.has(lr.target.type))
-                throw new Error("Cannot connect virtual element output with virtual element input.")
-
-            const possible_lanes = valid_lane_range[lr.source.type] as span // only lanes where ACL_IN can feed in
-            const source_clane = 8 + lr.target.id // only clane where ACL_IN[id] can feed in.
-
-            // check for conflicts on the clane, try to move them out of the possible_lanes range.
-            enumerate(candidates).filter(([pr,idx]) => pr.uin == source_clane).map(([pr,idx])=> {
-                if(inrange(pr.lane, possible_lanes)) {
-
-                }
-            })
-
-
-        } else if(lr.source.type == "Const") {
-            // Can get consts either from MMul OUT4..7 (=no alt signal) or from REF0.5 (=alt signal)
-
-        } else {
-            // should collect these errors somewhere instead.
-            throw new Error("logical2physical: Illegal use of virtual elements (Daq/Extout are sinks, Extin/Const sources.)")
-        }
+    // Correction step: Ensure pinned lanes are not touched and no overlap of lanes
+    const pinned_lanes = pinned.map(lane)
+    const double_assigned_flexlanes = duplicates(flexible.map(lane))
+    flexible.forEach((pr,idx) => {
+        if(pinned_lanes.includes(pr.lane) ||
+           duplicates(flexible.map(lane)).includes(pr.lane))
+           pinned[idx].lane = next_free(union(pinned_lanes, flexible.map(lane)))
     })
 
-    const default_empty_ublock_alt_signals = times(8, 0)
-    return [ candidates, default_empty_ublock_alt_signals ]
+    return { routes: union(pinned, flexible), errors, alt_signals }
 }
+
+/** Converts a PhysicalRouting to a ClusterConfig, ignoring any routing.errors */
+const routing2config = (routing: PhysicalRouting, mint: MIntConfig) : ClusterConfig => ({
+    ...routes2matrix(routing.routes),
+    ...{ MInt: mint, Ualt: routing.alt_signals }
+})
 
 
 
