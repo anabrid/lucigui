@@ -1,12 +1,14 @@
 <script lang="ts">
-    import { type LogicalComputingElementType } from './FlowViewStore.ts'
+    import { Int, Mul, ComputeElement } from './HybridController.ts'
 
-    const onDragStart = (event: DragEvent, nodeType: LogicalComputingElementType) => {
+
+
+    const onDragStart = (event: DragEvent, nodeType: ComputeElement) => {
         if (!event.dataTransfer) {
             return null;
         }
 
-        event.dataTransfer.setData("application/svelteflow", nodeType);
+        event.dataTransfer.setData("application/svelteflow", nodeType.name);
         event.dataTransfer.effectAllowed = "move";
     };
 </script>
@@ -15,21 +17,15 @@
     <div class="label">You can drag these nodes to the pane below.</div>
     <div class="nodes-container">
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div
-            class="input-node node"
-            on:dragstart={(event) => onDragStart(event, "Int")}
-            draggable={true}
-        >
-            Integrator
-        </div>
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div
-            class="default-node node"
-            on:dragstart={(event) => onDragStart(event, "Mul")}
-            draggable={true}
-        >
-            Multiplier
-        </div>
+        {#each Object.entries(ComputeElement.registry) as [element_name, element] }
+            <div
+                class="input-node node"
+                on:dragstart={(event) => onDragStart(event, element)}
+                draggable={true}
+            >
+                {element_name}
+            </div>
+        {/each}
     </div>
 </aside>
 
@@ -62,6 +58,6 @@
         font-weight: 700;
         border-radius: 3px;
         cursor: grab;
-        width: 50px;
+        display: inline-block;
     }
 </style>

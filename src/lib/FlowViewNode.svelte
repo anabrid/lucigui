@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
 
-    import { Mname, LogicalComputeElement } from "./HybridController";
+    import { Mname, AssignedComputeElement } from "./HybridController";
     import { node2logical } from './FlowViewStore.ts'
 
     type $$Props = NodeProps;
@@ -10,7 +10,7 @@
     //export let data: $$Props["data"];
     export let isConnectable: $$Props["isConnectable"];
 
-    const logicalElement = LogicalComputeElement.fromString(id);
+    const logicalElement = AssignedComputeElement.fromString(id);
 
     // TODO: Mark invalid elements, ie. not mappable on physical elements
     const valid = true
@@ -18,10 +18,11 @@
 
 <div class="node-container" class:invalid={!valid}>
     <div class="node">
-        <i>{ logicalElement.type }</i>
+        <i>{ logicalElement.type.name }</i>
         <sub>{ logicalElement.id }</sub>
     </div>
 
+    {#if logicalElement.type.inputs.length == 2}
     <Handle
         type="target"
         position={Position.Left}
@@ -36,7 +37,20 @@
         style="bottom: 10px"
         {isConnectable}
     />
-    <Handle type="source" position={Position.Right} id="c" {isConnectable} />
+    {:else if logicalElement.type.inputs.length == 1}
+    <Handle
+        type="target"
+        position={Position.Left}
+        id="in"
+        style="top: 15px"
+        {isConnectable}
+    />
+    {/if}
+    <!-- we currently only deal with known compute elements -->
+
+    {#if logicalElement.type.outputs.length == 1 }
+    <Handle type="source" position={Position.Right} id="out" {isConnectable} />
+    {/if}
 </div>
 
 <style>

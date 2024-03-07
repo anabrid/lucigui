@@ -11,6 +11,7 @@
 
 import { v4 as uuid } from 'uuid';
 import array from 'lodash'
+import { lucidac2graph } from './FlowViewStore';
 
 // abbreveating exceptions
 // tryOr(()=>something, )
@@ -22,10 +23,12 @@ export const nMblock = 2 // number of M blocks
 export const nMout = ncrosslanes / nMblock // == 8
 export const nlanes = 32
 
-export const xrange = (N) => Array(N).keys() // iterator
-export const range = (N) => [...xrange(N)] // array
-export type span = [number,number]
-export const inrange = (needle : number, range : span) => (needle >= range[0] && needle <= range[1])
+/** range([start=0], end), does not include end.
+ *  range(N) makes array [0,....,N-1], as in python. */
+export const range = array.range
+export const xrange = (N) => Array(N).keys() // iterator, slightly less powerful then range.
+//export type span = [number,number]
+//export const inrange = (needle : number, range : span) => (needle >= range[0] && needle <= range[1])
 export const times = (N, val) => Array.from({ length: N }, (v, i) => val)
 // slow but safe. The clone shall not be reactive or so.
 // Maybe use sructured clone instead.
@@ -175,123 +178,269 @@ export type PhysicalRoute = {
     pinned_lane?: boolean // whether the lane is pinned within a compilation process
 }
 
+
+/** Routine for computing the UCI matrix from a list of physical routes.
+ *  This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
+ **/
+export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
+    u: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.uin)).flat(),
+    i: range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane)).flat(),
+    c: range(32).map(lane => { const c = routes.find(r => r.lane == lane); return c ? c.cval : 0; })
+});
+
+/** Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion. */
+export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
+    zip(matrix.u, matrix.i, matrix.c)
+    .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
+    .filter(r => r.cval != 0);
+
+
 /// Basically a type enum covering the supported logical compute elements in this code
 // @TODO: Rename to something more sensible.
-export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
+// export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
-type VirtualElementDirection = "Sink"|"Source"
-type targetMap = { [id: LogicalComputeElement]: VirtualElementDirection }
-/** virtual elements which have M-block equivalent */
+/** The information direction indicates an output (source) or an input (sink) */
+type InformationDirection = "Sink"|"Source"
+
+/*
+type targetMap = { [id: LogicalComputeElement]: InformationDirection }
+ virtual elements which have M-block equivalent 
 const virtual_elements : targetMap = {"Extin": "Source", "Extout": "Sink", "Const": "Source", "Daq": "Sink"}
 
-const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() && !lr.target.is_virtual()
 
 type rangeMap = { [id: LogicalComputeElement]: span }
-/** lane ranges where logical elements can connect to.
-    The ranges include the beginning and end of the tuple. */
+// lane ranges where logical elements can connect to.
+    //The ranges include the beginning and end of the tuple. 
 const valid_lane_range : rangeMap = { "Mul": [0,31], "Int": [0,31], "Extin": [16,31], "Extout": [8,15], "Daq": [0,7], "Const": [0,31] }
-
-/** A named input or output from a LogicalComputeElement */
-type InputOutputName = string|null
-
-type ComputeElementDescription = {
-    name: string,
-    inputs: string[],
-    outputs: string[]
-}
-
-const Mul = <ComputeElementDescription> { name: "Mul", inputs: ["a", "b"], outputs: ["out"] }
-const Int = <ComputeElementDescription> { name: "Int", inputs: ["in"], outputs: ["out"] }
-
-type VirtualComputeElementDescription = ComputeElementDescription & {
-    virtual: true,
-    direction: VirtualElementDirection,
-    valid_lane_range: rangeMap
-}
-
-// const Extin = <VirtualComputeElementDescription>
+*/
 
 /**
- * Logical Compute Element (=unrouted unphysical computing element)
+ * A Compute Element is an abstract structure model describing the name,
+ * input and output slots. It does not describe the behaviour, despite a
+ * basic description shall be part of the comments.
+ * 
+ * The modeling in this library follows closely the hardware. That means
+ * we describe ONLY the compute elements on M-Blocks. There is no
+ * explicit compute element for implicit summation as it is done in the
+ * LUCIDAC U-C-I matrix.
+ * 
+ * A compute element can be instanced in terms of a logical, unrouted computing
+ * element, @see LogicalComputeElement. It can also be instanced in terms of
+ * a physical, routed computing element. We have no class for that right now.
+ * 
  **/
-export class LogicalComputeElement {
-    type: LogicalComputingElementType;
+export class ComputeElement {
+    name: string
+    inputs: string[]
+    outputs: string[]
+    is_virtual: boolean
+
+    constructor(name:string, inputs=["in"], outputs=["out"]) {
+        this.name=name, this.inputs=inputs, this.outputs=outputs }
+    
+    toString = () => this.name
+
+    static registry : { [name:string]: ComputeElement }
+    static fromString = (name:string) : ComputeElement => this.registry[name]
+}
+
+/**
+ * A real compute element type which knows at which clanes it sits.
+ */
+export class MblockComputeElement extends ComputeElement {
+    is_virtual = false
+    input2clane : (port: string) => number
+    output2clane : (port: string) => number
+}
+
+/** A single Multiplier on the LUCIDAC, computes out = -(a*b). */
+export const Mul = new MblockComputeElement("Mul", ["a", "b"])
+
+/** A single Integrator on the LUCIDAC, computes out = + int(in). */
+export const Int = new MblockComputeElement("Int")
+
+/**
+ * A virtual compute element describes compute elements which are used
+ * primarily in the FlowView: External inputs and outputs as well as
+ * Constants.
+ * 
+ * A virtual compute element can only serve either as input (source) or
+ * output (sink). They also have only up to one input or outputs.
+ * 
+ **/
+export class VirtualComputeElement extends ComputeElement {
+    is_virtual = true
+    direction: InformationDirection
+
+    constructor(name:string, direction:InformationDirection) {
+        if(direction=="Sink") super(name, ["sink"], []);
+        else super(name, [], ["source"])
+        this.direction=direction }
+}
+
+export class VirtualSink extends VirtualComputeElement {
+    /** where instances of this computing element are available */
+    available_lanes : number[]
+
+    constructor(name:string, lane_range:number[]) {
+        super(name, "Sink")
+        this.available_lanes=lane_range
+    }
+}
+
+export class VirtualSource extends VirtualComputeElement {
+    /** where instances of this computinge element are available */
+    available_clanes : number[]
+
+    constructor(name:string, available_clanes:number[]) {
+        super(name, "Source")
+        this.available_clanes=available_clanes
+    }
+}
+
+export const Daq = new VirtualSink("Daq", range(0, 8))
+export const Extout = new VirtualSink("Extout", range(8, 16))
+export const Extin = new VirtualSource("Extin", range(8, 16))
+export const Const = new VirtualSource("Const", [8])
+
+ComputeElement.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Const].map(n => [n.name, n]))
+
+/**
+ * A Logical or physical Compute Element which is however numerated.
+ * If this is a logical compute element, the id is unbound.
+ * If this is a physical compute element, the id is bound by the number
+ * of available computing elements of this type.
+ **/
+export class AssignedComputeElement {
+    type: ComputeElement;
     id: number;
 
-    constructor(type: LogicalComputingElementType, id: number) {
+    constructor(type: ComputeElement, id: number) {
         this.type = type; this.id = id   }
 
     /// Regexp for string encoding
     static strStructure = /(?<type>[a-zA-Z]+)(?<id>\d+)/;
 
     // destruct a node id string to their parts
-    static fromString(s: string): LogicalComputeElement {
+    static fromString(s: string): AssignedComputeElement {
         const r = this.strStructure.exec(s)
-        if (!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid LogicalComputeElement identifier, does not match strStructure") }
-        else return new LogicalComputeElement(r.groups.type as LogicalComputingElementType, Number(r.groups.id))
+        if (!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid AssignedComputeElement identifier, does not match strStructure") }
+        else return new AssignedComputeElement(ComputeElement.fromString(r.groups.type), Number(r.groups.id))
     }
 
     toString(): string { return `${this.type}${this.id}` }
 
-    is_virtual = () => this.type in virtual_elements
+    is_virtual() { return  "virtual" in this.type }
+}
 
-    /** Simple Pick&Place assignment of a logical computing element to a cross lane,
-     *  straight using the id requested in the type.
-     *  This will return the mblock output crosslane suitable for U-block input */
-    mblock_output_clane(): number | "NotAssignable" {
-        if (this.type in virtual_elements) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
-        if (this.id < 0) throw new Error("Expecting id to be greater equal 0")
-        switch (this.type) {
+/**
+ * The port of a (numerated) logical or physical Compute Element.
+ * The port can either be an input (sink) or output (source), depending
+ * on the compute element type.
+ **/
+export class AssignedComputeElementPort extends AssignedComputeElement {
+    port: string // typically something like "in"|"out"|"a"|"b"
+
+    constructor(type: ComputeElement, id: number, port: string) {
+        super(type, id); this.port = port }
+    
+    toStringWithPort() : string { return `${this.type}${this.id}${this.port}` }
+
+    static fromStringWithPort(base: string, port: string): AssignedComputeElementPort {
+        const r = AssignedComputeElement.fromString(base) as AssignedComputeElementPort
+        r.port = port
+        return r
+    }
+
+    direction() : InformationDirection|undefined {
+        if(this.type.inputs.includes(this.port)) return "Sink" // input
+        if(this.type.outputs.includes(this.port)) return "Source" // output
+        return undefined // invalid
+    }
+}
+
+/** 
+ * A concrete setup of two MBlocks, i.e. one entity configuration of LUCIDAC
+  */
+interface MBlockSetup {
+    /**
+     * Simple Pick&Place assignment of a logical computing element to a cross lane,
+     * straight using the id requested in the type.
+     * Depending on the element port, this shall either return an mblock output
+     * crosslane suitable for U-Block input OR
+     * an mblock input crosslane suitable for I-Block output.
+     **/
+    port2clane(cep: AssignedComputeElementPort) : number|"NotAssignable"
+
+    /** 
+     * Inverse of port2clane.
+     * 
+     * In case of mblock_as=Source, it exploits the mblock output layout
+     * which is, for instance for the StandardLUCIDAC:
+     * [int0,...int7,mul0,...mul3,ref,ref,ref,ref].
+     * 
+     * In case of mblock_as=Sink, exploits the mblock input layout, which is,
+     * for instance for the StandardLUCIDAC:
+     * [int0,...int7,mul0a,mul0b,...mul3a,mul3b]
+     **/
+    clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort
+}
+
+/**
+ * Standard configuration with MInt and MMul.
+ * 
+ * This is the reference implementation for a standard setup, i.e. one
+ * MMulBlock and MIntBlock. At least the slot positions are easily exchangable.
+ * However, other setups are possible in LUCIDAC such as two MIntBlocks,
+ * and require this class to be modified accordingly.
+ **/
+const StandardLUCIDAC = new class  implements MBlockSetup {
+    readonly type2slot = { "Mul": 0, "Int": 1 }
+    readonly slot2type = { 0:Mul, 1:Int } // array.invert(this.type2slot)
+
+    // Constants for any LUCIDAC
+    readonly clanes_per_slot = 8
+    readonly num_slots = 8
+
+    port2clane({type, id, port} : AssignedComputeElementPort) : number|"NotAssignable" {
+        if(type.is_virtual) throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
+        if(id < 0) throw new Error("Expecting id to be greater equal 0")
+        switch (type.name) {
             case "Int":
-                if (this.id > 8) return "NotAssignable"
-                return Number(this.id)
+                if(port != "in" && port != "out") throw new Error(`Integrator ComputeElement has only one input/output. Unavailable port ${port}`)
+                if (id > 8) return "NotAssignable"
+                return this.type2slot["Int"] * this.clanes_per_slot + id
             case "Mul":
-                if (this.id > 4) return "NotAssignable"
-                return 8 + Number(this.id)
+                if (port != "out" && port != "a" && port != "b") throw new Error(`Multiplier ComputeElement has inputs a and b and output out. Unavailable port ${port}`)
+                if (id > 4) return "NotAssignable"
+                return this.type2slot["Mul"] * this.clanes_per_slot + (port == "out" ? id : (2*id + (port == "b" ? 1 : 0)))
             default:
                 console.error(this)
-                throw new Error("Unexpected type of LogicalComputeElement")
+                throw new Error(`Physical ComputeElement type ${type} not available at StandardLUCIDAC`)
         }
     }
 
-    /** Same as mblock_output_lane but the input, suitable for I-block output */
-    mblock_input_clane(port?: string): number | "NotAssignable" {
-        if (this.type in virtual_elements) throw new Error("Can only assign lanes to computing elements with M-Block equivalent")
+    clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort {
+        const slotlane = clane % this.clanes_per_slot // going from [0,7]
+        if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
+            throw new Error(`Expecting 0 < clane < 16`)
 
-        if (this.id < 0) throw new Error("Expecting id to be greater equal 0")
-        switch (this.type) {
-            case "Int":
-                if (port && port != "in") throw new Error("Integrator has only one input ports.")
-                if (this.id > 8) return "NotAssignable"
-                return Number(this.id)
-            case "Mul":
-                if (port != "a" && port != "b") throw new Error("Multiplier has two input ports 'a' and 'b'. You must use one of them.")
-                if (this.id > 4) return "NotAssignable"
-                const offset = port == "b" ? 1 : 0
-                return 8 + 2 * Number(this.id) + offset
-            default:
-                console.error(this)
-                throw new Error("Unexpected type of LogicalComputeElement")
+        let ret = <AssignedComputeElementPort> {
+            type: this.slot2type[slotlane],
+            id : slotlane,
+            port: (mblock_as=="Source") ? "out" : "in"
         }
-    }
 
-    /** Inverse of mblock_output_clane. Exploiting the mblock output layout
-        [int0,...int7,mul0,...mul3,ref,ref,ref,ref] */
-    static from_mblock_output_clane(number) : LogicalComputeElement {
-        if(number < 0) throw new Error("Expecting number to be greater equal 0")
-        if(number < 8) return new LogicalComputeElement("Int", number)
-        if(number < 8+4) return new LogicalComputeElement("Mul", number-4)
-        if(number < 16) return new LogicalComputeElement("Const", number-8-4) // Mul outputs currently can serve as constants.
-        else throw new Error("Expecting number to be smaller 16")
-    }
+        if(ret.type == Mul && mblock_as=="Source" && ret.id > 4) {
+            // Mul outputs currently can serve as constants.
+            ret.type = Const
+        }
+        if(ret.type == Mul && mblock_as=="Sink") {
+            ret.id = Math.floor(slotlane/2)
+            ret.port = slotlane%2==0 ? "a" : "b"
+        }
 
-    /** Inverse of mblock_input_clane. Exploiting the mblock input layout
-        [int0,...int7,mul0a,mul0b,...mul3a,mul3b] */
-    static from_mblock_input_clane(number) : [LogicalComputeElement,InputOutputName] {
-        if(number < 0) throw new Error("Expecting number to be greater equal 0")
-        if(number < 8) return [new LogicalComputeElement("Int", number), undefined]
-        if(number < 16) return [new LogicalComputeElement("Mul", Math.floor((number-8)/2)), number%2==0 ? "a" : "b" ]
-        else throw new Error("Expecting number to be smaller 16")
+        return ret
     }
 }
 
@@ -322,28 +471,13 @@ export class LogicalLane {
  * This is a logical route, i.e. a connection between two logical computing elements.
  */
 export type LogicalRoute = {
-    source: LogicalComputeElement,
-    target: LogicalComputeElement,
-    source_output?: InputOutputName,
-    target_input?: InputOutputName,
+    source: AssignedComputeElementPort,
+    target: AssignedComputeElementPort,
     coeff: number, ///< coefficient weight on the lane
     lane?: LogicalLane ///< lane id
 }
 
-/** Routine for computing the UCI matrix from a list of physical routes.
- *  This is basically an Array-of-Structures -> Structure-of-Arrays conversion (AoS2SoA)
- **/
-export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
-    u: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.uin)).flat(),
-    i: range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane)).flat(),
-    c: range(32).map(lane => { const c = routes.find(r => r.lane == lane); return c ? c.cval : 0; })
-});
-
-/** Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion. */
-export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
-    zip(matrix.u, matrix.i, matrix.c)
-    .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
-    .filter(r => r.cval != 0);
+const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() && !lr.target.is_virtual()
 
 /** Compute the set of logical routes given a physical setup
  *
@@ -357,14 +491,14 @@ export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAl
     const candidates = routes.map(pr => {
         const source = 
             alt_signals && alt_signals.has_acl(alt_signals.clane2acl(pr.uin)) ?
-            new LogicalComputeElement("Extin", alt_signals.clane2acl(pr.uin)) : (
+            new AssignedComputeElementPort(Extin, alt_signals.clane2acl(pr.uin), "Source") : (
                 (alt_signals && alt_signals.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane) ?
-                new LogicalComputeElement("Const", const_counter++) :
-                LogicalComputeElement.from_mblock_output_clane(pr.uin)
+                new AssignedComputeElementPort(Const, const_counter++, "Source") :
+                StandardLUCIDAC.clane2port(pr.uin, "Source")
             );
-        const [target, target_input] = LogicalComputeElement.from_mblock_input_clane(pr.iout)
+        const target = StandardLUCIDAC.clane2port(pr.iout, "Sink")
         return {
-            source, target, target_input,
+            source, target,
             coeff: pr.cval,
             lane: new LogicalLane(pr.lane)
         }
@@ -395,14 +529,14 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
 
     // First handle virtual elements which require certain lanes or cross lanes
     let pinned = strip_off_routing_errors(unrouted.filter(lr => !is_non_virtual(lr)).map(lr => {
-        if(lr.source.type in virtual_elements && virtual_elements[lr.source.type] == "Sink")
+        if(lr.source.type.is_virtual && (lr.source.type as VirtualComputeElement).direction == "Sink")
             return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a source since it is a Sink`, lr }
-        if(lr.target.type in virtual_elements && virtual_elements[lr.target.type] == "Source")
+        if(lr.target.type.is_virtual && (lr.target.type as VirtualComputeElement).direction == "Source")
             return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a target since it is a Source`, lr }
-        if(lr.source.type in virtual_elements && lr.target.type in virtual_elements)
+        if(lr.source.type.is_virtual && lr.target.type.is_virtual)
             return <RoutingError> { msg: `Cannot connect two virtual elements ${lr.source} and ${lr.target}.`, lr }
 
-        if(lr.target.type == "Daq" || lr.target.type == "Extout") {
+        if(lr.target.type == Daq || lr.target.type == Extout) {
             // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
 
             if(lr.coeff) {
@@ -410,9 +544,11 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
             }
 
             // target lane is fixed (pinned) by the sink
-            const lane = valid_lane_range[lr.target.type][0] + lr.target.id
+            const lane = (lr.target.type as VirtualSink).available_lanes[lr.target.id]
             // source clane is determined by the physical element output
-            const source_clane = lr.source.mblock_output_clane() as number
+            const source_clane = StandardLUCIDAC.port2clane(lr.source)
+            if(source_clane == "NotAssignable")
+                return <RoutingError> { msg: `source clane not assignable`, lr }
 
             // The route determines the U block but not the I block.
             return <PhysicalRoute> {
@@ -421,13 +557,15 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
                 cval: 0,
                 iout: undefined
             }
-        } else if(lr.source.type == "Extin") {
-            // Second, handle source type: Extin
-
+        } else if(lr.source.type == Extin) {
             // ACL_IN can be fed at lanes 16..31.
             //const possible_lanes = valid_lane_range[lr.source.type] as span // only lanes where ACL_IN can feed in
 
             alt_signals.set_acl(lr.source.id)
+
+            const iout = StandardLUCIDAC.port2clane(lr.target) // input/Sink
+            if(iout == "NotAssignable")
+                return <RoutingError> { msg: `target clane not assignable`, lr }
 
             return <PhysicalRoute> {
                 // As we start with an empty U matrix, we are free to choose by convention always a fixed lane
@@ -436,22 +574,24 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
                 // In contrast, this is the only clane where ACL_IN[id] can feed in. No choice here.
                 uin:  8 + lr.source.id,
                 cval: lr.coeff,
-                iout: lr.target.mblock_input_clane(lr.target_input)
+                iout
             }
-        } else if(lr.source.type == "Const") {
-            // Third, handle source type: Const
-
+        } else if(lr.source.type == Const) {
             // By choice, we always choose the alt_signal 8 to get the constant
             // on clane 7. We don't exploit the 4 const refs on the MMul block in order
             // to remain free in choice for future alternative M blocks.
 
             alt_signals.set_alt_signal_ref_half()
 
+            const iout = StandardLUCIDAC.port2clane(lr.target) // input/Sink
+            if(iout == "NotAssignable")
+                return <RoutingError> { msg: `target clane not assignable`, lr }
+
             return <PhysicalRoute> {
                 lane: lr.lane ? lr.lane.id : undefined,
                 uin: 7, // ALT Signal Ref 0.5 clane
                 cval: lr.coeff,
-                iout: lr.target.mblock_input_clane(lr.target_input)
+                iout
             }            
         } else {
             return <RoutingError> { msg: `Illegal virtual element type ${lr.source} or ${lr.target}.`, lr }
@@ -467,12 +607,16 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
     })
 
     // Second, handle the real elements, i.e. real routes.
-    let flexible = unrouted.filter(is_non_virtual).map((lr, ctr) => ({
-        lane: lr.lane ? lr.lane.id : ctr,
-        uin: lr.source.mblock_output_clane(),
-        cval: lr.coeff,
-        iout: lr.target.mblock_input_clane(lr.target_input)
-    } as PhysicalRoute))
+    let flexible = strip_off_routing_errors(unrouted.filter(is_non_virtual).map((lr, ctr) => {
+        const uin = StandardLUCIDAC.port2clane(lr.source)
+        const iout = StandardLUCIDAC.port2clane(lr.target)
+        if(uin == "NotAssignable") return <RoutingError> { msg: "physical source not assignable", lr }
+        if(iout == "NotAssignable") return <RoutingError> { msg: "physical target not assignable", lr }
+        return <PhysicalRoute> {
+            lane: lr.lane ? lr.lane.id : ctr,
+            uin, iout, cval: lr.coeff,
+        }
+    }))
 
     // Correction step: Ensure pinned lanes are not touched and no overlap of lanes
     const pinned_lanes = pinned.map(lane)
@@ -491,7 +635,6 @@ const routing2config = (routing: PhysicalRouting, mint: MIntConfig) : ClusterCon
     ...routes2matrix(routing.routes),
     ...{ MInt: mint, Ualt: routing.alt_signals }
 })
-
 
 
 /**

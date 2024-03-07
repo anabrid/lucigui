@@ -1,5 +1,5 @@
-import { LogicalComputeElement, LogicalLane,
-  type LogicalRoute, UniqueCounter, type LogicalComputingElementType,
+import { ComputeElement, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
+  type LogicalRoute, UniqueCounter,
   range, next_free, tryOr } from './HybridController.ts'
 import { config, routes } from './HybridControllerStores.ts'
 
@@ -20,8 +20,8 @@ export type CircuitNode = svelteflow.Node<NodeData, "analog">
 
 const default_position = { x: 0, y: 0 }
 
-export const node2logical = (c: CircuitNode): LogicalComputeElement => LogicalComputeElement.fromString(c.id)
-export const logical2node = (l: LogicalComputeElement): CircuitNode => ({
+export const node2logical = (c: CircuitNode): AssignedComputeElement => AssignedComputeElement.fromString(c.id)
+export const logical2node = (l: AssignedComputeElement): CircuitNode => ({
   id: l.toString(),
   position: default_position,
   data: null,
@@ -53,10 +53,8 @@ export type CircuitEdge = svelteflow.Edge<EdgeData>
 let global_next_edge_counter = new UniqueCounter()
 
 const edge2logical = (e: CircuitEdge): LogicalRoute => ({
-  source: LogicalComputeElement.fromString(e.source),
-  target: LogicalComputeElement.fromString(e.target),
-  source_output: e.sourceHandle,
-  target_input: e.targetHandle,
+  source: AssignedComputeElementPort.fromStringWithPort(e.source, e.sourceHandle),
+  target: AssignedComputeElementPort.fromStringWithPort(e.target, e.targetHandle),
   coeff: e.data ? e.data.weight : undefined,
   lane: LogicalLane.fromString(e.id) ?? undefined
 })
@@ -65,8 +63,8 @@ const logical2edge = (l: LogicalRoute): CircuitEdge => ({
   id: LogicalLane.any().toString(),
   source: l.source.toString(),
   target: l.target.toString(),
-  sourceHandle: l.source_output,
-  targetHandle: l.target_input,
+  sourceHandle: l.source.port,
+  targetHandle: l.target.port,
   data: { weight: l.coeff },
   type: "analog"
 })

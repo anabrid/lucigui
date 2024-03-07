@@ -15,11 +15,9 @@
   import AnalogNode from './FlowViewNode.svelte'
   import PotiEdge from './FlowViewEdge.svelte'
 
-  import { routes2matrix, LogicalLane, type LogicalComputingElementType, LogicalComputeElement } from './HybridController.ts'
+  import { routes2matrix, LogicalLane, ComputeElement, AssignedComputeElement } from './HybridController.ts'
   import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores.ts";
   import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './FlowViewStore.ts'
-
-  export let cluster_config;
 
   // have to be declared in node as 'type':'analog'
   const nodeTypes = {
@@ -44,7 +42,8 @@
     event.preventDefault();
     if (!event.dataTransfer) return null;
     // type is a LogicalComputingElementType
-    const type = event.dataTransfer.getData("application/svelteflow") as LogicalComputingElementType;
+    const typeStr = event.dataTransfer.getData("application/svelteflow") as string;
+    const type = ComputeElement.fromString(typeStr)
 
     const position = screenToFlowPosition({
       x: event.clientX,
@@ -52,10 +51,11 @@
     });
 
     const newNode = {
-      id: new LogicalComputeElement(type, next_free_logical_clane($nodes, type)).toString(),
+      id: new AssignedComputeElement(type, next_free_logical_clane($nodes, type)).toString(),
       position,
       origin: [0.5, 0.0],
-      type: "analog"
+      type: "analog",
+      data: null
     } satisfies CircuitNode;
 
     console.info("onDrop: New node ", newNode);
@@ -77,7 +77,8 @@
       && !e.id.match(/lane\d+/) /* try to restrict to find real new connection*/)
 
     if(eidx == undefined) {
-      throw new Error("onConnect: Cannot find the edge", connection, $edges)
+      console.error("onConnect: Cannot find the edge", connection, $edges)
+      throw new Error("onConnect: Cannot find the edge")
     }
 
     // Find next free lane
