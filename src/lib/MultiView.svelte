@@ -22,13 +22,12 @@
 
 </td><td>
     <!-- <BlockView /> -->
-<!--    <h2>Edges</h2>
+    <h2>Edges</h2>
     <DebugView bind:view={$edges} />
 </td><td>
     <h2>Nodes</h2>
     <DebugView bind:view={$nodes} />
 </td><td>
--->
     <h2>Logical Routes</h2>
     <DebugView bind:view={$routes} />
 </td><td>

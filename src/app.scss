@@ -15,6 +15,10 @@ $primary: $astronaut;
 
 main.wrapper {
   padding: 4%;
+
+  &.page-editor {
+    padding: 0; // need the space!
+  }
 }
 
 nav .active {

@@ -15,7 +15,7 @@
   import AnalogNode from './FlowViewNode.svelte'
   import PotiEdge from './FlowViewEdge.svelte'
 
-  import { routes2matrix, LogicalLane, ComputeElement, AssignedComputeElement } from './HybridController.ts'
+  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from './HybridController.ts'
   import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores.ts";
   import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './FlowViewStore.ts'
 
@@ -41,9 +41,7 @@
   const onDrop = (event) => {
     event.preventDefault();
     if (!event.dataTransfer) return null;
-    // type is a LogicalComputingElementType
-    const typeStr = event.dataTransfer.getData("application/svelteflow") as string;
-    const type = ComputeElement.fromString(typeStr)
+    const typeName = event.dataTransfer.getData("application/svelteflow") as ComputeElementName;
 
     const position = screenToFlowPosition({
       x: event.clientX,
@@ -51,7 +49,7 @@
     });
 
     const newNode = {
-      id: new AssignedComputeElement(type, next_free_logical_clane($nodes, type)).toString(),
+      id: new AssignedComputeElement(typeName, next_free_logical_clane($nodes, typeName)).toString(),
       position,
       origin: [0.5, 0.0],
       type: "analog",
@@ -96,7 +94,7 @@
   }
 </script>
 
-<main style="min-height: 500px; width: 900px">
+<main style="height: 100%; min-height: 300px; min-width: 500px">
   <SvelteFlow {nodes} {nodeTypes} {edges} {edgeTypes}
     fitView 
     onconnect={onConnect}

@@ -1,4 +1,4 @@
-import { ComputeElement, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
+import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
   type LogicalRoute, UniqueCounter,
   range, next_free, tryOr } from './HybridController.ts'
 import { config, routes } from './HybridControllerStores.ts'
@@ -96,9 +96,9 @@ type CircuitStore = { nodes: CircuitNode[], edges: CircuitEdge[] }
 /// Retrieves next free id in a list of nodes.
 /// This will always return an id, even if it is bigger then the number of clanes,
 /// as we argue in the logical compute element space which is of infinite size.
-export function next_free_logical_clane(nodes: CircuitNode[], type: ComputeElement): number {
+export function next_free_logical_clane(nodes: CircuitNode[], typeName: ComputeElementName): number {
   const occupied_clanes = nodes.map(node2logical)
-    .filter(lc => lc.type == type)
+    .filter(lc => lc.typeName == typeName)
     .map(lc => lc.id)
   //return new LogicalComputeElement(type, /* id: */ next_free(occupied_clanes))
   return next_free(occupied_clanes)

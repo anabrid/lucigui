@@ -12,6 +12,7 @@
     export let selected: $$Props["selected"]
 
     const logicalElement = AssignedComputeElement.fromString(id);
+    const type = logicalElement.type()
 
     // TODO: Mark invalid elements, ie. not mappable on physical elements
     const valid = true
@@ -19,7 +20,7 @@
 
 <div class="node-container" class:invalid={!valid} class:selected={selected}>
     <div class="node">
-        <i>{ logicalElement.type.name }</i>
+        <i>{ type.name }</i>
         <sub>
             {#if selected}
                 <input bind:value={logicalElement.id}>
@@ -29,7 +30,7 @@
         </sub>
     </div>
 
-    {#if logicalElement.type.inputs.length == 2}
+    {#if type.inputs.length == 2}
     <Handle
         type="target"
         position={Position.Left}
@@ -44,7 +45,7 @@
         style="bottom: 10px"
         {isConnectable}
     />
-    {:else if logicalElement.type.inputs.length == 1}
+    {:else if type.inputs.length == 1}
     <Handle
         type="target"
         position={Position.Left}
@@ -55,7 +56,7 @@
     {/if}
     <!-- we currently only deal with known compute elements -->
 
-    {#if logicalElement.type.outputs.length == 1 }
+    {#if type.outputs.length == 1 }
     <Handle type="source" position={Position.Right} id="out" {isConnectable} />
     {/if}
 </div>

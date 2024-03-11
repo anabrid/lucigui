@@ -18,12 +18,17 @@
   const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
   const routes = Object.fromEntries(zip([urls, nav]));
 
+  let active_title = "";
+  const slugify = (text) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+
   // treat document title at navigation
   function routeLoaded(event) {
     const route_id = urls.findIndex((e) => e == event.detail.route);
     if (route_id == -1) return;
     // inserting the device name would also be handy
     document.title = titles[route_id] + " (" + globals.application_name + ")";
+
+    active_title = slugify(titles[route_id])
   }
 
   var endpoint_dropdown_active = false;
@@ -122,7 +127,7 @@
     </div>
   </div>
 </nav>
-<main class="wrapper">
+<main class="wrapper page-{active_title}">
 
   <Router {routes} on:routeLoaded={routeLoaded} />
 

@@ -1,26 +1,26 @@
 <script lang="ts">
-    import { Int, Mul, ComputeElement } from './HybridController.ts'
+    import { type ComputeElementName, ComputeElement } from './HybridController.ts'
 
 
 
-    const onDragStart = (event: DragEvent, nodeType: ComputeElement) => {
+    const onDragStart = (event: DragEvent, nodeTypeName: ComputeElementName) => {
         if (!event.dataTransfer) {
             return null;
         }
 
-        event.dataTransfer.setData("application/svelteflow", nodeType.name);
+        event.dataTransfer.setData("application/svelteflow", nodeTypeName);
         event.dataTransfer.effectAllowed = "move";
     };
 </script>
 
 <aside>
-    <div class="label">You can drag these nodes to the pane below.</div>
+    <!--<div class="label">You can drag these nodes to the pane below.</div>-->
     <div class="nodes-container">
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         {#each Object.entries(ComputeElement.registry) as [element_name, element] }
             <div
                 class="input-node node"
-                on:dragstart={(event) => onDragStart(event, element)}
+                on:dragstart={(event) => onDragStart(event, element_name)}
                 draggable={true}
             >
                 {element_name}

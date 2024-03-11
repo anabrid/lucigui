@@ -240,6 +240,11 @@ export class ComputeElement {
     
     toString = () => this.name
 
+    /**
+     * The registry shall collect all instances of this class.
+     * Actually this is a map from ComputeElementName -> ComputeElement,
+     * but we don't have the type ComputeElementName defined yet.
+     */
     static registry : { [name:string]: ComputeElement }
     static fromString = (name:string) : ComputeElement => this.registry[name]
 }
@@ -303,7 +308,17 @@ export const Extout = new VirtualSink("Extout", range(8, 16))
 export const Extin = new VirtualSource("Extin", range(8, 16))
 export const Const = new VirtualSource("Const", [8])
 
+// See also the ComputeElementName type blow
 ComputeElement.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Const].map(n => [n.name, n]))
+
+/**
+ * Union type which indicates a valid ComputeElement name.
+ * We store names in subsequent types instead of references to the actual
+ * objects to simplify the data structures in particular for import/export/serialization.
+ * No need to copy along basic type structures over and over again.
+ */
+export type ComputeElementName = "Mul"|"Int"|"Daq"|"Extout"|"Extin"|"Const"
+
 
 /**
  * A Logical or physical Compute Element which is however numerated.
@@ -312,25 +327,27 @@ ComputeElement.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Cons
  * of available computing elements of this type.
  **/
 export class AssignedComputeElement {
-    type: ComputeElement;
+    typeName: ComputeElementName;
     id: number;
 
-    constructor(type: ComputeElement, id: number) {
-        this.type = type; this.id = id   }
+    constructor(typeName: ComputeElementName, id: number) {
+        if(!(typeName in ComputeElement.registry)) throw new TypeError(`Illegal ComputeElementName ${typeName}.`)
+        this.typeName = typeName; this.id = id   }
 
     /// Regexp for string encoding
-    static strStructure = /(?<type>[a-zA-Z]+)(?<id>\d+)/;
+    static strStructure = /(?<typeName>[a-zA-Z]+)(?<id>\d+)/;
 
     // destruct a node id string to their parts
     static fromString(s: string): AssignedComputeElement {
         const r = this.strStructure.exec(s)
         if (!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid AssignedComputeElement identifier, does not match strStructure") }
-        else return new AssignedComputeElement(ComputeElement.fromString(r.groups.type), Number(r.groups.id))
+        else return new AssignedComputeElement(r.groups.typeName as ComputeElementName, Number(r.groups.id))
     }
 
-    toString(): string { return `${this.type}${this.id}` }
+    toString(): string { return `${this.typeName}${this.id}` }
+    type() { return ComputeElement.fromString(this.typeName) }
 
-    is_virtual() { return  "virtual" in this.type }
+    is_virtual() { return  "virtual" in this.type() }
 }
 
 /**
@@ -341,11 +358,11 @@ export class AssignedComputeElement {
 export class AssignedComputeElementPort extends AssignedComputeElement {
     port: string // typically something like "in"|"out"|"a"|"b"
 
-    constructor(type: ComputeElement, id: number, port: string) {
-        super(type, id); this.port = port }
+    constructor(typeName: ComputeElementName, id: number, port: string) {
+        super(typeName, id); this.port = port }
     
-    toStringWithPort() : string { return `${this.type}${this.id}${this.port}` }
-    static strStructure = /(?<type>[a-zA-Z]+)(?<id>\d+)(?<port>[a-zA-Z]+)/;
+    toStringWithPort() : string { return `${this.typeName}${this.id}${this.port}` }
+    static strStructure = /(?<typeName>[a-zA-Z]+)(?<id>\d+)(?<port>[a-zA-Z]+)/;
 
     static fromStringWithPort(base: string, port?: string): AssignedComputeElementPort {
         if(port) {
@@ -356,7 +373,7 @@ export class AssignedComputeElementPort extends AssignedComputeElement {
             const g = this.strStructure.exec(base)
             if(! g?.groups) { console.error(g,base); throw new TypeError("Invalid AssignedComputeElementPort identifier") }
             return new AssignedComputeElementPort(
-                ComputeElement.fromString(g.groups.type),
+                g.groups.typeName as ComputeElementName,
                 Number(g.groups.id),
                 g.groups.port
             )
@@ -364,8 +381,8 @@ export class AssignedComputeElementPort extends AssignedComputeElement {
     }
 
     direction() : InformationDirection|undefined {
-        if(this.type.inputs.includes(this.port)) return "Sink" // input
-        if(this.type.outputs.includes(this.port)) return "Source" // output
+        if(this.type().inputs.includes(this.port)) return "Sink" // input
+        if(this.type().outputs.includes(this.port)) return "Source" // output
         return undefined // invalid
     }
 }
@@ -407,16 +424,17 @@ interface MBlockSetup {
  **/
 const StandardLUCIDAC = new class  implements MBlockSetup {
     readonly type2slot = { "Mul": 0, "Int": 1 }
-    readonly slot2type = { 0:Mul, 1:Int } // array.invert(this.type2slot)
+    readonly slot2type = array.invert(this.type2slot)
 
     // Constants for any LUCIDAC
     readonly clanes_per_slot = 8
     readonly num_slots = 8
 
-    port2clane({type, id, port} : AssignedComputeElementPort) : number|"NotAssignable" {
-        if(type.is_virtual) return "NotAssignable" // throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
+    port2clane(el : AssignedComputeElementPort) : number|"NotAssignable" {
+        const {id, port} = el
+        if(el.type().is_virtual) return "NotAssignable" // throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
         if(id < 0) throw new Error("Expecting id to be greater equal 0")
-        switch (type.name) {
+        switch (el.typeName) {
             case "Int":
                 if(port != "in" && port != "out") throw new Error(`Integrator ComputeElement has only one input/output. Unavailable port ${port}`)
                 if (id > 8) return "NotAssignable"
@@ -427,7 +445,7 @@ const StandardLUCIDAC = new class  implements MBlockSetup {
                 return this.type2slot["Mul"] * this.clanes_per_slot + (port == "out" ? id : (2*id + (port == "b" ? 1 : 0)))
             default:
                 console.error(this)
-                throw new Error(`Physical ComputeElement type ${type} not available at StandardLUCIDAC`)
+                throw new Error(`Physical ComputeElement type ${el.typeName} not available at StandardLUCIDAC`)
         }
     }
 
@@ -436,17 +454,17 @@ const StandardLUCIDAC = new class  implements MBlockSetup {
         if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
             throw new Error(`Expecting 0 < clane < 16`)
 
-        let ret = <AssignedComputeElementPort> {
-            type: this.slot2type[slotlane],
-            id : slotlane,
-            port: (mblock_as=="Source") ? "out" : "in"
-        }
+        let ret = new AssignedComputeElementPort(
+            this.slot2type[slotlane] as ComputeElementName,
+            slotlane,
+            (mblock_as=="Source") ? "out" : "in"
+        )
 
-        if(ret.type == Mul && mblock_as=="Source" && ret.id > 4) {
+        if(ret.typeName == "Mul" && mblock_as=="Source" && ret.id > 4) {
             // Mul outputs currently can serve as constants.
-            ret.type = Const
+            ret.typeName = "Const"
         }
-        if(ret.type == Mul && mblock_as=="Sink") {
+        if(ret.typeName == "Mul" && mblock_as=="Sink") {
             ret.id = Math.floor(slotlane/2)
             ret.port = slotlane%2==0 ? "a" : "b"
         }
@@ -502,9 +520,9 @@ export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAl
     const candidates = routes.map(pr => {
         const source = 
             alt_signals && alt_signals.has_acl(alt_signals.clane2acl(pr.uin)) ?
-            new AssignedComputeElementPort(Extin, alt_signals.clane2acl(pr.uin), "Source") : (
+            new AssignedComputeElementPort("Extin", alt_signals.clane2acl(pr.uin), "Source") : (
                 (alt_signals && alt_signals.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane) ?
-                new AssignedComputeElementPort(Const, const_counter++, "Source") :
+                new AssignedComputeElementPort("Const", const_counter++, "Source") :
                 StandardLUCIDAC.clane2port(pr.uin, "Source")
             );
         const target = StandardLUCIDAC.clane2port(pr.iout, "Sink")
@@ -541,14 +559,17 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
     // First handle virtual elements which require certain lanes or cross lanes
     let pinned = strip_off_routing_errors(
         unrouted.filter(lr => lr.source.is_virtual || lr.target.is_virtual).map(lr => {
-        if(lr.source.type.is_virtual && (lr.source.type as VirtualComputeElement).direction == "Sink")
+        const source_type = lr.source.type()
+        const target_type = lr.target.type()
+
+        if(source_type.is_virtual && (source_type as VirtualComputeElement).direction == "Sink")
             return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a source since it is a Sink`, lr }
-        if(lr.target.type.is_virtual && (lr.target.type as VirtualComputeElement).direction == "Source")
+        if(target_type.is_virtual && (target_type as VirtualComputeElement).direction == "Source")
             return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a target since it is a Source`, lr }
-        if(lr.source.type.is_virtual && lr.target.type.is_virtual)
+        if(source_type.is_virtual && target_type.is_virtual)
             return <RoutingError> { msg: `Cannot connect two virtual elements ${lr.source} and ${lr.target}.`, lr }
 
-        if(lr.target.type == Daq || lr.target.type == Extout) {
+        if(target_type == Daq || target_type == Extout) {
             // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
 
             if(lr.coeff !== undefined && lr.coeff != 0 && lr.coeff != 1) {
@@ -556,7 +577,7 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
             }
 
             // target lane is fixed (pinned) by the sink
-            const lane = (lr.target.type as VirtualSink).available_lanes[lr.target.id]
+            const lane = (target_type as VirtualSink).available_lanes[lr.target.id]
             // source clane is determined by the physical element output
             const source_clane = StandardLUCIDAC.port2clane(lr.source)
             if(source_clane == "NotAssignable")
@@ -569,7 +590,7 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
                 cval: 0,
                 iout: undefined
             }
-        } else if(lr.source.type == Extin) {
+        } else if(source_type == Extin) {
             // ACL_IN can be fed at lanes 16..31.
             //const possible_lanes = valid_lane_range[lr.source.type] as span // only lanes where ACL_IN can feed in
 
@@ -588,7 +609,7 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
                 cval: lr.coeff,
                 iout
             }
-        } else if(lr.source.type == Const) {
+        } else if(source_type == Const) {
             // By choice, we always choose the alt_signal 8 to get the constant
             // on clane 7. We don't exploit the 4 const refs on the MMul block in order
             // to remain free in choice for future alternative M blocks.
