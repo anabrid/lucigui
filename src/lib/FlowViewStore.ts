@@ -43,7 +43,15 @@ export const logical2node = (l: AssignedComputeElement): CircuitNode => ({
  * 
  **/
 export type EdgeData = {
-  weight: number ///< Coefficient within the C block, float range [-20, +20]
+  /**
+   * Coefficient within the C block, float range [-20, +20].
+   * 
+   * The value "virtual" indicates that the edge is virtual and
+   * no coefficient is possible, for instance when connecting to a
+   * VirtualSink which is physically realized as M-Block output signal going
+   * to U-Block and then leaving the U-C-I matrix without passing the C-Block.
+   */
+  weight: number|"virtual"
 
   // this is encoded in the id:
   //lane: number, ///< Lane within the C block, int range [0..31]
@@ -52,12 +60,26 @@ export type CircuitEdge = svelteflow.Edge<EdgeData>
 
 let global_next_edge_counter = new UniqueCounter()
 
-const edge2logical = (e: CircuitEdge): LogicalRoute => ({
-  source: AssignedComputeElementPort.fromStringWithPort(e.source, e.sourceHandle),
-  target: AssignedComputeElementPort.fromStringWithPort(e.target, e.targetHandle),
-  coeff: e.data ? e.data.weight : undefined,
-  lane: LogicalLane.fromString(e.id) ?? undefined
-})
+const default_svelte_new_edge = /xy-edge__(?<source>[^-]+)-(?<target>[^-]+)/
+
+const edge2logical = (e: CircuitEdge): LogicalRoute => {
+  const r = default_svelte_new_edge.exec(e.id)
+  const coeff = e.data && e.data.weight != "virtual" ? e.data.weight : undefined
+  if(r?.groups) {
+    return {
+      source: AssignedComputeElementPort.fromStringWithPort(r.groups.source),
+      target: AssignedComputeElementPort.fromStringWithPort(r.groups.target),
+      coeff,
+      lane: undefined
+    }
+  }
+  return {
+    source: AssignedComputeElementPort.fromStringWithPort(e.source, e.sourceHandle),
+    target: AssignedComputeElementPort.fromStringWithPort(e.target, e.targetHandle),
+    coeff,
+    lane: LogicalLane.fromString(e.id) ?? undefined
+  }
+}
 
 const logical2edge = (l: LogicalRoute): CircuitEdge => ({
   id: LogicalLane.any().toString(),
@@ -65,7 +87,7 @@ const logical2edge = (l: LogicalRoute): CircuitEdge => ({
   target: l.target.toString(),
   sourceHandle: l.source.port,
   targetHandle: l.target.port,
-  data: { weight: l.coeff },
+  data: { weight: l.target.is_virtual ? "virtual" : l.coeff },
   type: "analog"
 })
 
@@ -74,7 +96,7 @@ type CircuitStore = { nodes: CircuitNode[], edges: CircuitEdge[] }
 /// Retrieves next free id in a list of nodes.
 /// This will always return an id, even if it is bigger then the number of clanes,
 /// as we argue in the logical compute element space which is of infinite size.
-export function next_free_logical_clane(nodes: CircuitNode[], type: LogicalComputingElementType): number {
+export function next_free_logical_clane(nodes: CircuitNode[], type: ComputeElement): number {
   const occupied_clanes = nodes.map(node2logical)
     .filter(lc => lc.type == type)
     .map(lc => lc.id)

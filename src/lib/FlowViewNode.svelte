@@ -9,6 +9,7 @@
     export let id: $$Props["id"];
     //export let data: $$Props["data"];
     export let isConnectable: $$Props["isConnectable"];
+    export let selected: $$Props["selected"]
 
     const logicalElement = AssignedComputeElement.fromString(id);
 
@@ -16,10 +17,16 @@
     const valid = true
 </script>
 
-<div class="node-container" class:invalid={!valid}>
+<div class="node-container" class:invalid={!valid} class:selected={selected}>
     <div class="node">
         <i>{ logicalElement.type.name }</i>
-        <sub>{ logicalElement.id }</sub>
+        <sub>
+            {#if selected}
+                <input bind:value={logicalElement.id}>
+            {:else}
+                {logicalElement.id}
+            {/if}
+        </sub>
     </div>
 
     {#if logicalElement.type.inputs.length == 2}
@@ -53,14 +60,21 @@
     {/if}
 </div>
 
-<style>
+<style type="scss">
     .node-container {
         padding: .4em;
         border-radius: 3px;
         text-align: center;
-        width: 4em;
         border: 1px solid #1a192b;
         background-color: white;
+
+        &.selected {
+            border-color: blue;
+        }
+    }
+
+    input {
+        width:2em
     }
 
     .invalid {

@@ -65,7 +65,10 @@
       class="edgeButtonContainer nodrag nopan"
       style:transform="translate(-50%, -50%) translate({labelX}px,{labelY}px)"
     >
+      <!-- undefined weight means this edge is virtual -->
+      {#if $weight != "virtual"}
       <input type="number" bind:value={$weight} style="width:3em" />
+      {/if}
       <button class="edgeButton" on:click={onEdgeClick}> × </button>
     </div>
   </EdgeLabelRenderer>

@@ -345,11 +345,22 @@ export class AssignedComputeElementPort extends AssignedComputeElement {
         super(type, id); this.port = port }
     
     toStringWithPort() : string { return `${this.type}${this.id}${this.port}` }
+    static strStructure = /(?<type>[a-zA-Z]+)(?<id>\d+)(?<port>[a-zA-Z]+)/;
 
-    static fromStringWithPort(base: string, port: string): AssignedComputeElementPort {
-        const r = AssignedComputeElement.fromString(base) as AssignedComputeElementPort
-        r.port = port
-        return r
+    static fromStringWithPort(base: string, port?: string): AssignedComputeElementPort {
+        if(port) {
+            const r = AssignedComputeElement.fromString(base) as AssignedComputeElementPort
+            r.port = port
+            return r
+        } else {
+            const g = this.strStructure.exec(base)
+            if(! g?.groups) { console.error(g,base); throw new TypeError("Invalid AssignedComputeElementPort identifier") }
+            return new AssignedComputeElementPort(
+                ComputeElement.fromString(g.groups.type),
+                Number(g.groups.id),
+                g.groups.port
+            )
+        }
     }
 
     direction() : InformationDirection|undefined {
@@ -403,7 +414,7 @@ const StandardLUCIDAC = new class  implements MBlockSetup {
     readonly num_slots = 8
 
     port2clane({type, id, port} : AssignedComputeElementPort) : number|"NotAssignable" {
-        if(type.is_virtual) throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
+        if(type.is_virtual) return "NotAssignable" // throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
         if(id < 0) throw new Error("Expecting id to be greater equal 0")
         switch (type.name) {
             case "Int":
@@ -519,7 +530,7 @@ export type PhysicalRouting = {
 /**Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place" */
 export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
     let alt_signals = new UBlockAltSignals()
-    let errors : RoutingError[]
+    let errors : RoutingError[] = []
     const strip_off_routing_errors = (lst : PhysicalRouteOrError[]) =>
         lst.filter(roe => {
             if(is_routing_error(roe)) errors.push(roe)
@@ -528,7 +539,8 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
     const lane = (pr : PhysicalRoute) => pr.lane // handy shorthand in .map(lane)
 
     // First handle virtual elements which require certain lanes or cross lanes
-    let pinned = strip_off_routing_errors(unrouted.filter(lr => !is_non_virtual(lr)).map(lr => {
+    let pinned = strip_off_routing_errors(
+        unrouted.filter(lr => lr.source.is_virtual || lr.target.is_virtual).map(lr => {
         if(lr.source.type.is_virtual && (lr.source.type as VirtualComputeElement).direction == "Sink")
             return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a source since it is a Sink`, lr }
         if(lr.target.type.is_virtual && (lr.target.type as VirtualComputeElement).direction == "Source")
@@ -539,8 +551,8 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
         if(lr.target.type == Daq || lr.target.type == Extout) {
             // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
 
-            if(lr.coeff) {
-                throw new Error(`Expecting virtual sinks (routing target) without coefficient: ${lr}`)
+            if(lr.coeff !== undefined && lr.coeff != 0 && lr.coeff != 1) {
+                throw new Error(`Expecting virtual sinks (routing target) without non-trivial coefficient: ${lr}`)
             }
 
             // target lane is fixed (pinned) by the sink

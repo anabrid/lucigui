@@ -25,6 +25,9 @@ export let requires_reboot : boolean = false;
             different watch handlers have to be applied by svelte.
         -->
         <input {... {type}} bind:value />
+        <!--
+            TODO: Should instead make a switch here for types.render
+        -->
     </div>
     <p class="help"><slot><!-- help messages can be passed here --></slot></p>
 </div>

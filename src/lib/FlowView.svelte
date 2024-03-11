@@ -81,11 +81,13 @@
       throw new Error("onConnect: Cannot find the edge")
     }
 
+    const target_is_virtual = AssignedComputeElement.fromString($edges[eidx].target).is_virtual()
+
     // Find next free lane
     const new_lane = next_free_logical_lane($edges)
     $edges[eidx].id = new LogicalLane(new_lane).toString()
     $edges[eidx].label = `${$edges[eidx].id} (connected)` // Currently only debugging
-    $edges[eidx].data ||= { weight: 1.0 }
+    $edges[eidx].data ||= { weight: target_is_virtual ? "virtual" : 1.0 }
     $edges[eidx].type = "analog"
 
     console.info("onConnect: Successfully updated", connection, eidx, $edges)
