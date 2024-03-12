@@ -1,8 +1,8 @@
 <script lang="ts">
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
 
-    import { Mname, AssignedComputeElement } from "./HybridController";
-    import { node2logical } from './FlowViewStore.ts'
+    import { Mname, AssignedComputeElement } from "@/lib/HybridController";
+    import { node2logical } from './Store'
 
     type $$Props = NodeProps;
 

@@ -10,8 +10,8 @@
     //import { query } from './HybridController.js'
     //const entities_promise = query("get_config")
 
-    import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores.ts";
-    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, Mname } from "./HybridController.ts";
+    import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "@/lib/HybridControllerStores";
+    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, Mname } from "@/lib/HybridController";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.

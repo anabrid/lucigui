@@ -11,13 +11,13 @@
 
   import "@xyflow/svelte/dist/style.css";
 
-  import Sidebar from "./FlowViewSidebar.svelte";
-  import AnalogNode from './FlowViewNode.svelte'
-  import PotiEdge from './FlowViewEdge.svelte'
+  import Sidebar from "./Sidebar.svelte";
+  import AnalogNode from './Node.svelte'
+  import PotiEdge from './Edge.svelte'
 
-  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from './HybridController.ts'
-  import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "./HybridControllerStores.ts";
-  import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './FlowViewStore.ts'
+  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from '@/lib/HybridController'
+  import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "@/lib/HybridControllerStores";
+  import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './Store'
 
   // have to be declared in node as 'type':'analog'
   const nodeTypes = {

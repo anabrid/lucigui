@@ -1,7 +1,7 @@
 <script>
-  import Status from '../lib/Status.svelte'
-  import DeviceTree from '../lib/DeviceTree.svelte'
-  import BlockView from '../lib/BlockView.svelte'
+  import Status from '@/lib/Status.svelte'
+  import DeviceTree from '@/views/DeviceTree.svelte'
+  import BlockView from '@/views/BlockView.svelte'
   import {fade} from 'svelte/transition'
 
   import { endpoint, endpoint_reachable } from '../lib/HybridControllerStores'

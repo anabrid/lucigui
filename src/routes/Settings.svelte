@@ -1,8 +1,8 @@
 <script>
     import { fade } from "svelte/transition";
-    import SettingsNode from "../lib/SettingsNode.svelte";
+    import SettingsNode from "@/views/SettingsNode.svelte";
     const Setting = SettingsNode; // alias
-    import { settings } from "../lib/HybridControllerStores";
+    import { settings } from "@/lib/HybridControllerStores";
 </script>
 
 <main in:fade={{ duration: 100 }}>

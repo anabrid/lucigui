@@ -8,8 +8,8 @@
       useEdges
     } from '@xyflow/svelte';
 
-    import { type EdgeData } from './FlowViewStore.ts'
-    import { LogicalLane } from './HybridController.ts'
+    import { type EdgeData } from './Store'
+    import { LogicalLane } from '@/lib/HybridController'
     import writableDerived from 'svelte-writable-derived';
   
     type $$Props = EdgeProps;

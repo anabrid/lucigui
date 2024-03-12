@@ -1,10 +1,10 @@
 import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
   type LogicalRoute, UniqueCounter,
-  range, next_free, tryOr } from './HybridController.ts'
-import { config, routes } from './HybridControllerStores.ts'
+  range, next_free, tryOr } from '@/lib/HybridController'
+import { config, routes } from '@/lib/HybridControllerStores'
 
 import { type Writable } from 'svelte/store'
-import svelteflow from '@xyflow/svelte'
+import { type Node, type Edge } from '@xyflow/svelte'
 
 
 // 3rd party: https://www.npmjs.com/package/svelte-writable-derived
@@ -16,7 +16,7 @@ import { writableDerived, propertyStore } from 'svelte-writable-derived'
  * string. This way, no aux data is required and thus NodeData={}.
  */
 export type NodeData = null
-export type CircuitNode = svelteflow.Node<NodeData, "analog">
+export type CircuitNode = Node<NodeData, "analog">
 
 const default_position = { x: 0, y: 0 }
 
@@ -56,7 +56,7 @@ export type EdgeData = {
   // this is encoded in the id:
   //lane: number, ///< Lane within the C block, int range [0..31]
 }
-export type CircuitEdge = svelteflow.Edge<EdgeData>
+export type CircuitEdge = Edge<EdgeData>
 
 let global_next_edge_counter = new UniqueCounter()
 

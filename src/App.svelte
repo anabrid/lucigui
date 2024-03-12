@@ -3,7 +3,7 @@
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
 
-  import { endpoint, endpoint_reachable } from "./lib/HybridControllerStores.ts";
+  import { endpoint, endpoint_reachable } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from "./routes/Home.svelte";

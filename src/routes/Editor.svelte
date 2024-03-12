@@ -1,17 +1,13 @@
 <script>
    import {fade} from 'svelte/transition'
 
-   import MultiView from '../lib/MultiView.svelte'
+   import BlockView from '@/views/BlockView.svelte'
+   import DeviceTree from '@/views/DeviceTree.svelte'
+   import FlowView from '@/views/SvelteFlowView/Provider.svelte';
+   import DebugView from '@/views/DebugView.svelte';
 
-   import BlockView from '../lib/BlockView.svelte'
-   import DeviceTree from '../lib/DeviceTree.svelte'
-   import FlowView from '../lib/FlowView.svelte';
-   import DebugView from '../lib/DebugView.svelte';
-
-   import { SvelteFlowProvider } from '@xyflow/svelte';
-
-   import { routes, physical_routes } from '../lib/HybridControllerStores'
-   import { edges, nodes, circuit } from '../lib/FlowViewStore.ts'
+   import { routes, physical_routes } from '@/lib/HybridControllerStores'
+   import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
 
    let show_flow = true
    let show_matrix = false
@@ -56,9 +52,7 @@
 
         {#if show_flow}
         <div class="flow">
-            <SvelteFlowProvider>
-                <FlowView />
-            </SvelteFlowProvider>
+            <FlowView/>
         </div>
         {/if}
 

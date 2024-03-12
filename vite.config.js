@@ -54,6 +54,11 @@ export default defineConfig({
     }
   
   ],
+  resolve: {
+    alias: {
+      '@': "/src"
+    }
+  },
   define: {
     globals
   }

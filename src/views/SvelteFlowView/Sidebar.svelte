@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type ComputeElementName, ComputeElement } from './HybridController.ts'
+    import { type ComputeElementName, ComputeElement } from '@/lib/HybridController'
 
 
 

@@ -3,7 +3,7 @@ import { readable, writable, get, derived, type Writable } from 'svelte/store';
 
 import { HybridController, type OutputCentricConfig, type LogicalRoute, 
     type ReducedConfig, type PhysicalRouting, 
-    logical2physical} from './HybridController.ts'
+    logical2physical} from './HybridController'
 import default_messages from './default_messages.json'
 import writableDerived from 'svelte-writable-derived';
 
