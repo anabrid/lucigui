@@ -1,3 +1,12 @@
+// Copyright (c) 2024 anabrid GmbH
+// Contact: https://www.anabrid.com/licensing/
+// SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+
+/**
+ * @file Stores suitable for svelteflow, derived from the central stores.
+ *
+ */
+
 import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
   type LogicalRoute, UniqueCounter,
   range, next_free, tryOr } from '@/lib/HybridController'

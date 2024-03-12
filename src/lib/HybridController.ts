@@ -1,4 +1,10 @@
+// Copyright (c) 2024 anabrid GmbH
+// Contact: https://www.anabrid.com/licensing/
+// SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+
 /**
+ * @file The LUCIDAC Hybrid Controller, Typescript implementation
+ * 
  * A lean and mean minimal asynchronous LUCIDAC HybridController client
  * library in modern ECMAScript.
  * 

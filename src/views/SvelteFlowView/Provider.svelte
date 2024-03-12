@@ -1,4 +1,10 @@
 <!--
+Copyright (c) 2024 anabrid GmbH
+Contact: https://www.anabrid.com/licensing/
+SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+-->
+
+<!--
  SvelteFlow requires a global "wrapper" around the "main"
  element <SvelteFlow/> in order to work. Therfore this component
  is the right one to import in order to disentangle any parent

@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2024 anabrid GmbH
+Contact: https://www.anabrid.com/licensing/
+SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+-->
 <script context="module">
   // HTML ids must be unique. Iff multiple instances of this component are embedded,
   // ensure that they remain unique with the htmlid_prefix.

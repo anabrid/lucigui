@@ -1,3 +1,11 @@
+// Copyright (c) 2024 anabrid GmbH
+// Contact: https://www.anabrid.com/licensing/
+// SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+
+/**
+ * @file Svelte stores to access the Hybrid Controller states
+ */
+
 import { onMount } from 'svelte';
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
 

@@ -1,8 +1,19 @@
 {
   "name": "lucidac-gui",
-  "private": true,
-  "version": "0.0.1",
+  "description": "Browser based (SPA) configuration and programming utility for LUCIDAC",
+  "private": false,
+  "version": "0.0.2",
   "type": "module",
+  "license": "(MIT OR GPL-2.0-or-later)",
+  "author": {
+    "name": "Anabrid GmbH",
+    "email": "hello@anabrid.com",
+    "url": "https://anabrid.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://lab.analogparadigm.com/lucidac/software/lucidac-gui"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -15,6 +26,7 @@
     "sass": "^1.70.0",
     "svelte": "^4.2.10",
     "svelte-check": "^3.6.6",
+    "svelte-writable-derived": "^3.1.0",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^5.1.0"
@@ -26,7 +38,6 @@
     "font-awesome": "^4.7.0",
     "lodash": "^4.17.21",
     "svelte-spa-router": "^4.0.1",
-    "svelte-writable-derived": "^3.1.0",
     "uuid": "^9.0.1"
   }
 }

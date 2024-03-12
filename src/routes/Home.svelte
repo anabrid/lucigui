@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2024 anabrid GmbH
+Contact: https://www.anabrid.com/licensing/
+SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+-->
 <script>
   import Status from '@/lib/Status.svelte'
   import DeviceTree from '@/views/DeviceTree.svelte'
