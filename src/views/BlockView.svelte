@@ -8,11 +8,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // ensure that they remain unique with the htmlid_prefix.
   let component_instance_counter = 0;
 </script>
-<script>
+<script lang="ts">
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
     import { cluster_config, status, onmount_fetch_config } from "@/lib/HybridControllerStores";
-    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, Mname } from "@/lib/HybridController";
+    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/lib/HybridController";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.
@@ -48,6 +48,18 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     })
     */
 
+  const shortTypes = { "Int": "I", "Mul": "M", "Const": "C" }
+  const Mname = (clane:number, mblock_as:InformationDirection)  => {
+    const e = StandardLUCIDAC.clane2port(clane, mblock_as)
+    const shortTypeName = e.typeName in shortTypes ? shortTypes[e.typeName] : e.typeName
+    const interestingInOut =  !(e.port == "in" || e.port == "out")
+    return { shortTypeName, interestingInOut, port: e.port, id: e.id }
+    /*if(interestingInOut)
+      return `<math><mo>${shortTypeName}</mo><><sup>${e.port}</sup><sub>${e.id}</sub></span>`
+    else
+      return `<i>${shortTypeName}</i><sub>${e.id}</sub>`*/
+  }
+
 </script>
 
 <div class="entities">
@@ -62,6 +74,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
           {#each "uci" as uci}
             {#if uci == "u" || uci == "i"}
               {#each xrange(ncrosslanes) as clane}
+                {@const label = Mname(clane, uci == "u" ? "Source" : "Sink") }
                 <td>
                   <!--
                     Hack to enable uncheckable radio buttons: In case it is selected,
@@ -84,9 +97,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     value={clane}
                   />
                   {/if}
-                  <label for="{htmlid_prefix}_{uci}_{lane}_{clane}"
-                    >{@html Mname(clane)}</label
-                  >
+                  <label for="{htmlid_prefix}_{uci}_{lane}_{clane}"><!--
+                    requires no whitespace
+                    --><i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>
+                  </label>
+                    <!--{@html Mname(clane, uci == "u" ? "Source" : "Sink")}-->
                 </td>
               {/each}
             {:else}
@@ -125,10 +140,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     color: #fff;
     width: 1.3em;
     height: 1.3em;
+    position: relative;
 
     &:hover {
       background-color: #c0d8ff;
       color: #aaa;
+    }
+
+    sup {
+      position: absolute;
+      left: 1.1em;
+      top: -.4em;
     }
   }
 

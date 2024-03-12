@@ -48,9 +48,6 @@ export function enumerate<T>(ary:T[]) : Array<[T,number]> { return ary.map((x,id
 export const duplicates = (array) => array.filter((e, i, a) => a.indexOf(e) !== i)
 const union = array.union // lodash
 
-// map crosslanes into their input meaning
-export const Mname = (clane) => (clane < 8) ? `<i>I</i><sub>${clane}</sub>` : `<i>M</i><sub>${clane - 8}</sub>`
-
 export class UniqueCounter {
     count: number;
     constructor(init = 0) { this.count = init }
@@ -203,7 +200,7 @@ export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
 /** Compute physical routes from UCI matrix. Inverse of routes2matrix; a SoA2AoS conversion. */
 export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
     zip(matrix.u, matrix.i, matrix.c)
-    .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
+    .map(([uin,iout,cval],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
     .filter(r => r.cval && r.cval != 0);
 
 
@@ -212,7 +209,7 @@ export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
 // export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
 /** The information direction indicates an output (source) or an input (sink) */
-type InformationDirection = "Sink"|"Source"
+export type InformationDirection = "Sink"|"Source"
 
 /*
 type targetMap = { [id: LogicalComputeElement]: InformationDirection }
@@ -434,7 +431,7 @@ interface MBlockSetup {
  * However, other setups are possible in LUCIDAC such as two MIntBlocks,
  * and require this class to be modified accordingly.
  **/
-const StandardLUCIDAC = new class  implements MBlockSetup {
+export const StandardLUCIDAC = new class  implements MBlockSetup {
     readonly type2slot = { "Mul": 0, "Int": 1 }
     readonly slot2type = array.invert(this.type2slot)
 
@@ -463,11 +460,10 @@ const StandardLUCIDAC = new class  implements MBlockSetup {
 
     clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort {
         const slotlane = clane % this.clanes_per_slot // going from [0,7]
-        const slot = clane > this.num_slots ? 1 : 0
+        const slot = clane >= this.num_slots ? 1 : 0
         if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
             throw new Error(`Expecting 0 < clane < 16`)
 
-        console.info("clane2port with ", clane, mblock_as, slotlane)
         let ret = new AssignedComputeElementPort(
             this.slot2type[slot] as ComputeElementName,
             slotlane,

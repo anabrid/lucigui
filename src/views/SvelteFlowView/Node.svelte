@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
 
-    import { Mname, AssignedComputeElement } from "@/lib/HybridController";
+    import { AssignedComputeElement } from "@/lib/HybridController";
     import { node2logical } from './Store'
 
     type $$Props = NodeProps;
