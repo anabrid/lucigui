@@ -8,14 +8,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // ensure that they remain unique with the htmlid_prefix.
   let component_instance_counter = 0;
 </script>
-
 <script>
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
-    //import { query } from './HybridController.js'
-    //const entities_promise = query("get_config")
-
-    import { cluster, status, config, config_loaded, hc, onmount_fetch_config } from "@/lib/HybridControllerStores";
+    import { cluster_config, status, onmount_fetch_config } from "@/lib/HybridControllerStores";
     import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, Mname } from "@/lib/HybridController";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
@@ -26,6 +22,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     //export const default_matrix = { "u": times(nlanes, []), "c":times(nlanes, 0), "i":times(nlanes, []) }
     //export let matrix = clone(default_matrix)
 
+    // NOTE: The following code maps between OutputCentric Config and ClusterConfig.
+    //       It is deprecated and in future only neccessary at hardware upload.
+    /*
     function cluster2config($cluster) { 
       if(!$config_loaded) return;
       $config = reduced2output($cluster)
@@ -40,23 +39,26 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $: cluster2config($cluster)
     $: config2cluster($config)
 
+
     const empty = (yourObject) => Object.keys(yourObject).length==0
 
     onmount_fetch_config( (config) => {
       config2cluster(config);
 //      prev = clone($cluster)
     })
-
+    */
 
 </script>
 
 <div class="entities">
+  <!--
   {#if !$config_loaded}
     <p>Attention, working with defaults, will be overwritten when loading from server</p>
   {/if}
+  -->
     <table>
       {#each xrange(nlanes) as lane}
-        <tr class:active={$cluster.c[lane] != 0}>
+        <tr class:active={$cluster_config.c[lane] != 0}>
           {#each "uci" as uci}
             {#if uci == "u" || uci == "i"}
               {#each xrange(ncrosslanes) as clane}
@@ -66,10 +68,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     replace it with a checkbox which is uncheckable. Thanks to CSS
                     they are styled the same way.
                   -->
-                  {#if $cluster[uci][lane] == clane}
+                  {#if $cluster_config[uci][lane] == clane}
                   <input
                     type="checkbox"
-                    on:click={ $cluster[uci][lane] = null }
+                    on:click={ $cluster_config[uci][lane] = undefined }
                     id="{htmlid_prefix}_{uci}_{lane}_{clane}"
                     checked
                     >
@@ -77,7 +79,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                   <input
                     type="radio"
                     name="{uci}_lane_{lane}"
-                    bind:group={$cluster[uci][lane]}
+                    bind:group={$cluster_config[uci][lane]}
                     id="{htmlid_prefix}_{uci}_{lane}_{clane}"
                     value={clane}
                   />
@@ -92,7 +94,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 ><input
                   type="number"
                   id="c_{lane}"
-                  bind:value={$cluster[uci][lane]}
+                  bind:value={$cluster_config[uci][lane]}
                   min="-20"
                   max="20"
                 /></td

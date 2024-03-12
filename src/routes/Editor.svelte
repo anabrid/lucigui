@@ -11,11 +11,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import FlowView from '@/views/SvelteFlowView/Provider.svelte';
    import DebugView from '@/views/DebugView.svelte';
 
-   import { routes, physical_routes } from '@/lib/HybridControllerStores'
+   import { logical_routes, physical_routes } from '@/lib/HybridControllerStores'
    import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
 
    let show_flow = true
-   let show_matrix = false
+   let show_matrix = true
    let show_code = false
    let show_tree = false
 
@@ -61,6 +61,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         </div>
         {/if}
 
+        {#if show_matrix}
+        <div class="matrix">
+            <h2>Physical Matrix</h2>
+            <BlockView/>
+        </div>
+        {/if}
+
         {#if show_debug_graph}
         <div class="debug">
             <h2>Edges</h2>
@@ -75,7 +82,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         {#if show_debug_logical}
         <div class="debug">
             <h2>Logical Routes</h2>
-            <DebugView bind:view={$routes} />
+            <DebugView bind:view={$logical_routes} />
         </div>
         {/if}
 

@@ -71,6 +71,7 @@ type MIntConfig = Array<{ "ic": number, "k": number }>  /* fixed size: 8 */
 
 /** Auxiliary Internal Configuration for an U-Block */
 class UBlockAltSignals {
+    // TODO: Why can signals be null?
     signals: Array<boolean> | null /* fixed size 9 */
     constructor() { this.signals = times(9, false) }
     
@@ -79,14 +80,14 @@ class UBlockAltSignals {
         if(acl_idx < 0 || acl_idx > 7) throw new TypeError(`Expected Extin ACL index in [0,7] but got ${acl_idx}.`)
         this.signals[acl_idx] = enable
     }
-    has_acl = (acl_idx:number) => this.signals[acl_idx]
+    has_acl = (acl_idx?:number) => acl_idx ? this.signals[acl_idx] : false
 
     acl2clane = (acl_idx:number) => acl_idx + 8 // ACL_IN[idx] is on clane idx+8
-    clane2acl = (clane:number) => clane - 8
+    clane2acl = (clane:number) => clane>8 ? (clane - 8) : undefined
 
     /// Enable or disable the constant input on clane 7
     set_alt_signal_ref_half = (enable:boolean=true) => this.signals[8] = enable
-    has_alt_signal_ref_halt = () => this.signals[8]
+    has_alt_signal_ref_halt = () => this.signals && this.signals[8]
 
     static ref_halt_clane = 7 // ref halt is on clane 7
 }
@@ -99,19 +100,25 @@ class UBlockAltSignals {
  * @todo: rename u/c/i to U/C/I
  */
 export interface ReducedConfig {
-    "u": Array<number>, /* 32 numbers where each is in range [0,15] and defines the input crosslane for the given output lane */
-    "c": Array<number>, /* 32 coefficients in value [-20,+20] */
-    "i": Array<number>, /* 32 numbers where each is in range [0,15] and defines the output crosslane for the given input lane */
+    "u": Array<number|undefined>, /* 32 numbers where each is in range [0,15] and defines the input crosslane for the given output lane */
+    "c": Array<number|undefined>, /* 32 coefficients in value [-20,+20] */
+    "i": Array<number|undefined>, /* 32 numbers where each is in range [0,15] and defines the output crosslane for the given input lane */
 }
 
 /**
  * This representation is used internally in the HybridController javascript library
  * and closely resembles the part ["config"]["/0"] in the OutputCentricConfig.
  **/
-type ClusterConfig = ReducedConfig & {
+export type ClusterConfig = ReducedConfig & {
     MInt: MIntConfig,
     Ualt: UBlockAltSignals
 }
+
+export const default_empty_cluster_config = () : ClusterConfig => ({
+    u: [], c: [], i: [],
+    MInt: times(8, { ic: 0, k: 1000 }),
+    Ualt: new UBlockAltSignals()
+})
 
 /**
  * This is the type returned by HybridController.get_config() and also suitable for HybridController.set_config().
@@ -197,7 +204,7 @@ export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
 export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
     zip(matrix.u, matrix.i, matrix.c)
     .map(([uin,cval,iout],lane)=>({lane, uin, cval, iout} as PhysicalRoute))
-    .filter(r => r.cval != 0);
+    .filter(r => r.cval && r.cval != 0);
 
 
 /// Basically a type enum covering the supported logical compute elements in this code
@@ -456,11 +463,13 @@ const StandardLUCIDAC = new class  implements MBlockSetup {
 
     clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort {
         const slotlane = clane % this.clanes_per_slot // going from [0,7]
+        const slot = clane > this.num_slots ? 1 : 0
         if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
             throw new Error(`Expecting 0 < clane < 16`)
 
+        console.info("clane2port with ", clane, mblock_as, slotlane)
         let ret = new AssignedComputeElementPort(
-            this.slot2type[slotlane] as ComputeElementName,
+            this.slot2type[slot] as ComputeElementName,
             slotlane,
             (mblock_as=="Source") ? "out" : "in"
         )
@@ -503,11 +512,17 @@ export class LogicalLane {
 
 /**
  * This is a logical route, i.e. a connection between two logical computing elements.
+ * 
+ * Normally, logical routes are mapped onto Physical Routes. This requires @field coeff
+ * to be set with some reasonable lane weight. Logical routes can also connect to a
+ * virtual sink out of U block, avoiding the C block. In this case, @field coeff and
+ * @field lane shall be undefined. @field lane can also be undefined if there is no
+ * particular whish for a physical lane.
  */
 export type LogicalRoute = {
     source: AssignedComputeElementPort,
     target: AssignedComputeElementPort,
-    coeff: number, ///< coefficient weight on the lane
+    coeff?: number, ///< coefficient weight on the lane
     lane?: LogicalLane ///< lane id
 }
 
@@ -523,13 +538,13 @@ const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() &&
 export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAltSignals) : LogicalRoute[] => {
     let const_counter = 0
     const candidates = routes.map(pr => {
-        const source = 
-            alt_signals && alt_signals.has_acl(alt_signals.clane2acl(pr.uin)) ?
-            new AssignedComputeElementPort("Extin", alt_signals.clane2acl(pr.uin), "Source") : (
-                (alt_signals && alt_signals.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane) ?
-                new AssignedComputeElementPort("Const", const_counter++, "Source") :
-                StandardLUCIDAC.clane2port(pr.uin, "Source")
-            );
+        let source = null
+        if(alt_signals?.has_acl(alt_signals.clane2acl(pr.uin)))
+            source = new AssignedComputeElementPort("Extin", alt_signals.clane2acl(pr.uin) as number, "Source")
+        else if(alt_signals?.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane)
+            source = new AssignedComputeElementPort("Const", const_counter++, "Source")
+        else
+            source = StandardLUCIDAC.clane2port(pr.uin, "Source")
         const target = StandardLUCIDAC.clane2port(pr.iout, "Sink")
         return {
             source, target,
@@ -669,9 +684,15 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
 }
 
 /** Converts a PhysicalRouting to a ClusterConfig, ignoring any routing.errors */
-const routing2config = (routing: PhysicalRouting, mint: MIntConfig) : ClusterConfig => ({
+export const routing2config = (routing: PhysicalRouting, mint: MIntConfig) : ClusterConfig => ({
     ...routes2matrix(routing.routes),
     ...{ MInt: mint, Ualt: routing.alt_signals }
+})
+
+export const config2routing = (conf: ClusterConfig) : PhysicalRouting => ({
+    routes: matrix2routes(conf),
+    errors: [],
+    alt_signals: conf.Ualt
 })
 
 
@@ -685,7 +706,7 @@ const routing2config = (routing: PhysicalRouting, mint: MIntConfig) : ClusterCon
  **/
 export class HybridController {
     endpoint: URL;
-    mac: string = null; ///< Mac address, determined by get_entities()
+    mac?: string = null; ///< Mac address, determined by get_entities()
 
     /*
     constructor(endpoint?: URL) {

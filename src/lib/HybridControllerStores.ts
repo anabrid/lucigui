@@ -9,9 +9,14 @@
 import { onMount } from 'svelte';
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
 
-import { HybridController, type OutputCentricConfig, type LogicalRoute, 
-    type ReducedConfig, type PhysicalRouting, 
-    logical2physical} from './HybridController'
+import {
+    HybridController, type OutputCentricConfig, type LogicalRoute,
+    type ReducedConfig, type PhysicalRouting,
+    type ClusterConfig, default_empty_cluster_config,
+    config2routing, routing2config,
+    logical2physical,
+    physical2logical
+} from './HybridController'
 import default_messages from './default_messages.json'
 import writableDerived from 'svelte-writable-derived';
 
@@ -57,6 +62,10 @@ export function onmount_fetch_status() {
     })
 }
 
+// TODO: Do not expose this as store.
+//       Or make it as a derived store of cluster_config.
+// TODO: Rename it to something like output_config or lucidac_config.
+
 // basically get_config() and set_config() in OutputCentricFormat format
 export const config_loaded = writable(false)
 export const config = writable<OutputCentricConfig>(default_messages.get_config)
@@ -77,23 +86,48 @@ export function onmount_fetch_config(callback = null) {
 // this would work but the derived store is not writable.
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))
 
-// config in ReducedConfig Format
-export const cluster = writable<ReducedConfig>({ u: [], c: [], i: [] })
+/**
+ * Base store for the UCI configuration in ClusterConfig format (includes ReducedConfig
+ * for UCI matrix).
+ * 
+ * We use this representation of LUCIDAC configuration as the base in the overall
+ * client application and convert to upstream OutputCentricConfig only on request
+ * (i.e. when writing to the hardware).
+ * 
+ * This also means this configuration is the root in the hierarchy of derived stores
+ * in this Svelte application.
+ **/
+export const cluster_config = writable<ClusterConfig>(default_empty_cluster_config())
+
+/**
+ * Lane-picture representation of the configuration, derived from matrix picture.
+ * 
+ * Note how the mapping from physical lanes to matrix misses routing errors which
+ * itself appeared as part of the mapping from LogicalRoute[]. However, this store
+ * has not type PhysicalRoute[] as it would still require to provide the alt_signals
+ * which result in the compilation process.
+ **/
+export const physical_routes = writableDerived<Writable<ClusterConfig>, PhysicalRouting>(
+    /* origins  */ cluster_config,
+    /* derive   */ config2routing,
+    /* reflect  */(reflecting: PhysicalRouting, old: ClusterConfig) => routing2config(reflecting, old.MInt)
+)
+// export const physical_routes = derived(routes, lrs => logical2physical(lrs))
+
+/**
+ * Unrouted Logical Connection picture representation.
+ * 
+ * The reflection step is the compilation or pick&place assignment.
+ * Given the small size of the LUCIDAC, this can be computed many times a second.
+ **/
+export const logical_routes = writableDerived<Writable<PhysicalRouting>, LogicalRoute[]>(
+    /* origins */ physical_routes,
+    /* derive  */ (physical: PhysicalRouting) => physical2logical(physical.routes, physical.alt_signals),
+    /* reflect */ logical2physical
+)
+// export const logical_routes = writable<LogicalRoute[]>([])
 
 
-export const routes = writable<LogicalRoute[]>([])
-
-//export const routes = writableDerived<Writable<ReducedConfig[]>, LogicalRoute[]>(
-    ///* base    */ cluster,
-    ///* derive  */ matrix2routes,
-    ///* reflect */ routes2matrix,
-    ///* default */ null
-  //)
-
-// two way data binding: https://stackoverflow.com/a/72418699
-
-// physical routes
-export const physical_routes = derived(routes, lrs => logical2physical(lrs))
 
 
 

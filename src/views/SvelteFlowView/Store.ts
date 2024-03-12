@@ -10,7 +10,7 @@
 import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
   type LogicalRoute, UniqueCounter,
   range, next_free, tryOr } from '@/lib/HybridController'
-import { config, routes } from '@/lib/HybridControllerStores'
+import { config, logical_routes } from '@/lib/HybridControllerStores'
 
 import { type Writable } from 'svelte/store'
 import { type Node, type Edge } from '@xyflow/svelte'
@@ -127,7 +127,7 @@ export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore): Circu
     const existing_nodes = new Set(prev_nodes.map(n => n.id))
 
     const new_nodes = routes.filter(r => r.coeff > 0)
-      .flatMap((/*element*/logical_route, /*idx*/lane) => {
+      .flatMap((/*element*/logical_route, /*idx*/_lane) => {
         const source_str = logical_route.source.toString()
         const target_str = logical_route.target.toString()
         return [
@@ -157,11 +157,31 @@ function graph2lucidac(graph: CircuitStore): LogicalRoute[] {
   return routes
 }
 
+
+export default function writableDerived<S extends Stores, T>(
+  origins: S,
+  derive: (values: StoresValues<S>) => T,
+  reflect: (reflecting: T, old: StoresValues<S>) => SetValues<S>,
+  initial?: T
+): Writable<T>;
+
+export default function writableDerived<S extends Stores, T>(
+  origins: S,
+  derive: (values: StoresValues<S>, set: (value: T) => void, update: Updater<T>) => void,
+  reflect: (reflecting: T, old: StoresValues<S>) => SetValues<S>,
+  initial?: T
+): Writable<T>;
+
+
+/**
+ * The svelteflow circuit store, storing edges and routes suitable for svelteflow.
+ * It is derived from the LogicalRoute store and can write back thanks to the
+ * mappings defined in this file.
+ */
 export const circuit = writableDerived<Writable<LogicalRoute[]>, CircuitStore>(
-  /* base    */ routes,
-  /* derive  */(base, set, update) => update(cur_derived => lucidac2graph(base, cur_derived)),
+  /* base    */ logical_routes,
+  /* derive  */ (base, _set, update) => update(cur_derived => lucidac2graph(base, cur_derived)),
   /* reflect */ graph2lucidac,
-  /* default */ null
 )
 
 // stores to be used by SvelteFlow
