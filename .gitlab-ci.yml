@@ -1,7 +1,15 @@
 image: node:16.5.0
 
-build_static_assets:
-  stage: build
+stages:
+  - install
+  - build
+  - deploy
+
+variables:
+  SOURCEMAP_BASE_URL: https://lucidac-gui.anabrid.dev/main/
+
+install_packages:
+  stage: install
   cache:
     key:
       files:
@@ -10,11 +18,31 @@ build_static_assets:
     paths:
       - node_modules/
   script:
-    - npm install
-    - npm run build
-    - cp -a dist/. public/
+    - npm install  
+
+build_headless:
+  stage: build
+  script:
+    - HEADLESS_BUILD=true npm run build
   artifacts:
     paths:
-      - public
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      - dist
+
+build_for_teensy:
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+
+upload_headless_to_webserver:
+  stage: deploy
+  image: svenk/latex
+  needs:
+    - build_headless
+  script:
+    - chmod 600 "$SSH_PRIVATE_KEY_FILE_STAGING"
+    - echo "ai.svenk.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBE2YTwpWWq4ceRXHbCFHlw5kmRVLQjKbdYeFAAyYUDXFRhCjRknE6DKlGIIciKOqzAMiFGz5/vxb6tKMCKBeFU0=" > ~/userknown.txt
+    - echo -e "cd anabrid.dev/lucidac-gui/main/\nput -R dist/*" | sftp -o "UserKnownHostsFile=~/userknown.txt" -i"$SSH_PRIVATE_KEY_FILE_STAGING" $DEPLOY_STAGING_SSH_HOST
+
