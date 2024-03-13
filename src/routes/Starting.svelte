@@ -21,7 +21,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
        <ul>
             <li>Python, extensive reference implementation: <em>pybrid</em></li>
             <li>Minimal Python: <em>shcpy</em></li>
-            <li>Julia: <em>REDACProtocol.jl</em>, <em>AnabridREDAC.jl</em>></li>
+            <li>Julia: <em>REDACProtocol.jl</em>, <em>AnabridREDAC.jl</em></li>
             <li>C++: <em>tcredac</em>, <em>lucism</em>, etc. </li>
             <li>Typescript/Javascript/ECMAScript: <em>HybridController.ts</em></li>
         </ul>

@@ -22,3 +22,5 @@ export function toggle(initState: boolean ){
     const toggle = () => update(s => !s)
     return {subscribe, toggle}
 }
+
+export const slugify = (text) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
