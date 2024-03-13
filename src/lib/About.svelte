@@ -1,17 +1,27 @@
+<!--
+ This component represents an "About" panel as a modal.
+ It can be opened by other components by importing something like
+
+    import { info_modal_open } from '@/lib/About.svelte'
+    info_modal_open.toggle()  or
+    <a on:click={info_modal_open.toggle}>open about panel</a>
+
+-->
+<script context="module">
+  import { toggle } from "@/lib/utils";
+  export const info_modal_open = toggle(false)
+</script>
+
 <script>
   // Works but is... plain text.
-  //import { default as readme_markdown_string } from  '@/assets/README.md?raw'
-  import { hostname } from "@/lib/utils";
+  import { hostname, globals } from "@/lib/utils";
 
   // instead, we access a global variable prepared by vite.config.js.
-  const README = textfiles.README_HTML
-
-
-  export let info_modal_open;
+  const README = vite_replaced.textfiles.README_HTML
 </script>
 
 <div class="modal is-active" id="about-the-app">
-    <div class="modal-background"></div>
+    <div class="modal-background" on:click={info_modal_open.toggle}></div>
     <div class="modal-content">
       <div class="card">
         <!--

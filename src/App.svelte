@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
 
-  import { toggle } from "@/lib/utils";
+  import { toggle, globals } from "@/lib/utils";
 
   import { endpoint, endpoint_reachable } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
@@ -18,7 +18,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Settings from "@/routes/Settings.svelte";
   import Editor from "@/routes/Editor.svelte";
   
-  import About from "@/lib/About.svelte"
+  import About, { info_modal_open } from "@/lib/About.svelte"
 
   const nav = [Home, Settings, Editor, Starting];
   const urls = ["/", "/settings", "/editor", "/starting"];
@@ -65,8 +65,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 });
 
   const navbar_burger_active = toggle(false)
-  const info_modal_open = toggle(false)
-
 </script>
 
 <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -143,7 +141,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 </main>
 
 {#if $info_modal_open}
-  <About {info_modal_open} />
+  <About />
 {/if}
 
 <style type="scss">

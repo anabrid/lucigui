@@ -8,6 +8,7 @@
 
 import { onMount } from 'svelte';
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
+import { globals } from './utils';
 
 import {
     HybridController, type OutputCentricConfig, type LogicalRoute,

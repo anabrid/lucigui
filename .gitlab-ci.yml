@@ -1,7 +1,6 @@
 image: node:16.5.0
 
 stages:
-  - install
   - build
   - deploy
 
@@ -17,14 +16,10 @@ default:
     paths:
       - node_modules/
 
-install_packages:
-  stage: install
-  script:
-    - npm install
-
 build_headless:
   stage: build
   script:
+    - npm install
     - HEADLESS_BUILD=true npm run build
     - cp *.md dist/
   artifacts:
@@ -34,6 +29,7 @@ build_headless:
 build_for_teensy:
   stage: build
   script:
+    - npm install
     - npm run build
     - cp *.md dist/
   artifacts:

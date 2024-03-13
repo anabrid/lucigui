@@ -8,7 +8,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 </script>
 
 <main in:fade="{{duration: 100}}">
-    <h2>Lucidac: Getting started</h2>
+    <h2 class="title">Lucidac: Getting started</h2>
+    <div class="content">
     <p>LUCIDAC is the world's first discrete fully configurable analog computer made
         by <a href="https://anabrid.com">anabrid</a>.
         Head over to the <b>LUCIDAC documentation</b> for understanding how to use the
@@ -37,6 +38,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
        Microcontroller unit (MCU) which is called the <em>HybridController</em>.
        The documentation is online at...
     </p>
+    </div> 
 
 
     

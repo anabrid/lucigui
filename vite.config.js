@@ -47,6 +47,8 @@ const globals = {
   senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
 }
 
+// const meta_serialized = Object.entries(meta_variables).map(([k,v]) => ws+`<meta property="luci:${k}" content="${v}" />`).join("\n")
+
 // Just an easy compile-time text inserter.
 const textfiles = {
   'README_HTML': marked.parse(slurp("README.md"))
@@ -60,15 +62,11 @@ export default defineConfig({
       name: 'update-static-index-html-deployment-infos',
       transformIndexHtml: {
         enforce: 'pre',
-        transform: (html) => {
-          return html.replace(
-            /CODE-NAME-AND-VERSION/,
-            globals.application_name_and_version
-          )
-        }
+        transform: (html) => 
+          html.replace(/CODE-NAME-AND-VERSION/, globals.application_name_and_version)
+              .replace(/GLOBALS_JSON/, JSON.stringify(globals, null, /* indent */ 8))          
       }
     }
-  
   ],
   resolve: {
     alias: {
@@ -76,8 +74,11 @@ export default defineConfig({
     }
   },
   define: {
-    globals,
-    textfiles
+    // these variables appear globally, we want to scope them with "vite_replaced"
+    // Usage is then like vite_replaced.textfiles.README_HTML
+    vite_replaced: {
+      textfiles
+    }
   },
   base: './', // use relative paths
   build: {
