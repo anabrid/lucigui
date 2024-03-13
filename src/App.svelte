@@ -8,13 +8,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
 
+  import { toggle } from "@/lib/utils";
+
   import { endpoint, endpoint_reachable } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
-  import Home from "./routes/Home.svelte";
-  import Starting from "./routes/Starting.svelte";
-  import Settings from "./routes/Settings.svelte";
-  import Editor from "./routes/Editor.svelte";
+  import Home from "@/routes/Home.svelte";
+  import Starting from "@/routes/Starting.svelte";
+  import Settings from "@/routes/Settings.svelte";
+  import Editor from "@/routes/Editor.svelte";
+  
+  import About from "@/lib/About.svelte"
 
   const nav = [Home, Settings, Editor, Starting];
   const urls = ["/", "/settings", "/editor", "/starting"];
@@ -60,6 +64,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
+  const navbar_burger_active = toggle(false)
+  const info_modal_open = toggle(false)
+
 </script>
 
 <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -69,73 +76,75 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     </a>
 
     <!-- svelte-ignore a11y-missing-attribute -->
+    <!-- svelte-ignore a11y-interactive-supports-focus -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <a
       role="button"
       class="navbar-burger"
       aria-label="menu"
       aria-expanded="false"
       data-target="navbarBasicExample"
+      class:is-active={$navbar_burger_active}
+      on:click={navbar_burger_active.toggle}
     >
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
       <span aria-hidden="true"></span>
     </a>
   </div>
-  <div class="navbar-menu is-primary">
+  <div class="navbar-menu is-primary" class:is-active={!$navbar_burger_active}>
     <div class="navbar-start">
       {#each zip([urls, titles]) as [href, title]}
         <a {href} use:link use:active class="navbar-item">{title}</a>
       {/each}
     </div>
     <div class="navbar-end">
-      <div class="navbar-item">
-        <div class="buttons"></div>
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          Headless
+        </a>
+    
+        <div class="navbar-dropdown is-right">
+          <div class="navbar-item">
+            Endpoint URL: {$endpoint}
+          </div>
+          <div class="navbar-item">
+            Reachable: {$endpoint_reachable}
+          </div>
+          <hr class="navbar-divider">
+          <a class="navbar-item">
+            Login (if connected...)
+          </a>
+          <hr class="navbar-divider">
+          <a class="navbar-item" on:click={info_modal_open.toggle}>
+            About
+          </a>
+        </div>
+      </div>
+    </div>
 
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!--
         <div
           class="dropdown"
           class:is-active={endpoint_dropdown_active}
           on:click={() =>
             (endpoint_dropdown_active = !endpoint_dropdown_active)}
         >
-          <div class="dropdown-trigger">
-            <button
-              class="button"
-              aria-haspopup="true"
-              aria-controls="dropdown-navbar-endpoint"
-            >
-              <span>Endpoint</span>
-              <span class="icon is-small">
-                <i class="fa fa-angle-down" aria-hidden="true"></i>
-              </span>
-            </button>
-          </div>
-          <div class="dropdown-menu" id="dropdown-navbar-endpoint" role="menu">
-            <div class="dropdown-content">
-              <div class="dropdown-item">
-                <p>Endpoint URL: {$endpoint}</p>
-              </div>
-              <hr class="dropdown-divider" />
-              <div class="dropdown-item">
-                <p>Reachable: {$endpoint_reachable}</p>
-              </div>
-              <hr class="dropdown-divider" />
-              <!-- svelte-ignore a11y-invalid-attribute -->
-              <a href="#" class="dropdown-item"> This is a link </a>
-            </div>
-          </div>
-        </div>
+        -->
 
-        <button class="button"> Login </button>
-      </div>
-    </div>
-  </div>
+
 </nav>
 <main class="wrapper page-{active_title}">
 
   <Router {routes} on:routeLoaded={routeLoaded} />
 
 </main>
+
+{#if $info_modal_open}
+  <About {info_modal_open} />
+{/if}
+
 <style type="scss">
 </style>

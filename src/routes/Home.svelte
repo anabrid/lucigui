@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import {fade} from 'svelte/transition'
 
   import { endpoint, endpoint_reachable } from '../lib/HybridControllerStores'
+  import { hostname } from '@/lib/utils';
 </script>
 <main in:fade="{{duration: 100}}">
 
@@ -21,7 +22,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
           <p>This web application allows you to configure and control
             suitable LUCIDACs which have a <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a> setting
             that allows access from
-            <tt>{window.location.protocol}//{window.location.hostname}:{window.location.port}</tt>.
+            <tt>{hostname}</tt>.
           </p>
           {:else}
           <h1 class="title">A GUI to your LUCIDAC</h1>

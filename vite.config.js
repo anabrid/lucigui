@@ -8,12 +8,14 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 /* Read this very code's version from package.json */
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-
 import { execSync } from 'node:child_process'
 
-const file = fileURLToPath(new URL('package.json', import.meta.url));
-const json = readFileSync(file, 'utf8');
-const pkg = JSON.parse(json);
+import { marked } from 'marked';
+
+// Read file to memory, path relative to repo root.
+const slurp = (filename) => readFileSync(fileURLToPath(new URL(filename, import.meta.url)), 'utf8');
+
+const pkg = JSON.parse(slurp("package.json"));
 const githash = execSync("git rev-parse --short HEAD").toString().trimEnd();
 
 // we use the environment variable access method from node.js and not
@@ -45,6 +47,11 @@ const globals = {
   senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
 }
 
+// Just an easy compile-time text inserter.
+const textfiles = {
+  'README_HTML': marked.parse(slurp("README.md"))
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -65,11 +72,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': "/src"
+      '@': "/src",
     }
   },
   define: {
-    globals
+    globals,
+    textfiles
   },
   base: './', // use relative paths
   build: {
