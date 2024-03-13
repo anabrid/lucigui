@@ -33,9 +33,33 @@ import writableDerived from 'svelte-writable-derived';
 // this is just global but not a store variable
 export let hc = new HybridController()
 
+// TODO consider making this store of type URL instead of string
 export const endpoint = writable(globals.default_lucidac_endpoint)
+
+// TODO This kind of connection tracking should be part of the HybridController itself.
 type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
-export const endpoint_reachable = readable<endpoint_reachability>("offline",
+
+// TODO: Derived is only useful when the endpoint is not something what the
+//       user is about to enter. There must be additional logic, i.e. a "connect now"
+//       button. This should not happen automatically as with the derived store.
+//       Maybe the frontend view logic needs another internal buffer which writes to the
+//       store only after completion:
+
+//   current endpoint:   [ <readonly> ] <- is $store ; show line only if is not empty
+//   enter new endpoint: [ <input>    ] [ <connect> ] -> writes to $store
+
+export const endpoint_reachable = derived<typeof endpoint, endpoint_reachability>(endpoint,
+    (endpoint, set) => {
+        //if(hc.is_connectable()) set("offline") // does not really matter
+        set("connecting")
+        hc.connect(new URL(endpoint))
+            .then(() => set("online"))
+            .catch(() => set("failed"))
+    },
+    /* initial value */ "offline"
+)
+
+/*export const endpoint_reachable = readable<endpoint_reachability>("offline",
     (set) => {
         if (hc.connected()) set("online")
         else {
@@ -43,7 +67,7 @@ export const endpoint_reachable = readable<endpoint_reachability>("offline",
             hc.connect(get(endpoint)).then(() => set("online"))
                 .catch(() => set("failed"))
         }
-    })
+    })*/
 
 // Device settings are only a mockup so far
 export const settings = writable(default_messages.get_settings)
@@ -57,7 +81,14 @@ export const status_loaded = writable(false)
 export const status = writable(default_messages.status)
 export function onmount_fetch_status() {
     onMount(async () => {
-        if (!hc.connected()) await hc.connect(get(endpoint))
+
+        // TODO THIS LOGIC MUST BE REWORKED.
+        
+        const cur_connection_status = get(endpoint_reachable)
+        if(cur_connection_status == "connecting" || cur_connection_status == "online") {
+
+        }
+        if (!hc.is_connectable()) await hc.connect(new URL(get(endpoint)))
         status.set(await hc.query("status"))
         status_loaded.set(true)
     })
@@ -73,7 +104,7 @@ export const config = writable<OutputCentricConfig>(default_messages.get_config)
 export function onmount_fetch_config(callback = null) {
     onMount(async () => {
         console.log("onmount_fetch_config starting")
-        if (!hc.connected()) await hc.connect(get(endpoint))
+        if (!hc.is_connectable()) await hc.connect(new URL(get(endpoint)))
         console.log("onmount_fetch_config connected")
         config.set(await hc.get_config())
         console.log("set config to", get(config))

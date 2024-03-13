@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
 
-  import { toggle, globals } from "@/lib/utils";
+  import { toggle, globals, slugify } from "@/lib/utils";
 
   import { endpoint, endpoint_reachable } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
@@ -28,7 +28,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   const routes = Object.fromEntries(zip([urls, nav]));
 
   let active_title = "";
-  const slugify = (text) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 
   // treat document title at navigation
   function routeLoaded(event) {

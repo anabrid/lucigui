@@ -699,18 +699,13 @@ export const config2routing = (conf: ClusterConfig) : PhysicalRouting => ({
  *   const hc = new HybridController(new URL("http://1.2.3.4:5678/api"))
  *   await hc.query("status")
  * 
+ * Note that this class is stateless, i.e. there is no connection hold.
+ * This is because HTTP itself is stateless. You can change the endpoint
+ * anytime.
  **/
 export class HybridController {
-    endpoint: URL;
-    mac?: string = null; ///< Mac address, determined by get_entities()
-
-    /*
-    constructor(endpoint?: URL) {
-        if(endpoint) {
-            this.connect(endpoint)
-        }
-    }
-    */
+    endpoint?: URL;
+    mac?: string; ///< Mac address, determined by get_entities()
 
     /// raises error if connection fails
     async connect(endpoint: URL) {
@@ -718,8 +713,7 @@ export class HybridController {
         return this.get_entities()
     }
 
-    connected() { return Boolean(this.endpoint); }
-
+    is_connectable() { return Boolean(this.endpoint); }
 
     async query(msg_type: string, msg = {}) {
         const envelope_sent = {
@@ -728,6 +722,8 @@ export class HybridController {
             msg: msg
         }
         const json_sent = JSON.stringify(envelope_sent);
+        if(!this.is_connectable())
+            throw new Error("Requiring and endpoint to be set")
         const resp = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
@@ -784,7 +780,7 @@ export class HybridController {
 
     async set_config(config: OutputCentricConfig) {
         if (!this.mac) {
-            this.get_entities()
+            await this.get_entities()
         }
 
         const set_config_query = {
