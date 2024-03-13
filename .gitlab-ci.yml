@@ -20,12 +20,13 @@ default:
 install_packages:
   stage: install
   script:
-    - npm install  
+    - npm install
 
 build_headless:
   stage: build
   script:
     - HEADLESS_BUILD=true npm run build
+    - cp *.md dist/
   artifacts:
     paths:
       - dist
@@ -34,6 +35,7 @@ build_for_teensy:
   stage: build
   script:
     - npm run build
+    - cp *.md dist/
   artifacts:
     paths:
       - dist
