@@ -8,8 +8,7 @@ stages:
 variables:
   SOURCEMAP_BASE_URL: https://lucidac-gui.anabrid.dev/main/
 
-install_packages:
-  stage: install
+default:
   cache:
     key:
       files:
@@ -17,6 +16,9 @@ install_packages:
       prefix: npm
     paths:
       - node_modules/
+
+install_packages:
+  stage: install
   script:
     - npm install  
 
