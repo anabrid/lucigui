@@ -692,6 +692,9 @@ export const config2routing = (conf: ClusterConfig) : PhysicalRouting => ({
 })
 
 
+export type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
+
+
 /**
  * The actual HybridController client class for the LUCIDAC.
  * Usage is like:
@@ -704,13 +707,21 @@ export const config2routing = (conf: ClusterConfig) : PhysicalRouting => ({
  * anytime.
  **/
 export class HybridController {
+    /** You should set the endpoint by using connect() */
     endpoint?: URL;
     mac?: string; ///< Mac address, determined by get_entities()
+
+    endpoint_status: endpoint_reachability = "offline"
+    endpoint_status_update : Date = new Date()
+
+    constructor(endpoint? : URL) {
+        if(endpoint) this.connect(endpoint)
+    }
 
     /// raises error if connection fails
     async connect(endpoint: URL) {
         this.endpoint = endpoint
-        return this.get_entities()
+        return this.get_entities() // defines this.mac
     }
 
     is_connectable() { return Boolean(this.endpoint); }
@@ -724,6 +735,12 @@ export class HybridController {
         const json_sent = JSON.stringify(envelope_sent);
         if(!this.is_connectable())
             throw new Error("Requiring and endpoint to be set")
+
+        if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
+            this.endpoint_status = "connecting"
+            this.endpoint_status_update = new Date()
+        }
+
         const resp = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
@@ -731,8 +748,15 @@ export class HybridController {
             },
             body: json_sent
         })
-        if (!resp.ok)
+
+        this.endpoint_status_update = new Date()
+        if (!resp.ok) {
+            this.endpoint_status = "failed"
             throw new Error(`HybridController XHR failed, wanted to send ${json_sent}, received ${resp.text()}`)
+        } else {
+            this.endpoint_status = "online"
+        }
+
         const envelope_recv = await resp.json()
         if ("error" in envelope_recv) {
             const json_recv = JSON.stringify(envelope_recv)

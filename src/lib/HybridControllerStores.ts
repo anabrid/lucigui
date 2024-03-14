@@ -16,7 +16,8 @@ import {
     type ClusterConfig, default_empty_cluster_config,
     config2routing, routing2config,
     logical2physical,
-    physical2logical
+    physical2logical,
+    type endpoint_reachability
 } from './HybridController'
 import default_messages from './default_messages.json'
 import writableDerived from 'svelte-writable-derived';
@@ -30,44 +31,76 @@ import writableDerived from 'svelte-writable-derived';
 /// non-trivial algorithsm) shall go into HybridController.ts while everything else
 /// goes here.
 
-// this is just global but not a store variable
-export let hc = new HybridController()
+/**
+ * A "store" syncable with async getter/setters.
+ * 
+ * This is written to be synced with XHR/AJAX fetch() targets in mind, therefore the
+ * naming "download" and "upload" for "get" and "set", respectively. Similar suited
+ * names would be "pull" and "push" (git lingua).
+ * 
+ * For convenience, this function does not return a store but instance a map of stores.
+ * Usage is then like instance.$value to access the actual value or for instance
+ * instance.$status to obtain status information, whereas instance.download() or
+ * instance.upload() will trigger (actually queue) the sync.
+ * 
+ * Note that this "store" starts with a "undefined" value.
+ */
+export function syncable<T>(download_action: () => Promise<T>, upload_action?: (val:T) => Promise<any>) {
+    const value = writable<T|undefined>(undefined)
+    const error = writable()
+    const lock = writable<Promise<unknown> | undefined>()
 
-// TODO consider making this store of type URL instead of string
-export const endpoint = writable(globals.default_lucidac_endpoint)
+    type statusmsg = "syncing"|"error"|"set"
+    const status = derived([value, error, lock],
+        ([$v, $e, $l]) => {
+            if($l) return "syncing"
+            if($e) return "error"
+            if($v) return "set"
+            else   return "unknown"
+        }, "unknown")
 
-// TODO This kind of connection tracking should be part of the HybridController itself.
-type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
+    const success = (v) => value.update(() => v)
+    const failure = (e) => error.update(() => e)
+    const download = () => lock.set(download_action().then(success, failure))
+    const queue = (action: () => void) => get(lock)?.then(action) || action()
 
-// TODO: Derived is only useful when the endpoint is not something what the
-//       user is about to enter. There must be additional logic, i.e. a "connect now"
-//       button. This should not happen automatically as with the derived store.
-//       Maybe the frontend view logic needs another internal buffer which writes to the
-//       store only after completion:
+    if(upload_action) {
+        const upload = () => lock.set(upload_action(get(value)).then(success, failure))
+        return { value, error, status, download: queue(download), upload: queue(upload) }
+    } else
+        return { value, error, status, download: queue(download) }
+}
 
-//   current endpoint:   [ <readonly> ] <- is $store ; show line only if is not empty
-//   enter new endpoint: [ <input>    ] [ <connect> ] -> writes to $store
+/**
+ * A "buffering" Hybrid Controller that is full of svelte stores.
+ * It mimics how the actual HybridController works (which does not save so many
+ * things).
+ */
+class SvelteHybridController {
+    remote = new HybridController()
+    
+    status = syncable(() => this.remote.query("status"))
+    entities = syncable(this.remote.get_entities)
+    config = syncable(this.remote.get_config, this.remote.set_config)
+    settings = syncable(() => this.remote.query("settings")) // for SAFTETY not yet writable
 
-export const endpoint_reachable = derived<typeof endpoint, endpoint_reachability>(endpoint,
-    (endpoint, set) => {
-        //if(hc.is_connectable()) set("offline") // does not really matter
-        set("connecting")
-        hc.connect(new URL(endpoint))
-            .then(() => set("online"))
-            .catch(() => set("failed"))
-    },
-    /* initial value */ "offline"
-)
+    endpoint = writable<URL>()
+    mac = writable<string>()
+    endpoint_status = writable<endpoint_reachability>()
 
-/*export const endpoint_reachable = readable<endpoint_reachability>("offline",
-    (set) => {
-        if (hc.connected()) set("online")
-        else {
-            set("connecting")
-            hc.connect(get(endpoint)).then(() => set("online"))
-                .catch(() => set("failed"))
-        }
-    })*/
+    constructor(endpoint? : URL) {
+        if(endpoint) this.remote.connect(endpoint)
+    }
+}
+
+export const hc = new SvelteHybridController(new URL(globals.default_lucidac_endpoint))
+
+// TODO:
+// each msgbuffer should be downloaded as soon as possible (i.e. at startup or 
+//  onMount latest).
+// They also need to be downloaded any time the hc endpoint changes.
+
+/*
 
 // Device settings are only a mockup so far
 export const settings = writable(default_messages.get_settings)
@@ -79,20 +112,7 @@ export const entities = writable(default_messages.get_entities)
 // basically get_status()
 export const status_loaded = writable(false)
 export const status = writable(default_messages.status)
-export function onmount_fetch_status() {
-    onMount(async () => {
 
-        // TODO THIS LOGIC MUST BE REWORKED.
-        
-        const cur_connection_status = get(endpoint_reachable)
-        if(cur_connection_status == "connecting" || cur_connection_status == "online") {
-
-        }
-        if (!hc.is_connectable()) await hc.connect(new URL(get(endpoint)))
-        status.set(await hc.query("status"))
-        status_loaded.set(true)
-    })
-}
 
 // TODO: Do not expose this as store.
 //       Or make it as a derived store of cluster_config.
@@ -114,6 +134,8 @@ export function onmount_fetch_config(callback = null) {
         }
     })
 }
+
+*/
 
 // this would work but the derived store is not writable.
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))

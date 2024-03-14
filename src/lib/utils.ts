@@ -17,7 +17,18 @@ export function get_hostname() {
 
 export const hostname = get_hostname()
 
-export function toggle(initState: boolean ){
+/**
+ * toggle() returns a svelte store that can be used for steering a boolean.
+ * Usage:
+ * 
+ *   const instance = toggle(true)
+ *   <p>Boolean value is {$instance}
+ *   <a on:click={instance.toggle}>change it</a>
+ * 
+ * Note how readout is the store's value but toggle is not working on the
+ * store dollar value but the store itself.
+ */
+export function toggle(initState: boolean) {
     let {subscribe, update} = writable(initState);
     const toggle = () => update(s => !s)
     return {subscribe, toggle}
