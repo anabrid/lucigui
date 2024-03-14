@@ -69,7 +69,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <nav class="navbar" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item" href="#/">
-      <img src="lucidac-logo.svg" alt="LUCIDAC" />
+      <img src="lucidac-logo-klein.svg" alt="LUCIDAC" />
     </a>
 
     <!-- svelte-ignore a11y-missing-attribute -->

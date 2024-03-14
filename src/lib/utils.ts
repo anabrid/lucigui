@@ -35,3 +35,17 @@ export function toggle(initState: boolean) {
 }
 
 export const slugify = (text) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+
+export function isValidHttpUrl(string:string) {
+    // source: https://stackoverflow.com/a/43467144
+    let url;
+    
+    try {
+      url = new URL(string);
+    } catch (_) {
+      return false;  
+    }
+  
+    return url.protocol === "http:" || url.protocol === "https:";
+}
+  

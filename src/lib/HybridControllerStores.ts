@@ -56,8 +56,8 @@ class Syncable<T> {
             if($l) return "syncing"
             if($e) return "error"
             if($v) return "set"
-            else   return "unknown"
-        }, "unknown")
+            else   return "offline"
+        }, "offline")
 
     readonly success = (v) => this.value.update(() => v)
     readonly failure = (e) => this.error.update(() => e)
@@ -120,13 +120,13 @@ class SvelteHybridController {
      * Learn about the endpoint reachability the svelte way, fully
      * synchronized with the "dumb" remote.endpoint_status.
      **/
-    endpoint_status = writable<endpoint_reachability>()
+    endpoint_status = writable<endpoint_reachability>("offline")
 
     constructor(endpoint? : URL) {
         this.remote.endpoint_status_update = () =>
-            this.endpoint_status.update(_ => this.remote.endpoint_status)
+            this.endpoint_status.set(this.remote.endpoint_status)
         this.endpoint.subscribe(val => this.connect)
-        if(endpoint) this.endpoint.update(_ => endpoint)
+        if(endpoint) this.endpoint.set(endpoint)
     }
 
     private connect(endpoint : URL) {
@@ -141,6 +141,17 @@ class SvelteHybridController {
  * details).
  **/
 export const hc = new SvelteHybridController(new URL(globals.default_lucidac_endpoint))
+
+// debugging
+hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val))
+hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val))
+
+// svelte <input bind:value={$something}> works, but bind:value={hc.$something} not,
+// therefore provide aliases that can be used as global variables
+// The same is true with reactive statements such as $: foo = hc.$bar (does not work but foo=$bar does)
+
+export const endpoint = hc.endpoint
+export const endpoint_status = hc.endpoint_status
 
 
 // this would work but the derived store is not writable.

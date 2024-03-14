@@ -4,10 +4,13 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
-    import { fade } from "svelte/transition";
-    import SettingsNode from "@/views/SettingsNode.svelte";
-    const Setting = SettingsNode; // alias
-    import { hc } from "@/lib/HybridControllerStores";
+    import { fade } from "svelte/transition"
+    import { hc } from "@/lib/HybridControllerStores"
+    import Setting from "@/views/SettingsNode.svelte"
+    import Endpoint from "@/lib/Endpoint.svelte"
+
+    let disabled = false
+    $: disabled = hc.config.$status != "set"
 </script>
 
 <main in:fade={{ duration: 100 }}>
@@ -18,25 +21,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
     <nav class="level">
         <div class="level-left">
-            <p class="level-item">
-                <button class="button is-primary">Apply & Reboot</button>
-            </p>
-            <p class="level-item">
-                <button class="button">Undo changes</button>
-            </p>
+            <div class="level-item buttons"> <!-- Group: has-addons -->
+                <button class="button is-primary" {disabled}>Apply & Reboot</button>
+                <button class="button" {disabled}>Undo changes</button>
+                <button class="button" {disabled}>Reset to factory settings</button>
+            </div>
         </div>
         <div class="level-right">
-            <p class="level-item">
+            <p class="level-item buttons">
                 <button class="button">Show advanced settings</button>
-            </p>
-            <p class="level-item">
                 <button class="button">Download to file</button>
-            </p>
-            <p class="level-item">
                 <button class="button">Restore from file</button>
-            </p>
-            <p class="level-item">
-                <button class="button">Reset to factory settings</button>
             </p>
         </div>
     </nav>
@@ -49,6 +44,21 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         <button>Reset to factory settings</button> (should read factory settings and apply them here)
     </p>
     -->
+
+    {#if hc.config.$status != "set" }
+    <div class="notification is-warning">
+        {#if hc.config.$status == "syncing"}
+        <strong>Settings not yet loaded</strong> We are trying to reach the endpoint.
+        As soon as the current settings were loaded, the form can be edited.
+        {:else if hc.config.$status == "error"}
+        <strong>Endpoint not reachable</strong> We cannot reach the endpoint but you can
+        have a glance at this form to see the possible settings options.
+        {:else}
+        <strong>Offline</strong> We have not tried to reach any endpoint <Endpoint/> yet but you can
+        have a glance at this form to see the possible settings options.
+        {/if}        
+    </div>
+    {/if}
 
     <div class="tile is-ancestor">
         <div class="tile is-parent is-vertical">

@@ -7,8 +7,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Status from '@/lib/Status.svelte'
   import {fade} from 'svelte/transition'
 
-  import { hc } from '@/lib/HybridControllerStores'
+  import { hc, endpoint } from '@/lib/HybridControllerStores'
   import { hostname, globals } from '@/lib/utils';
+  import Endpoint from "@/lib/Endpoint.svelte"
+
 
   import About, { info_modal_open } from "@/lib/About.svelte"
 
@@ -55,6 +57,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
               does not accept <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a>.
             </p>
             {/if}
+
+          <p>New widget: <Endpoint/> </p>
+
+          <p>cf: <input bind:value={$endpoint}></p>
           
           </div>
         </div>
@@ -98,7 +104,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         </div>
       </div>
       <div class="tile is-child box">
-        <img src="Lucidac_vektor.svg" style="width:100%" alt="Lucidac vector illustration">
+        <img src="lucidac-3d-front.webp" style="width:100%" alt="Lucidac illustration">
       </div>
     </div>
 
