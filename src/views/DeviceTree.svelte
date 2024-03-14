@@ -6,13 +6,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script>
     import DeviceTreeNode from './DeviceTreeNode.svelte'
 
-    import { config, onmount_fetch_config } from "@/lib/HybridControllerStores";
-    onmount_fetch_config();
+    import { hc } from "@/lib/HybridControllerStores";
     
   </script>
 
   <div class="entities">
       <ul>
-        <DeviceTreeNode k="DeviceTree" v={$config} />
+        <DeviceTreeNode k="DeviceTree" v={hc.config.$value} />
       </ul>
   </div>

@@ -4,8 +4,7 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
-    import { status, onmount_fetch_status } from "./HybridControllerStores.ts";
-    onmount_fetch_status();
+    import { hc } from "@/lib/HybridControllerStores.ts";
 
     // a few helpful names here that will be populated later 
     /*
@@ -18,11 +17,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   </script>
 
   <div class="status">
-      {#if ! $status}
+      {#if hc.status.$status != "set"}
       <p>Loading status...</p>
       {:else}
           <ul>
-          {#each Object.entries($status) as [k,v] }
+          {#each Object.entries(hc.status.$value) as [k,v] }
               <li>{k}: {v}</li>
           {/each}
           </ul>

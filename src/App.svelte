@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   import { toggle, globals, slugify } from "@/lib/utils";
 
-  import { endpoint, endpoint_reachable } from "@/lib/HybridControllerStores";
+  import { hc } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from "@/routes/Home.svelte";
@@ -103,10 +103,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     
         <div class="navbar-dropdown is-right">
           <div class="navbar-item">
-            Endpoint URL: {$endpoint}
+            Endpoint URL: {hc.$endpoint}
           </div>
           <div class="navbar-item">
-            Reachable: {$endpoint_reachable}
+            Reachable: {hc.$endpoint_status}
           </div>
           <hr class="navbar-divider">
           <a class="navbar-item">

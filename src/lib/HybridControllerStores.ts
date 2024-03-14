@@ -6,7 +6,6 @@
  * @file Svelte stores to access the Hybrid Controller states
  */
 
-import { onMount } from 'svelte';
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
 import { globals } from './utils';
 
@@ -22,14 +21,16 @@ import {
 import default_messages from './default_messages.json'
 import writableDerived from 'svelte-writable-derived';
 
-/// \file
-/// This module is basically a svelte kind of interface to the HybridController class.
-/// Most stores are synced with the XHR endpoint. There are also a number of derived
-/// stores and standard data types.
-///
-/// Data types and functions which are *not* dependant on svelte (and in particular
-/// non-trivial algorithsm) shall go into HybridController.ts while everything else
-/// goes here.
+/**
+ * @file
+ * This module is basically a svelte kind of interface to the HybridController class.
+ * Most stores are synced with the XHR endpoint. There are also a number of derived
+ * stores and standard data types.
+ *
+ * Data types and functions which are *not* dependant on svelte (and in particular
+ * non-trivial algorithms) shall go into HybridController.ts while everything else
+ * goes here.
+ **/
 
 /**
  * A "store" syncable with async getter/setters.
@@ -45,13 +46,12 @@ import writableDerived from 'svelte-writable-derived';
  * 
  * Note that this "store" starts with a "undefined" value.
  */
-export function syncable<T>(download_action: () => Promise<T>, upload_action?: (val:T) => Promise<any>) {
-    const value = writable<T|undefined>(undefined)
-    const error = writable()
-    const lock = writable<Promise<unknown> | undefined>()
-
-    type statusmsg = "syncing"|"error"|"set"
-    const status = derived([value, error, lock],
+class Syncable<T> {
+    value = writable<T|undefined>(undefined)
+    error = writable()
+    lock = writable<Promise<unknown> | undefined>()
+    
+    readonly status = derived([this.value, this.error, this.lock],
         ([$v, $e, $l]) => {
             if($l) return "syncing"
             if($e) return "error"
@@ -59,16 +59,29 @@ export function syncable<T>(download_action: () => Promise<T>, upload_action?: (
             else   return "unknown"
         }, "unknown")
 
-    const success = (v) => value.update(() => v)
-    const failure = (e) => error.update(() => e)
-    const download = () => lock.set(download_action().then(success, failure))
-    const queue = (action: () => void) => get(lock)?.then(action) || action()
+    readonly success = (v) => this.value.update(() => v)
+    readonly failure = (e) => this.error.update(() => e)
 
-    if(upload_action) {
-        const upload = () => lock.set(upload_action(get(value)).then(success, failure))
-        return { value, error, status, download: queue(download), upload: queue(upload) }
-    } else
-        return { value, error, status, download: queue(download) }
+    download_action : () => Promise<T>
+    upload_action? : (val:T) => Promise<any>
+
+    constructor(download_action: () => Promise<T>, upload_action?: (val:T) => Promise<any>) {
+        this.download_action = download_action
+        this.upload_action = upload_action
+    }
+
+    readonly download_now = () => this.lock.set(this.download_action().then(this.success, this.failure))
+    readonly upload_now = () => {
+        if(!this.upload_action) throw new Error("Syncable can only download")
+        const value = get(this.value)
+        if(!value) throw new Error("Syncable cannot upload nonexisting value")
+        this.lock.set(this.upload_action(value).then(this.success, this.failure))
+    }
+
+    readonly queue = (action: () => void) => get(this.lock)?.then(action) || action()
+
+    readonly upload = () => this.queue(this.upload_now)
+    readonly download = () => this.queue(this.download_now)
 }
 
 /**
@@ -77,65 +90,58 @@ export function syncable<T>(download_action: () => Promise<T>, upload_action?: (
  * things).
  */
 class SvelteHybridController {
-    remote = new HybridController()
-    
-    status = syncable(() => this.remote.query("status"))
-    entities = syncable(this.remote.get_entities)
-    config = syncable(this.remote.get_config, this.remote.set_config)
-    settings = syncable(() => this.remote.query("settings")) // for SAFTETY not yet writable
+    private remote = new HybridController()
 
+    // TODO:
+    // Consider using the mockup messages like default_messages.get_settings
+    // as placeholder or default or make placeholder access easy.
+
+    // TODO:
+    // each msgbuffer should be downloaded as soon as possible (i.e. at startup or 
+    //  onMount latest).
+    // They also need to be downloaded any time the hc endpoint changes.
+
+    status = new Syncable(() => this.remote.query("status"))
+    entities = new Syncable(this.remote.get_entities)
+    config = new Syncable(this.remote.get_config, this.remote.set_config)
+    settings = new Syncable(() => this.remote.query("settings")) // for SAFTETY not yet writable
+
+    /**
+     * This store masquerades the remote.endpoint.
+     * This is the right place to change or observe the endpoint in this class.
+     * No need to call remote.connect or similar.
+     *
+     * TODO: Consider resetting/updating all syncables on endpoint change.
+     **/
     endpoint = writable<URL>()
-    mac = writable<string>()
+    // mac = writable<string>() // can be read from $entities
+
+    /**
+     * Learn about the endpoint reachability the svelte way, fully
+     * synchronized with the "dumb" remote.endpoint_status.
+     **/
     endpoint_status = writable<endpoint_reachability>()
 
     constructor(endpoint? : URL) {
-        if(endpoint) this.remote.connect(endpoint)
+        this.remote.endpoint_status_update = () =>
+            this.endpoint_status.update(_ => this.remote.endpoint_status)
+        this.endpoint.subscribe(val => this.connect)
+        if(endpoint) this.endpoint.update(_ => endpoint)
+    }
+
+    private connect(endpoint : URL) {
+        // we don't call remote.connect but instead this function to gather the get_entities result.
+        this.entities.download()
     }
 }
 
+/**
+ * This is the Svelte-flaveoured HybridController global app singleton.
+ * It is not a store but a collection of many stores (@see Syncable<T> for
+ * details).
+ **/
 export const hc = new SvelteHybridController(new URL(globals.default_lucidac_endpoint))
 
-// TODO:
-// each msgbuffer should be downloaded as soon as possible (i.e. at startup or 
-//  onMount latest).
-// They also need to be downloaded any time the hc endpoint changes.
-
-/*
-
-// Device settings are only a mockup so far
-export const settings = writable(default_messages.get_settings)
-
-// basically hc.get_entities(), is only write for being updated
-export const entities_loaded = writable(false)
-export const entities = writable(default_messages.get_entities)
-
-// basically get_status()
-export const status_loaded = writable(false)
-export const status = writable(default_messages.status)
-
-
-// TODO: Do not expose this as store.
-//       Or make it as a derived store of cluster_config.
-// TODO: Rename it to something like output_config or lucidac_config.
-
-// basically get_config() and set_config() in OutputCentricFormat format
-export const config_loaded = writable(false)
-export const config = writable<OutputCentricConfig>(default_messages.get_config)
-export function onmount_fetch_config(callback = null) {
-    onMount(async () => {
-        console.log("onmount_fetch_config starting")
-        if (!hc.is_connectable()) await hc.connect(new URL(get(endpoint)))
-        console.log("onmount_fetch_config connected")
-        config.set(await hc.get_config())
-        console.log("set config to", get(config))
-        config_loaded.set(true)
-        if (callback) {
-            callback(get(config))
-        }
-    })
-}
-
-*/
 
 // this would work but the derived store is not writable.
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))

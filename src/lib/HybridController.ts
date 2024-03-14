@@ -9,10 +9,11 @@
  * library in modern ECMAScript.
  * 
  * This file is written in TypeScript but contains *no* dependency to any Svelte
- * code. It is *standalone* with minimal dependencies to nodejs.
+ * code and also *no* dependencies to any other code within this repository.
+ * It is *standalone* with minimal dependencies to nodejs.
  * 
  * A number of stores depend on codes written in this file, for instance the
- * HybridControllerStores.ts or the FlowViewStore.ts.
+ * HybridControllerStores.ts or the FlowView/Store.ts.
  **/
 
 import { v4 as uuid } from 'uuid';
@@ -711,8 +712,16 @@ export class HybridController {
     endpoint?: URL;
     mac?: string; ///< Mac address, determined by get_entities()
 
+    /** Stores most recent information about endpoint reachability, updated by query() */
     endpoint_status: endpoint_reachability = "offline"
-    endpoint_status_update : Date = new Date()
+
+    /** Allows to callback when endpoint status changes */
+    endpoint_status_update? : () => void
+
+    private set_endpoint_status(msg: endpoint_reachability) {
+        this.endpoint_status = msg
+        if(this.endpoint_status_update) this.endpoint_status_update()
+    }
 
     constructor(endpoint? : URL) {
         if(endpoint) this.connect(endpoint)
@@ -737,8 +746,7 @@ export class HybridController {
             throw new Error("Requiring and endpoint to be set")
 
         if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
-            this.endpoint_status = "connecting"
-            this.endpoint_status_update = new Date()
+            this.set_endpoint_status("connecting")
         }
 
         const resp = await fetch(this.endpoint, {
@@ -749,12 +757,11 @@ export class HybridController {
             body: json_sent
         })
 
-        this.endpoint_status_update = new Date()
         if (!resp.ok) {
-            this.endpoint_status = "failed"
+            this.set_endpoint_status("failed")
             throw new Error(`HybridController XHR failed, wanted to send ${json_sent}, received ${resp.text()}`)
         } else {
-            this.endpoint_status = "online"
+            this.set_endpoint_status("online")
         }
 
         const envelope_recv = await resp.json()

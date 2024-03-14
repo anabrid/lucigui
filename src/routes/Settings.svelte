@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     import { fade } from "svelte/transition";
     import SettingsNode from "@/views/SettingsNode.svelte";
     const Setting = SettingsNode; // alias
-    import { settings } from "@/lib/HybridControllerStores";
+    import { hc } from "@/lib/HybridControllerStores";
 </script>
 
 <main in:fade={{ duration: 100 }}>
@@ -57,11 +57,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <h2 class="title is-5">Personalization and Managament</h2>
                     <p class="subtitle is-5">These custom settings are only displayed to clients.</p>
 
-                    <Setting name="Contact name" bind:value={$settings.custom_contact}>
+                    <Setting name="Contact name" path={["custom", "contact"]}>
                         Name of owner or mainly responsible user of device.
                     </Setting>
 
-                    <Setting name="Location" bind:value={$settings.custom_location}>
+                    <Setting name="Location" path={["custom", "location"]}>
                         Location of device
                     </Setting>
                 </div>
@@ -76,7 +76,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                         type="select"
                         options={{ "Use DHCP": true , "Use static IP": false }}
                         requires_reboot
-                        bind:value={$settings.use_dhcp}
+                        path={["ethernet", "use_dhcp"]}
                     >
                         Whether to use DHCP for automatic IP adress configuration.
                     </Setting>
@@ -84,7 +84,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <Setting
                         name="Hostname"
                         type="input"
-                        bind:value={$settings.hostname}
+                        path={["ethernet", "hostname"]}
                     >
                         Hostname of device, used for DHCP and for display purposes
                     </Setting>
@@ -93,22 +93,22 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                         name="Webserver"
                         type="radio"
                         options={{ "Enable embedded webserver": true , "Disable embedded webserver": false }}
-                        bind:value={$settings.use_webserver}
+                        path={["ethernet", "use_webserver"]}
                     >
                         Whether to use activate the internal webserver in the LUCIDAC or not.
                         Attention: When you disable the webserver, this GUI is no more usable.
                     </Setting>
                 </div>
 
-                {#if !$settings.use_dhcp}
+                {#if !hc.settings.$value || !hc.settings.$value.use_dhcp}
                 <div class="box">
                     <h2 class="title is-5">Networking: Static Configuration</h2>
                     <p class="subtitle is-5">The following settings are only relevant because DHCP is not used.</p>
 
-                    <Setting name="IP Address" bind:value={$settings.static_ipaddr}>Static IPv4 Address of the device.</Setting>
-                    <Setting name="Netmask" bind:value={$settings.static_netmask}>Static IPv4 Netmask.</Setting>
-                    <Setting name="Gateway" bind:value={$settings.static_gw}>Static IPv4 Gateway address.</Setting>
-                    <Setting name="DNS Server" bind:value={$settings.static_dns}>Static IPv4 DNS address. Only one DNS server accepted.</Setting>
+                    <Setting name="IP Address" path={["ethernet", "static_ipaddr"]}>Static IPv4 Address of the device.</Setting>
+                    <Setting name="Netmask" path={["ethernet", "static_netmask"]}>Static IPv4 Netmask.</Setting>
+                    <Setting name="Gateway" path={["ethernet", "static_gw"]}>Static IPv4 Gateway address.</Setting>
+                    <Setting name="DNS Server" path={["ethernet", "static_dns"]}>Static IPv4 DNS address. Only one DNS server accepted.</Setting>
                 </div>
                 {/if}
 
@@ -120,7 +120,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <Setting
                         name="MAC address"
                         type="input"
-                        bind:value={$settings.mac}
+                        path={["ethernet", "mac"]}
                     >
                         Ethernet MAC address of the device. It is suggested not to change this setting
                         if there is no pressing need. Changing this address is helpful for instance for
@@ -135,7 +135,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <h2 class="title is-5">Access restrictions</h2>
                     <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
 
-                    <Setting name="User/Password" type="radio" bind:value={$settings.whatever}
+                    <Setting name="User/Password" type="radio" path={["user", "enable_whatever"]}
                         options={{ "Require login with username/password": true , "Grant anybody with access administrator rights": false }}>
                         Disabling the user/password access system is only recommended in safe networks
                         such as home networks, internal ad-hoc networks and restricted company subnets.
@@ -143,7 +143,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
                     <Setting name="Firewall" type="checkbox"
                         legend="Use simple Whitelist/Blacklist based firewall"
-                        bind:value={$settings.whatever}>
+                        path={["whatever", "fixme"]}
+                        >
                         Based on connecting IP addresses.
                         <em>Warning</em>: Can lock out.
                     </Setting>
@@ -157,7 +158,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
 
                     <!-- TODO: Component that displays table username/password with add/remove rows -->
-                    <Setting name="Users" type="user-pass" bind:value={$settings.users}>
+                    <Setting name="Users" type="user-pass" path={["whatever", "fixme"]}>
                     </Setting>
                 </div>
             </div>

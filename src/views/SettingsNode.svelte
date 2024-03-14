@@ -17,10 +17,16 @@ import { slugify } from '@/lib/utils'
 export let name : string; // Settings Name to show
 type form_element = "input" | "url" | "number" | "checkbox" | "password" | "select" | "user-pass"
 export let type : form_element = "input"; // input type
-export let value : any; // should be bound
+export let path : string[]; // path to settings, where they actually are
 export let requires_reboot : boolean = false;
 export let options : any = {}; // Object/map potential Keys => Values
 export let legend : string;
+
+// placeholder; TODO: Directly connect to settings store and also show suitable loaders
+//                    and in particular grey out elements (!)
+export let value : string;
+
+export let disabled = true
 
 </script>
 
@@ -33,33 +39,33 @@ export let legend : string;
         {#if type == "user-pass" }
         <div class="field">
             <div class="control">
-                <input class="input" type="text"><!-- bind:key -->
+                <input class="input" type="text" {disabled}><!-- bind:key -->
             </div>
         </div>
         {/if}
         <div class="field">
             <div class="control">
                 {#if type == "input" || type == "url" }
-                <input class="input" type="text" bind:value>
+                <input class="input" type="text" bind:value {disabled}>
                 {:else if type == "number" }
-                <input class="input" type="number" bind:value>
+                <input class="input" type="number" bind:value {disabled}>
                 {:else if type == "password" || type == "user-pass" }
-                <input class="input" type="password" bind:value>
+                <input class="input" type="password" bind:value {disabled}>
                 {:else if type == "checkbox" }
                 <label class="checkbox">
-                    <input type="checkbox" bind:value>
+                    <input type="checkbox" bind:value {disabled}>
                     {legend}
                 </label>
                 {:else if type == "radio"}
                     {#each Object.entries(options) as [k,v]}
                         <p><label class="radio">
-                            <input type="radio" name={htmlid_prefix} value={v}>
+                            <input type="radio" name={htmlid_prefix} value={v} {disabled}>
                             {k}
                         </label></p>
                     {/each}
                 {:else if type == "select" }
                 <span class="select">
-                    <select bind:value>
+                    <select bind:value {disabled}>
                         {#each Object.entries(options) as [k,v]}
                         <option value={v}>{k}</option>
                         {/each}

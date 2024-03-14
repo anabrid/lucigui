@@ -10,7 +10,7 @@
 import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
   type LogicalRoute, UniqueCounter,
   range, next_free, tryOr } from '@/lib/HybridController'
-import { config, logical_routes } from '@/lib/HybridControllerStores'
+import { logical_routes } from '@/lib/HybridControllerStores'
 
 import { type Writable } from 'svelte/store'
 import { type Node, type Edge } from '@xyflow/svelte'

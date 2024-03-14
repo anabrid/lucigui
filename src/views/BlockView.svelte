@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
-    import { cluster_config, status, onmount_fetch_config } from "@/lib/HybridControllerStores";
+    import { cluster_config } from "@/lib/HybridControllerStores";
     import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/lib/HybridController";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]

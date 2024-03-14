@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Status from '@/lib/Status.svelte'
   import {fade} from 'svelte/transition'
 
-  import { endpoint, endpoint_reachable } from '../lib/HybridControllerStores'
+  import { hc } from '@/lib/HybridControllerStores'
   import { hostname, globals } from '@/lib/utils';
 
   import About, { info_modal_open } from "@/lib/About.svelte"
@@ -40,14 +40,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             the <a href="#/editor">Graphical Circuit Editor</a> is of most interest.
           </p>
 
-          <p>The LUCIDAC connection endpoint is currently set to: {$endpoint}</p>
+          <p>The LUCIDAC connection endpoint is currently set to: {hc.$endpoint}</p>
 
-            {#if $endpoint_reachable == "online" }
+            {#if hc.$endpoint_status == "online" }
             <p>Connected.</p>
             <Status/>
-            {:else if $endpoint_reachable == "connecting"}
+            {:else if hc.$endpoint_status == "connecting"}
             <p>Connecting...</p>
-            {:else if $endpoint_reachable == "offline" }
+            {:else if hc.$endpoint_status == "offline" }
             <p>Offline</p>
             {:else }<!-- failed -->
             <p>Connection Failed. Please inspect error log.
