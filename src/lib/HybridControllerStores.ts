@@ -19,7 +19,7 @@ import {
     type endpoint_reachability
 } from './HybridController'
 import default_messages from './default_messages.json'
-import writableDerived from 'svelte-writable-derived';
+import { writableDerived, type MinimalWritable } from 'svelte-writable-derived';
 
 /**
  * @file
@@ -49,7 +49,9 @@ export function permissiveLookup(value, propName) {
  * package. It create a store for a property value in an object contained in another store
  * and allows a path of properties in nested objects.
  * 
- * However, if the property does not exist or the path does not resolve, it just maps to undefined.
+ * If the property does not exist or the path does not resolve, it just maps to undefined.
+ * 
+ * At writing (reflection), it will create missing paths on the go.
  * 
  * @note This is not properly typed because it can get a mess, see index.d.ts in svelte-writable-derived.
  **/
@@ -71,7 +73,7 @@ export function permissivePropertyStore(origin, propName:string|number|symbol|Ar
 			(value) => {
                 if(!value) return undefined
 				for (let i = 0; i < props.length; ++i) {
-                    if(props[i] in value)
+                    if(value && props[i] in value)
 					    value = value[ props[i] ];
                     else   
                         return undefined
@@ -79,12 +81,26 @@ export function permissivePropertyStore(origin, propName:string|number|symbol|Ar
 				return value;
 			},
 			(reflecting, object) => {
+                //console.log("permissivePropertyStore, reflect", reflecting, object, props)
 				let target = object;
 				for (let i = 0; i < props.length - 1; ++i) {
-                    if(target && props[i] in target)
-					    target = target[ props[i] ];
-                    else
-                        return object
+                    if(target) {
+                        if(!(props[i] in target)) {
+                            if(i+1<props.length) {
+                                // create a nested container
+                                if(typeof props[i+1] === 'string')
+                                    target[ props[i] ] = {}
+                                else if(typeof props[i+1] === 'number')
+                                    target[ props[i] ] = []
+                                else
+                                    throw new Error("Unexpected type in props")
+                            } else {
+                                break
+                            }
+                        }
+                        target = target[ props[i] ];
+                    } else
+                        break
 				}
                 if(target)
 				    target[ props[props.length - 1] ] = reflecting;
@@ -133,8 +149,13 @@ class Syncable<T> {
             else   return "offline"
         }, "offline")
 
-    readonly success = (v) => this.value.update(() => v)
-    readonly failure = (e) => this.error.update(() => e)
+    private readonly result = (p:Promise<any>) =>
+        p.then(
+            (v) => this.value.update(() => v),
+            (e) => { console.error("Syncable failure:", e); this.error.update(() => e) }
+        ).finally(
+            () => this.lock.set(undefined)
+        )
 
     download_action : () => Promise<T>
     upload_action? : (val:T) => Promise<any>
@@ -144,12 +165,12 @@ class Syncable<T> {
         this.upload_action = upload_action
     }
 
-    readonly download_now = () => this.lock.set(this.download_action().then(this.success, this.failure))
+    readonly download_now = () => this.lock.set(this.result(this.download_action()))
     readonly upload_now = () => {
         if(!this.upload_action) throw new Error("Syncable can only download")
         const value = get(this.value)
         if(!value) throw new Error("Syncable cannot upload nonexisting value")
-        this.lock.set(this.upload_action(value).then(this.success, this.failure))
+        this.lock.set(this.result(this.upload_action(value)))
     }
 
     readonly queue = (action: () => void) => get(this.lock)?.finally(action) || action()
@@ -178,7 +199,7 @@ class SvelteHybridController {
     status = new Syncable(() => this.remote.query("status"))
     entities = new Syncable(() => this.remote.get_entities())
     config = new Syncable(() => this.remote.get_config(), () => this.remote.set_config())
-    settings = new Syncable(() => this.remote.query("settings")) // for SAFTETY not yet writable
+    settings = new Syncable(() => this.remote.query("get_settings")) // for SAFTETY not yet writable
 
     /**
      * This store masquerades the remote.endpoint.
@@ -245,6 +266,57 @@ export const entities = hc.entities.value
 export const entities_avail = hc.entities.status
 export const hc_status = hc.status.value
 export const hc_status_avail = hc.status.status // because status_status is bones
+export const settings = hc.settings.value
+export const settings_avail = hc.settings.status
+export const settings_error = hc.settings.error
+
+// sometimes an even simpler version is needed
+export const connected = derived(hc.endpoint_status, (status) => status == "online")
+
+/**
+ * A buffered store is like a writable-derived store but with delayed write back.
+ * The sync only happens when you manually call save() or reset()
+ * OR when there is an new value in the upstream store, which results in a reset().
+ * 
+ * The check if the buffered store has changes is simply by
+ * has_changes = $upstream != $buffered. If you feel to do so, you can create a
+ * derived store for that with derived([a, b], ([a,b]) => a != b) with
+ * a=upstream and b=buffered.
+ */
+export function bufferedStore<T>(upstream : MinimalWritable<T>) {
+    // Initialize current value in non-reactive way and a stage buffer
+    let stage = writable(get<T>(upstream))
+
+    // helper functions enriching this store
+    function save() { upstream.set(stage) } // delayed storage write
+    function reset() { stage.set(get<T>(upstream)) }
+
+    // clumsy way to track upstream changes without leaking store subscriptions
+    let subscribers = 0
+    let upstream_unsubscribe : (()=>void)
+    function subscribe(subscription: (value: any) => void) : (() => void) {
+        if(++subscribers) upstream_unsubscribe = upstream.subscribe((val:T) => stage.set(val))
+        const unsubscribe = stage.subscribe(subscription)
+        return () => {
+            if(0==--subscribers && upstream_unsubscribe) upstream_unsubscribe()
+            unsubscribe()
+        }
+    }
+
+    return { subscribe, update:stage.update, set:stage.set, save, reset }
+}
+
+
+    // initialize in a non-reactive way
+    let current_endpoint = get(hc.endpoint)
+    let new_endpoint = current_endpoint
+
+    // this component is mostly about a delayed storage write
+    function connect() { $endpoint = new_endpoint }
+
+    // reset component with respect to store
+    function reset() { new_endpoint = current_endpoint }
+    endpoint.subscribe((e) => { current_endpoint = e; reset() })
 
 
 // this would work but the derived store is not writable.

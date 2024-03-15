@@ -3,7 +3,7 @@
     in a defered way
 -->
 <script lang="ts">
-    import { hc, endpoint, endpoint_status } from "./HybridControllerStores";
+    import { hc, bufferedStore, endpoint, endpoint_status } from "./HybridControllerStores";
     import { type endpoint_reachability } from "./HybridController"
     import { isValidHttpUrl } from "./utils"
     import { get } from 'svelte/store'
@@ -13,20 +13,12 @@
     import About from "./About.svelte";
     import { ConnectionLineType } from "@xyflow/svelte";
 
-    // initialize in a non-reactive way
-    let current_endpoint = get(hc.endpoint)
-    let new_endpoint = current_endpoint
-
-    // this component is mostly about a delayed storage write
-    function connect() { $endpoint = new_endpoint }
-
-    // reset component with respect to store
-    function reset() { new_endpoint = current_endpoint }
-    endpoint.subscribe((e) => { current_endpoint = e; reset() })
+    // This component is basically a fancy input box for a delayed write
+    const new_endpoint = bufferedStore(hc.endpoint)
 
     let editing = false // derived: whether Component is in an "editing" state
     let input_focus = false // whether <input> has focus
-    $: editing = input_focus || new_endpoint != current_endpoint
+    $: editing = input_focus || $new_endpoint != $endpoint
 
     // for me the <input type=url> validation does not work out of box,
     // so we basically redo it in svelte
@@ -53,14 +45,14 @@
     let rightButtonIcon = undefined
 
     const communicationAction = {
-        offline() { connect() },
+        offline() { new_endpoint.save() },
         connecting() { window.alert("Ha. Currently things are not cancable.")  },
         online() { window.alert("Will implement ping function in future") },
         failed() { /* could call hc.connect(null, true); */ window.alert("not now") }
     }
 
     const leftButtonAction = () => {}
-    const rightButtonAction = () => (editing ? (url_valid ? connect() : reset()) : communicationAction[$endpoint_status]())
+    const rightButtonAction = () => (editing ? (url_valid ? new_endpoint.save() : new_endpoint.reset()) : communicationAction[$endpoint_status]())
 
     export let show_only_action_button = false
 
@@ -85,7 +77,7 @@
         on:click={(e)=>e.target.select()}
         on:focus={() => input_focus = true}
         on:blur={() => input_focus = false}
-        placeholder="http://1.2.3.4/api" bind:value={new_endpoint}>
+        placeholder="http://1.2.3.4/api" bind:value={$new_endpoint}>
     </span>
     <span class="control">
         <button class="button {rightButtonClasses}" on:click={rightButtonAction}>

@@ -48,7 +48,7 @@ const client_defaults = {
    * or using loopback magic such as "http://127.0.0.1:1234/api"
    * or are relative to where the SPA is hosted from, i.e. "/api"
    **/
-  endpoint: "", // http://lucidac-17-40-F4.fritz.box/api",
+  endpoint: "http://lucidac-17-40-F4.fritz.box/api",
 
   // Data source name for Senitry performance monitor
   senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"

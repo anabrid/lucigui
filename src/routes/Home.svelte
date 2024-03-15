@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import {fade} from 'svelte/transition'
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
-  import { hc, endpoint, endpoint_status, hc_status, hc_status_avail, entities } from '@/lib/HybridControllerStores'
+  import { hc, endpoint, endpoint_status, hc_status, connected, entities } from '@/lib/HybridControllerStores'
   import { hostname } from '@/lib/utils';
   import ClientDefaults from '@/lib/client_defaults';
   import Endpoint from "@/lib/Endpoint.svelte"
@@ -18,8 +18,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   onMount(() => { hc.status.download() })
 
   let gettingStarted = false
-  let connected = false
-  $: connected = $endpoint_status == "online"
 
   // Download status whenever endpoint changes (to non-null).
   $: $endpoint, $endpoint && hc.status.download()
@@ -27,12 +25,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 </script>
 
 <main in:fade="{{duration: 100}}">
-  <section class="hero" class:is-fullheight-with-navbar={!connected} class:is-medium={connected}><!-- style="flex-direction: row"> -->
+  <section class="hero" class:is-fullheight-with-navbar={!$connected} class:is-medium={$connected}><!-- style="flex-direction: row"> -->
     <div class="hero-body">
       <div class="columns">
         <div class="column is-half">
           <p class="title">
-            Configure {!ClientDefaults.has_default_endpoint&&!connected?"any":"your"} luci with ease
+            Configure {!ClientDefaults.has_default_endpoint&&!$connected?"any":"your"} luci with ease
           </p>
           <div class="subtitle">
             {#if !ClientDefaults.has_default_endpoint}
