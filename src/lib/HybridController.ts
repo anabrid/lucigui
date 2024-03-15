@@ -720,6 +720,7 @@ export class HybridController {
 
     private set_endpoint_status(msg: endpoint_reachability) {
         this.endpoint_status = msg
+        console.info("HybridController.set_endpoint_status", msg, this.endpoint_status_update)
         if(this.endpoint_status_update) this.endpoint_status_update()
     }
 
@@ -736,6 +737,7 @@ export class HybridController {
     is_connectable() { return Boolean(this.endpoint); }
 
     async query(msg_type: string, msg = {}) {
+        console.info("HybridController: query", this, msg)
         const envelope_sent = {
             id: uuid(),
             type: msg_type,
@@ -743,7 +745,7 @@ export class HybridController {
         }
         const json_sent = JSON.stringify(envelope_sent);
         if(!this.is_connectable())
-            throw new Error("Requiring and endpoint to be set")
+            throw new Error("Requiring an endpoint to be set")
 
         if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
             this.set_endpoint_status("connecting")

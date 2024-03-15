@@ -32,6 +32,68 @@ import writableDerived from 'svelte-writable-derived';
  * goes here.
  **/
 
+export function permissiveLookup(value, propName) {
+    const props = propName.concat();
+    if(!value) return undefined
+    for (let i = 0; i < props.length; ++i) {
+        if(props[i] in value)
+            value = value[ props[i] ];
+        else   
+            return undefined
+    }
+    return value;
+}
+
+/**
+ * This is basically a friendlier version of the propertyStore from the svelte-writable-derived
+ * package. It create a store for a property value in an object contained in another store
+ * and allows a path of properties in nested objects.
+ * 
+ * However, if the property does not exist or the path does not resolve, it just maps to undefined.
+ * 
+ * @note This is not properly typed because it can get a mess, see index.d.ts in svelte-writable-derived.
+ **/
+export function permissivePropertyStore(origin, propName:string|number|symbol|Array<string|number|symbol>) {
+	if (!Array.isArray(propName)) {
+		return writableDerived(
+			origin,
+			(object) => object && propName in object ? object[propName] : undefined,
+			(reflecting, object) => {
+                if(object)
+				    object[propName] = reflecting;
+				return object;
+			},
+		);
+	} else {
+		let props = propName.concat();
+		return writableDerived(
+			origin,
+			(value) => {
+                if(!value) return undefined
+				for (let i = 0; i < props.length; ++i) {
+                    if(props[i] in value)
+					    value = value[ props[i] ];
+                    else   
+                        return undefined
+				}
+				return value;
+			},
+			(reflecting, object) => {
+				let target = object;
+				for (let i = 0; i < props.length - 1; ++i) {
+                    if(target && props[i] in target)
+					    target = target[ props[i] ];
+                    else
+                        return object
+				}
+                if(target)
+				    target[ props[props.length - 1] ] = reflecting;
+				return object;
+			},
+		);
+	}
+}
+
 /**
  * A "store" syncable with async getter/setters.
  * 
@@ -48,8 +110,20 @@ import writableDerived from 'svelte-writable-derived';
  */
 class Syncable<T> {
     value = writable<T|undefined>(undefined)
-    error = writable()
-    lock = writable<Promise<unknown> | undefined>()
+    error = writable(undefined)
+    lock = writable<Promise<unknown> | undefined>(Promise.resolve())
+
+    /** Access a property as a store. Will fall back to 'undefined' if path non-existent */
+    property = (propName:string|number|symbol|Array<string|number|symbol>) => permissivePropertyStore(this.value, propName)
+
+    /** Looks up a value, does not return a store but the value or undefined. */
+    lookup = (propName:string|number|symbol|Array<string|number|symbol>) => permissiveLookup(get(this.value), propName)
+
+    reset() {
+        this.value.set(undefined)
+        this.error.set(undefined)
+        this.lock.set(undefined)
+    }
     
     readonly status = derived([this.value, this.error, this.lock],
         ([$v, $e, $l]) => {
@@ -78,7 +152,7 @@ class Syncable<T> {
         this.lock.set(this.upload_action(value).then(this.success, this.failure))
     }
 
-    readonly queue = (action: () => void) => get(this.lock)?.then(action) || action()
+    readonly queue = (action: () => void) => get(this.lock)?.finally(action) || action()
 
     readonly upload = () => this.queue(this.upload_now)
     readonly download = () => this.queue(this.download_now)
@@ -102,8 +176,8 @@ class SvelteHybridController {
     // They also need to be downloaded any time the hc endpoint changes.
 
     status = new Syncable(() => this.remote.query("status"))
-    entities = new Syncable(this.remote.get_entities)
-    config = new Syncable(this.remote.get_config, this.remote.set_config)
+    entities = new Syncable(() => this.remote.get_entities())
+    config = new Syncable(() => this.remote.get_config(), () => this.remote.set_config())
     settings = new Syncable(() => this.remote.query("settings")) // for SAFTETY not yet writable
 
     /**
@@ -122,25 +196,44 @@ class SvelteHybridController {
      **/
     endpoint_status = writable<endpoint_reachability>("offline")
 
-    constructor(endpoint? : URL) {
-        this.remote.endpoint_status_update = () =>
-            this.endpoint_status.set(this.remote.endpoint_status)
-        this.endpoint.subscribe(val => this.connect)
-        if(endpoint) this.endpoint.set(endpoint)
-    }
+    /**
+     * Internally handles connection and disconnection (endpoint=null)
+     * Use $endpoint=<whatever> for public API.
+     **/
+    private connect(endpoint?: URL ){
+        this.status.reset()
+        this.entities.reset()
+        this.config.reset()
+        this.settings.reset()
 
-    private connect(endpoint : URL) {
-        // we don't call remote.connect but instead this function to gather the get_entities result.
-        this.entities.download()
+        this.remote.endpoint = endpoint // manual double bind ;)
+        // we don't call this.remote.connect() but instead
+        // let the entities store gather the get_entities result,
+        // ie. do this way the same as this.remote.connect() does.
+        if(endpoint) this.entities.download()
+    }
+        
+    constructor(endpoint? : URL) {
+        this.remote.endpoint_status_update = () => this.endpoint_status.set(this.remote.endpoint_status)
+        if(endpoint) this.endpoint.set(endpoint)
+        this.endpoint.subscribe(e => this.connect(e))
     }
 }
+
+let default_endpoint_url = undefined
+try { default_endpoint_url = new URL(globals.default_lucidac_endpoint) }
+catch(e) {}
 
 /**
  * This is the Svelte-flaveoured HybridController global app singleton.
  * It is not a store but a collection of many stores (@see Syncable<T> for
  * details).
  **/
-export const hc = new SvelteHybridController(new URL(globals.default_lucidac_endpoint))
+export const hc = new SvelteHybridController(default_endpoint_url)
+
+// expose to global window for fabulous debugging in browser console
+window.hc = hc
+window.get = get // svelte store get
 
 // debugging
 hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val))
@@ -152,6 +245,10 @@ hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val)
 
 export const endpoint = hc.endpoint
 export const endpoint_status = hc.endpoint_status
+export const entities = hc.entities.value
+export const entities_avail = hc.entities.status
+export const hc_status = hc.status.value
+export const hc_status_avail = hc.status.status // because status_status is bones
 
 
 // this would work but the derived store is not writable.

@@ -30,12 +30,12 @@ const globals = {
   // headless builds are inteded to be servered without an endpoint in mind.
   // The opposite is a build intended to be served from a Teensy ("not headless").
   // An example for a headless build is the usage on some http://*.anabrid.dev/ server.
-  headless_build: env("HEADLESS_BUILD", "false") === "true",
+  headless_build: true, // env("HEADLESS_BUILD", "false") === "true",
   
   // suitable endpoint URLs are either explicit, such as "http://192.168.1.123/api"
   // or using loopback magic such as "http://127.0.0.1:1234/api"
   // or are relative to where the SPA is hosted from, i.e. "/api"
-  default_lucidac_endpoint: "http://192.168.150.113/api",
+  default_lucidac_endpoint: "", // http://lucidac-17-40-F4.fritz.box/api",
 
   // Used for instance in <title> elements
   application_name: "LUCIDAC-GUI",

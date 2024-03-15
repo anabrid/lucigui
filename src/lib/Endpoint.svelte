@@ -16,57 +16,60 @@
     // initialize in a non-reactive way
     let current_endpoint = get(hc.endpoint)
     let new_endpoint = current_endpoint
+
+    // this component is mostly about a delayed storage write
+    function connect() { $endpoint = new_endpoint }
+
+    // reset component with respect to store
     function reset() { new_endpoint = current_endpoint }
+    endpoint.subscribe((e) => { current_endpoint = e; reset() })
 
-    $: current_endpoint = $endpoint; reset()
-    $: console.log("New value: ", $endpoint)
-
-    let editing = false
-    $: editing = new_endpoint != current_endpoint
+    let editing = false // derived: whether Component is in an "editing" state
+    let input_focus = false // whether <input> has focus
+    $: editing = input_focus || new_endpoint != current_endpoint
 
     // for me the <input type=url> validation does not work out of box,
     // so we basically redo it in svelte
     let url_valid = true
-    $: url_valid = isValidHttpUrl(new_endpoint.toString())
+    $: url_valid = isValidHttpUrl(new_endpoint?.toString())
 
-    // this are all the different states this component can be in
+    // this are all the different states this component can be in, just for tracking.
     type component_state = "editing"|"invalid"|endpoint_reachability
 
     let leftButtonClasses = ""
     let rightButtonClasses = ""
-    const rightButtonCommunicationClasses = { "offline": "is-primary", "connecting": "is-primary is-light", "online": "is-light", "failed": "is-warning" }
+    const rightButtonCommunicationClasses = { offline: "is-primary", connecting: "is-primary is-light", online: "is-light", failed: "is-warning" }
     $: leftButtonClasses = editing ? (url_valid ? "" : "") : ""
     $: rightButtonClasses = editing ? (url_valid ? "is-success" : "is-warning") : rightButtonCommunicationClasses[$endpoint_status]
 
-    let leftButtonLabel = "LUCIDAC at"
-    let rightButtonLabel = "bla"
-    const leftButtonCommunicationLabels  = {
-        editing: "Valid URL:",
-        invalid: "Invalid URL:",
-
-        // TODO: Continue here, make things a bit more clear.
-
-        offline: "LUCIDAC @",
-        connecting: "Connecting...",
-        online: "Host @",
-        failed: "Unreachable:",
-    }
-    const rightButtonCommunicationLabels = {"offline": "Connect", "connecting": "Cancel", "online": "Ping", "failed": "Retry", }
+    let leftButtonLabel = ""
+    let rightButtonLabel = ""
+    const leftButtonCommunicationLabels  = { offline: "LUCIDAC @", connecting: "Connecting...", online: "Connected:", failed: "Unreachable:" }
+    const rightButtonCommunicationLabels = { offline: "Connect", connecting: "Cancel", online: "Ping", failed: "Retry" }
 
     $: leftButtonLabel = editing ? (url_valid ? "Valid URL: " : "Invalid URL: ") : leftButtonCommunicationLabels[$endpoint_status]
     $: rightButtonLabel = editing ? (url_valid ? "Connect" : "Cancel" ) : rightButtonCommunicationLabels[$endpoint_status]
 
     let rightButtonIcon = undefined
 
+    const communicationAction = {
+        offline() { connect() },
+        connecting() { window.alert("Ha. Currently things are not cancable.")  },
+        online() { window.alert("Will implement ping function in future") },
+        failed() { /* could call hc.connect(null, true); */ window.alert("not now") }
+    }
+
     const leftButtonAction = () => {}
-    const rightButtonAction = () => (editing ? (url_valid ? connect() : reset()) : null)
+    const rightButtonAction = () => (editing ? (url_valid ? connect() : reset()) : communicationAction[$endpoint_status]())
+
+    export let show_only_action_button = false
 
 </script>
 
 <span class="field has-addons" style="display: inline-flex; vertical-align: middle">
-    <span class="control">
+    <span class="control" class:is-hidden={show_only_action_button}>
         <button class="button is-static {leftButtonClasses}" on:click={leftButtonAction}>
-            {leftButtonLabel} -- {$endpoint_status}
+            {leftButtonLabel}
         </button>
         <!--
         <button class="button" on:click={reset}>
@@ -77,15 +80,12 @@
         </button>
         -->
     </span>
-    <span class="control is-expanded has-icons-right">
+    <span class="control is-expanded" class:is-hidden={show_only_action_button}>
       <input class="input" class:is-success={url_valid} class:is-danger={!url_valid} type="url"
         on:click={(e)=>e.target.select()}
+        on:focus={() => input_focus = true}
+        on:blur={() => input_focus = false}
         placeholder="http://1.2.3.4/api" bind:value={new_endpoint}>
-    <!--
-      <span class="icon is-small is-right" on:click={reset} style="cursor:pointer">
-        <FontAwesomeIcon icon={faRedo}  />
-      </span>
-    -->
     </span>
     <span class="control">
         <button class="button {rightButtonClasses}" on:click={rightButtonAction}>
@@ -96,30 +96,12 @@
             {/if}
             <span>{rightButtonLabel}</span>
         </button>
-        <!--
-      {#if editing}
-        {#if url_valid}
-        <button class="button is-success">
-            <span>Connect</span>
-        </button>
-        {:else}
-        <button class="button is-danger" disabled>
-            <span class="icon">
-                <i class="fa fa-check"></i>
-            </span>
-            <span>
-                Invalid URL
-            </span>
-        </button>
-        {/if}
-      {:else}
-        {#if hc.$endpoint_status == "offline" } connecting online failed
-         <button class="button is-success">
-            Connect
-         </button>
-         {:else if hc.$endpoint_status == "online" }
-         <button 
-      {/if}
-        -->
     </span>
 </span>
+
+<style>
+  /* Avoid margins which make it hard to embed into button rows and texts */
+  .field, .field > * {
+    margin-bottom: 0
+  }
+</style>
