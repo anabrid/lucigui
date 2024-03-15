@@ -7,7 +7,7 @@
  */
 
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
-import { globals } from './utils';
+import ClientDefaults from '@/lib/client_defaults';
 
 import {
     HybridController, type OutputCentricConfig, type LogicalRoute,
@@ -220,16 +220,12 @@ class SvelteHybridController {
     }
 }
 
-let default_endpoint_url = undefined
-try { default_endpoint_url = new URL(globals.default_lucidac_endpoint) }
-catch(e) {}
-
 /**
  * This is the Svelte-flaveoured HybridController global app singleton.
  * It is not a store but a collection of many stores (@see Syncable<T> for
  * details).
  **/
-export const hc = new SvelteHybridController(default_endpoint_url)
+export const hc = new SvelteHybridController(ClientDefaults.endpoint_url)
 
 // expose to global window for fabulous debugging in browser console
 window.hc = hc

@@ -9,7 +9,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
   import { hc, endpoint, endpoint_status, hc_status, hc_status_avail, entities } from '@/lib/HybridControllerStores'
-  import { hostname, globals } from '@/lib/utils';
+  import { hostname } from '@/lib/utils';
+  import ClientDefaults from '@/lib/client_defaults';
   import Endpoint from "@/lib/Endpoint.svelte"
   import DebugView from '@/views/DebugView.svelte';
   import { onMount } from 'svelte';
@@ -31,10 +32,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       <div class="columns">
         <div class="column is-half">
           <p class="title">
-            Configure {globals.headless_build&&!connected?"any":"your"} luci with ease
+            Configure {!ClientDefaults.has_default_endpoint&&!connected?"any":"your"} luci with ease
           </p>
           <div class="subtitle">
-            {#if globals.headless_build}
+            {#if !ClientDefaults.has_default_endpoint}
             Program circuits for re-configurable analog-digital hybrid computers.
 
             <p class="buttons" style="margin-top: 1em">
@@ -54,7 +55,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
               {:else if $endpoint_status == "failed"}
               <div class="notification is-danger">
                 <strong>Connecting to the LUCIDAC endpoint failed</strong>.
-                {#if globals.headless_build}
+                {#if !ClientDefaults.has_default_endpoint}
                 Here are a few possible reasons:
                 <ul>
                   <li>Domain name not resolvable: Try IP address instead.</li>

@@ -14,9 +14,20 @@
 
 <script>
   // Works but is... plain text.
-  import { hostname, globals } from "@/lib/utils";
+  import { hostname } from "@/lib/utils";
+  import ClientDefaults from '@/lib/client_defaults';
+  import { endpoint } from "./HybridControllerStores";
 
-  // instead, we access a global variable prepared by vite.config.js.
+  const infos = {
+    Version: ClientDefaults.app_version, // todo, would be nice to have Gitlab links
+    Commit: ClientDefaults.app_githash,
+    Date: ClientDefaults.app_build_date,
+    "Hosted on": hostname,
+    "Default endpoint": ClientDefaults.endpoint || "Headless (no default endpoint)",
+    "Current endpoint": $endpoint || "Not connected"
+  }
+
+  // we access a global string variable prepared by vite.config.js.
   const README = vite_replaced.textfiles.README_HTML
 </script>
 
@@ -39,12 +50,14 @@
               </figure>
             </div>
             <div class="media-content">
-              <p class="title is-4">LUCIDAC-GUI</p>
-              <p class="subtitle is-6">
-                Version: {globals.application_name_and_version}
-                <br>
-                Hosted on: {hostname}
-              </p>
+              <p class="title is-4">{ClientDefaults.app_name}</p>
+              <div class="subtitle is-6">
+                <table class="table is-bordered is-striped is-narrow is-hoverable is-size-7">
+                {#each Object.entries(infos) as [k,v]}
+                  <tr><th>{k}:</th><td>{v}</td></tr>
+                {/each}
+                </table>
+              </div>
             </div>
           </div>
       
@@ -70,3 +83,4 @@
     </div>
     <button on:click={info_modal_open.toggle} class="modal-close is-large" aria-label="close"></button>
   </div>
+

@@ -8,7 +8,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
 
-  import { toggle, globals, slugify } from "@/lib/utils";
+  import { toggle, slugify } from "@/lib/utils";
+  import ClientDefaults from '@/lib/client_defaults';
 
   import { hc, endpoint, endpoint_status } from "@/lib/HybridControllerStores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
@@ -34,34 +35,38 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     const route_id = urls.findIndex((e) => e == event.detail.route);
     if (route_id == -1) return;
     // inserting the device name would also be handy
-    document.title = titles[route_id] + " (" + globals.application_name + ")";
+    document.title = `${titles[route_id]} (${ClientDefaults.app_name})`;
 
     active_title = slugify(titles[route_id])
   }
 
   var endpoint_dropdown_active = false;
   
-  Sentry.init({
-    dsn: globals.senitry_dsn,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: false,
-        blockAllMedia: false,
-      }),
-      Sentry.feedbackIntegration({
-        colorScheme: "system"
-      })
-    ],
-  
-    // Performance Monitoring
-    tracesSampleRate: 0.2, // 1.0, //  Capture 100% of the transactions
-    // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-    tracePropagationTargets: ["*"], // ["localhost", /^https:\/\/anabrid\.dev/, /^((\d+)\.?){4}/],
-    // Session Replay
-    replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-    replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-});
+  if(ClientDefaults.sentry_dsn) {
+    try {
+      Sentry.init({
+        dsn: ClientDefaults.sentry_dsn,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration({
+            maskAllText: false,
+            blockAllMedia: false,
+          }),
+          Sentry.feedbackIntegration({
+            colorScheme: "system"
+          })
+        ],
+      
+        // Performance Monitoring
+        tracesSampleRate: 0.2, // 1.0, //  Capture 100% of the transactions
+        // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: ["*"], // ["localhost", /^https:\/\/anabrid\.dev/, /^((\d+)\.?){4}/],
+        // Session Replay
+        replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+        replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+      });
+    } catch(e) {}
+  }
 
   const navbar_burger_active = toggle(false)
 </script>

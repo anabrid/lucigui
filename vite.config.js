@@ -23,25 +23,32 @@ const githash = execSync("git rev-parse --short HEAD").toString().trimEnd();
 const environ = process.env // loadEnv("production", process.cwd())
 const env = (key, fallback_val) => key in environ ? environ[key] : fallback_val
 
-const globals = {
-  lucidac_gui_version: pkg.version,
-  lucidac_gui_githash: githash,
-
-  // headless builds are inteded to be servered without an endpoint in mind.
-  // The opposite is a build intended to be served from a Teensy ("not headless").
-  // An example for a headless build is the usage on some http://*.anabrid.dev/ server.
-  headless_build: true, // env("HEADLESS_BUILD", "false") === "true",
+/** See src/lib/client_defaults.ts for the Interface describing this object */
+const client_defaults = {
+  app_version: pkg.version,
+  app_githash: githash,
+  app_build_date: new Date().toISOString(),
   
-  // suitable endpoint URLs are either explicit, such as "http://192.168.1.123/api"
-  // or using loopback magic such as "http://127.0.0.1:1234/api"
-  // or are relative to where the SPA is hosted from, i.e. "/api"
-  default_lucidac_endpoint: "", // http://lucidac-17-40-F4.fritz.box/api",
-
   // Used for instance in <title> elements
-  application_name: "LUCIDAC-GUI",
+  app_name: "LUCIDAC-GUI",
 
-  // Fully qualified application name including version
-  application_name_and_version: `LUCIDAC-GUI/${pkg.version}+${githash}`,
+  /**
+   * Builds are either
+   * 
+   *   1) headless: inteded to be servered without an endpoint in mind.
+   *      In this case, leave default_endpoint empty.
+   *      Example usage on https://lucidac-gui.anabrid.dev/
+   * 
+   *   2) not headless: Inteded to be served from a Teensy or any other
+   *      server where there is a clear unique endpoint. In this case,
+   *      provide and endpoint.
+   * 
+   * Endpoints are URLs as strings. Suitable URLs are either explicit,
+   * such as "http://192.168.1.123/api"
+   * or using loopback magic such as "http://127.0.0.1:1234/api"
+   * or are relative to where the SPA is hosted from, i.e. "/api"
+   **/
+  endpoint: "", // http://lucidac-17-40-F4.fritz.box/api",
 
   // Data source name for Senitry performance monitor
   senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
@@ -63,8 +70,8 @@ export default defineConfig({
       transformIndexHtml: {
         enforce: 'pre',
         transform: (html) => 
-          html.replace(/CODE-NAME-AND-VERSION/, globals.application_name_and_version)
-              .replace(/GLOBALS_JSON/, JSON.stringify(globals, null, /* indent */ 8))          
+          html.replace(/CODE-NAME-AND-VERSION/, `${client_defaults.app_name}/${client_defaults.app_version}+${client_defaults.app_githash}`)
+              .replace(/GLOBALS_JSON/, JSON.stringify(client_defaults, null, /* indent */ 8))          
       }
     }
   ],

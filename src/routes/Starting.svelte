@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script>
    import {fade} from 'svelte/transition'
 
-   import { globals } from '@/lib/utils';
+   import ClientDefaults from '@/lib/client_defaults';
    import About, { info_modal_open } from "@/lib/About.svelte"
 
 </script>
@@ -54,7 +54,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <h3 class="subtitle">Readme for first time users</h3>
             <div class="content">
             <p>Please note that this application is in early development (you are in fact
-                using version {globals.application_name_and_version}). You are very much invited
+                using version {ClientDefaults.app_name_and_version}). You are very much invited
                 to test out what is already possible and report problems, expectations, inconsistencies
                 bugs, etc in form of a <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues/new">new ticket</a>
                 on our <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues">bug tracker</a>.
