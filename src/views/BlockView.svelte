@@ -48,6 +48,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     })
     */
 
+  export let compact = false
+  $: console.log("Compact: ", compact)
+
   const shortTypes = { "Int": "I", "Mul": "M", "Const": "C" }
   const Mname = (clane:number, mblock_as:InformationDirection)  => {
     const e = StandardLUCIDAC.clane2port(clane, mblock_as)
@@ -68,7 +71,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     <p>Attention, working with defaults, will be overwritten when loading from server</p>
   {/if}
   -->
-    <table>
+    <table class:compact={compact}>
       {#each xrange(nlanes) as lane}
         <tr class:active={$cluster_config.c[lane] != 0}>
           {#each "uci" as uci}
@@ -99,9 +102,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                   {/if}
                   <label for="{htmlid_prefix}_{uci}_{lane}_{clane}"><!--
                     requires no whitespace
-                    --><i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>
+                    -->{#if !compact}<i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>{/if}
                   </label>
-                    <!--{@html Mname(clane, uci == "u" ? "Source" : "Sink")}-->
                 </td>
               {/each}
             {:else}
@@ -141,6 +143,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     width: 1.3em;
     height: 1.3em;
     position: relative;
+
+    table.compact & {
+      width: .3em;
+      height: auto;
+    }
 
     &:hover {
       background-color: #c0d8ff;
