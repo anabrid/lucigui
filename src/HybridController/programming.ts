@@ -16,7 +16,6 @@
  * HybridControllerStores.ts or the FlowView/Store.ts.
  **/
 
-import { v4 as uuid } from 'uuid';
 import array from 'lodash'
 
 // abbreveating exceptions
@@ -65,7 +64,7 @@ export const next_free = (occupied_numbers: number[]): number => {
 }
 
 /** Internal Configuration for an Int M-Block */
-type MIntConfig = Array<{ "ic": number, "k": number }>  /* fixed size: 8 */
+export type MIntConfig = Array<{ ic: number, k?: number }>  /* fixed size: 8 */
 
 /** Auxiliary Internal Configuration for an U-Block */
 class UBlockAltSignals {
@@ -104,13 +103,20 @@ export interface ReducedConfig {
 }
 
 /**
- * This representation is used internally in the HybridController javascript library
- * and closely resembles the part ["config"]["/0"] in the OutputCentricConfig.
+ * Canonical names for completing the configuration of a LUCIDAC, when the UCI configuration
+ * is given. There are several ways of defining the UCI configuration, either for instance
+ * with @see ReducedConfig but also with @see PhysicalRoute[].
  **/
-export type ClusterConfig = ReducedConfig & {
+export interface AuxConfig {
     MInt: MIntConfig,
     Ualt: UBlockAltSignals
 }
+
+/**
+ * This representation is used internally in the HybridController javascript library
+ * and closely resembles the part ["config"]["/0"] in the OutputCentricConfig.
+ **/
+export type ClusterConfig = ReducedConfig & AuxConfig
 
 export const default_empty_cluster_config = () : ClusterConfig => ({
     u: [], c: [], i: [],
@@ -556,9 +562,12 @@ export type RoutingError = { msg: string, lr: LogicalRoute }
 export type PhysicalRouteOrError = PhysicalRoute | RoutingError
 export const is_routing_error = (roe : PhysicalRouteOrError) : boolean => "msg" in roe
 
+/** Describes the output of a logical->physical "pick&place compiler" process
+ * @todo: Consider renaming alt_signals -> Ualt as in @see AuxConfig
+ **/
 export type PhysicalRouting = {
     routes : PhysicalRoute[],
-    errors: RoutingError[],
+    errors?: RoutingError[],
     alt_signals: UBlockAltSignals
 }
 

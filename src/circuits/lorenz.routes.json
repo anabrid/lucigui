@@ -1,23 +1,20 @@
 {
-    "$meta": {
+    "_meta": {
         "desc": "As logical routes, following /firmware/hybrid-controller-dev/test/integrated/test_lorenz_attractor/",
         "title": "Lorenz Attractor"
     },
-    "PhysicalLaneBasedConfig": {
-        "MInt": [
-            {
-                "ic": -1.0,
-                "k": 1000
-            },
-            {
-                "ic": 0,
-                "k": 1000
-            },
-            {
-                "ic": 0,
-                "k": 1000
-            }
-        ],
+    "MIntConfig": [
+        {
+            "ic": -1.0
+        },
+        {
+            "ic": 0
+        },
+        {
+            "ic": 0
+        }
+    ],
+    "PhysicalRouting": {
         "routes": [
             {
                 "cval": -1,
@@ -86,7 +83,7 @@
                 "uin": 9
             }
         ],
-        "Ualt": [
+        "alt_signals": [
             false,
             false,
             false,

@@ -14,9 +14,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import DeviceTree from '@/views/DeviceTree.svelte'
    import FlowView from '@/views/SvelteFlowView/Provider.svelte';
    import DebugView from '@/views/DebugView.svelte';
+   import ExampleCircuits from '@/views/ExampleCircuits.svelte';
 
    import { logical_routes, physical_routes } from '@/HybridController/svelte-stores'
    import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
+
+   let show_examples = toggle(true)
 
    let show_flow = toggle(true)
    let show_matrix = toggle(true)
@@ -33,7 +36,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 </script>
 
-<main in:fade={{ duration: 100 }} class="container is-fullhd" style="margin-top: 1.5rem">
+<main in:fade={{ duration: 100 }} class="container is-fluid" style="margin-top: 1.5rem">
 
     <div class="block">
         <h1 class="title">Analog Programming</h1>
@@ -59,6 +62,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 </div>
             </div>
             <div class="level-item">
+                <div class="buttons">
+                    <button class="button" class:is-selected={$show_examples} on:click={show_examples.toggle}>
+                        <span>Examples</span>
+                    </button>
+                </div>
+            </div>
+            <div class="level-item">
                 <div class="buttons has-addons">
                     <button class="button" class:is-selected={$show_flow} on:click={show_flow.toggle}>
                         <span class="icon"><FontAwesomeIcon icon={faCircleNodes} /></span>
@@ -71,7 +81,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <button class="button" class:is-selected={$show_code} on:click={show_code.toggle}>Code</button>
                     <button class="button" class:is-selected={$show_tree} on:click={show_tree.toggle}>Tree</button>
                 </div>
-                <div>&nbsp;&nbsp;</div><!-- dafuq -->
+            </div>
+            <div class="level-item">
                 <div class="buttons has-addons">
                     <button class="button" class:is-selected={$show_debug_graph} on:click={show_debug_graph.toggle}>Debug Graph</button>
                     <button class="button" class:is-selected={$show_debug_logical} on:click={show_debug_logical.toggle}>Logical</button>
@@ -101,6 +112,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <!--
             <DeviceTree />
             -->
+
+        {#if $show_examples}
+        <div class="examples">
+            <ExampleCircuits/>
+        </div>
+        {/if}
 
         {#if $show_flow}
         <div class="flow">
@@ -147,7 +164,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 </main>
 
 <style lang="scss">
-    .buttons {
+    .level .button {
         margin-bottom: 0 !important
     }
 

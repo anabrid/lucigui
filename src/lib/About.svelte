@@ -81,3 +81,11 @@
     <button on:click={info_modal_open.toggle} class="modal-close is-large" aria-label="close"></button>
   </div>
 
+<style>
+  .modal-background {
+    backdrop-filter: blur(3px)
+  }
+  .modal-content {
+    box-shadow: 0 3px 30px 16px rgba(0,0,0,.5)
+  }
+</style>
