@@ -5,6 +5,9 @@
 import './app.scss'
 import App from './App.svelte'
 
+var splashscreen = document.getElementById("app-splashscreen")
+if(splashscreen) splashscreen.remove()
+
 const app = new App({
   target: document.getElementById('app'),
 })
