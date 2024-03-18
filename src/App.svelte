@@ -15,13 +15,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from "@/routes/Home.svelte";
-  import Starting from "@/routes/Starting.svelte";
+  import Help from "@/routes/Help.svelte";
   import Settings from "@/routes/Settings.svelte";
   import Editor from "@/routes/Editor.svelte";
   
   import About, { info_modal_open } from "@/lib/About.svelte"
 
-  const nav = [Home, Settings, Editor, Starting];
+  const nav = [Home, Settings, Editor, Help];
   const urls = ["/", "/settings", "/editor", "/starting"];
   const titles = ["Home", "Settings", "Editor", "Getting Started"];
 

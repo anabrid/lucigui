@@ -1,0 +1,31 @@
+<h2 class="title">Getting started</h2>
+<p class="subtitle">Ressources and helpful links</p>
+<div class="content">
+    <p>LUCIDAC is the world's first discrete fully configurable analog computer made
+        by <a href="https://anabrid.com">anabrid</a>.
+        Head over to the <a href="https://anabrid.dev/docs/redac-hardware-documentation.pdf">LUCIDAC documentation</a>
+        for understanding how to use the device.
+    
+    <p>Harness the real power of your LUCIDAC by making use of the client libraries
+    for various programming languages as well as the command line interfaces.
+    We offer client libraries for
+    <ul>
+            <li>Python, extensive reference implementation: <a href="https://anabrid.dev/docs/pyanabrid-redac/">pybrid</a></li>
+            <li>Minimal Python: <a href="https://lab.analogparadigm.com/lucidac/software/simplehc.py">shcpy</a></li>
+            <li>Julia: <a href="https://anabrid.dev/docs/AnabridREDAC.jl/">AnabridREDAC.jl</a> (using <a href="https://anabrid.dev/docs/REDACProtocol.jl/">REDACProtocol.jl</a>)</li>
+            <li>C and C++: <a href="https://lab.analogparadigm.com/lucidac/software/lucisim">tcredac</a></li>
+            <li>Typescript/Javascript/ECMAScript: <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/blob/main/src/lib/HybridController.ts?ref_type=heads">HybridController.ts</a></li>
+        </ul>
+        <p>Access is possible over various ways:
+        <ul>
+            <li>TCP/IP JSON-Lines protocol, also accessible with <em>netcat</em></li>
+            <li>HTTP JSON-RCP kind-of protocol, also accessible with <em>curl</em></li>
+            <li>USB-C Serial console speaking the JSON-Lines protocol (Fallback admin interface)</li>
+    </ul>
+    <p>The strongly typed JSON-lines based protocol makes it easy to write a third
+        party custom client in a different programming language.
+    
+    <p>All LUCIDAC Software is Open Source. You can explore the programming of the
+    Microcontroller unit (MCU) which is called the <a href="https://anabrid.dev/docs/hybrid-controller/">HybridController</a>.
+    </p>
+</div>

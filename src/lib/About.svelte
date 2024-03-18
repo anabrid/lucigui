@@ -27,8 +27,6 @@
     "Current endpoint": $endpoint || "Not connected"
   }
 
-  // we access a global string variable prepared by vite.config.js.
-  const README = vite_replaced.textfiles.README_HTML
 </script>
 
 <div class="modal is-active" id="about-the-app">
@@ -52,34 +50,33 @@
             <div class="media-content">
               <p class="title is-4">{ClientDefaults.app_name}</p>
               <div class="subtitle is-6">
-                <table class="table is-bordered is-striped is-narrow is-hoverable is-size-7">
-                {#each Object.entries(infos) as [k,v]}
-                  <tr><th>{k}:</th><td>{v}</td></tr>
-                {/each}
-                </table>
+                A web application for managing LUCIDACs and editing
+                analog circuits.
               </div>
             </div>
           </div>
       
           <div class="content">
-            {@html README}
-          </div>
+            <table class="table is-bordered is-striped is-narrow is-hoverable is-size-7">
+              {#each Object.entries(infos) as [k,v]}
+                <tr><th>{k}:</th><td>{v}</td></tr>
+              {/each}
+              </table>
+        </div>
         </div><!--/card content-->
-  <!--
         <footer class="card-footer">
           <p class="card-footer-item">
             <span>
-              View on <a href="https://twitter.com/codinghorror/status/506010907021828096">Twitter</a>
+              Read <a href="#/help/readme">in-depth explanation</a>
             </span>
           </p>
           <p class="card-footer-item">
             <span>
-              Share on <a href="#">Facebook</a>
+              Open <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues">issue tracker</a>
             </span>
           </p>
         </footer>
-  -->
-      </div>
+        </div>
     </div>
     <button on:click={info_modal_open.toggle} class="modal-close is-large" aria-label="close"></button>
   </div>
