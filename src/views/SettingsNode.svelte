@@ -67,7 +67,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 <input class="input" class:is-info={has_changes} type="password" bind:value={$value} {disabled}>
                 {:else if type == "checkbox" }
                 <label class="checkbox">
-                    <input type="checkbox" class:is-info={has_changes} bind:value={$value} {disabled}>
+                    <input type="checkbox" class:is-info={has_changes} bind:checked={$value} {disabled}>
                     {legend}
                 </label>
                 {:else if type == "radio"}

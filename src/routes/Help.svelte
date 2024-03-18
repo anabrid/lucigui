@@ -35,12 +35,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
     export let topic_slug = "starting" // default
 
-    // FIXME: The menu does not yet properly work, i.e. the class:is-active
-    //        is not reactive. TODO Solve by using svelte-spa-router routes.
+    // TODO introduce svelte-spa-router routes such as "#/help/:slug"
 
-    let topic = topics[0] // default
     const topicBySlug = (slug) => topics.find(t => t.slug==slug) || { title:"Not Found", content:"Not found" }
-    const set = (slug) => topic = topicBySlug(slug)
+    $: topic = topicBySlug(topic_slug)
+
 </script>
 
 <main in:fade="{{duration: 100}}" class="container is-fullhd" style="margin-top: 1.5rem">
@@ -52,7 +51,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 </p>
                 <ul class="menu-list">
                     {#each topics as t}
-                    <li><a on:click={()=>set(t.slug)} class:is-active={topic_slug==t.slug}>{t.title}</a></li>
+                    <li><a on:click={()=>topic_slug = t.slug} class:is-active={topic_slug==t.slug}>{t.title}</a></li>
                     {/each}
                 </ul>
             </aside>

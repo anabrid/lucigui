@@ -31,7 +31,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    let show_debug_physical = toggle(true)
 
    let compact_matrix = false
-   $: console.log("Editor Compact: ", compact_matrix)
+   $: console.log("Editor Compact: ", compact_matrix==true, compact_matrix==false)
 
 
 </script>
@@ -129,10 +129,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         <div class="matrix">
             <h2>Physical Matrix
                 (<label for="compact-physical-matrix">
-                    <input id="compact-physical-matrix" type="checkbox" bind:value={compact_matrix}>
+                    <input id="compact-physical-matrix" type="checkbox" bind:checked={compact_matrix}>
                 Compact</label>)
             </h2>
-            <BlockView compact={compact_matrix} />
+            <BlockView bind:compact={compact_matrix} />
         </div>
         {/if}
 
