@@ -22,11 +22,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import About, { info_modal_open } from "@/lib/About.svelte"
 
   const nav = [Home, Settings, Editor, Help];
-  const urls = ["/", "/settings", "/editor", "/starting"];
+  const urls = ["/", "/settings", "/editor", "/help"];
   const titles = ["Home", "Settings", "Editor", "Getting Started"];
 
   const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
-  const routes = Object.fromEntries(zip([urls, nav]));
+  let routes = Object.fromEntries(zip([urls, nav]));
+
+  // add some special rules
+  routes["/help/:topic?"] = Help
 
   let active_title = "";
 

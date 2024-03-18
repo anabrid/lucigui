@@ -3,8 +3,9 @@ Copyright (c) 2024 anabrid GmbH
 Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
-<script>
+<script lang="ts">
    import {fade} from 'svelte/transition'
+   import { link, querystring } from "svelte-spa-router";
 
    import ClientDefaults from '@/lib/client_defaults';
    import About, { info_modal_open } from "@/lib/About.svelte"
@@ -33,12 +34,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       }
     ]
 
-    export let topic_slug = "starting" // default
+    export let params = {} // set by svelte-spa-router route "#/help/:slug"
+    export let topic : string
+    $: topic = ("topic" in params) ? params["topic"] : "starting"
 
-    // TODO introduce svelte-spa-router routes such as "#/help/:slug"
+    const topicBySlug = (slug) => topics.find(t => t.slug==slug) || { title:"Not Found", content: `<h1>Not found</h1><p>Help topic <em>${slug}</em> not found</p>` }
 
-    const topicBySlug = (slug) => topics.find(t => t.slug==slug) || { title:"Not Found", content:"Not found" }
-    $: topic = topicBySlug(topic_slug)
+    let context = typeof topics[0]
+    $: context = topicBySlug(topic)
 
 </script>
 
@@ -51,15 +54,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 </p>
                 <ul class="menu-list">
                     {#each topics as t}
-                    <li><a on:click={()=>topic_slug = t.slug} class:is-active={topic_slug==t.slug}>{t.title}</a></li>
+                    <!-- this works without svelte-spa-router:  on:click={()=>topic = t.slug}  -->
+                    <li><a use:link={"/help/" + t.slug} class:is-active={topic==t.slug}>{t.title}</a></li>
                     {/each}
                 </ul>
             </aside>
         </div>
 
         <div class="column">
-            <article class="box" class:content={!topic.uses_bulma}>
-              {@html topic.content}
+            <article class="box" class:content={!context.uses_bulma}>
+              {@html context.content}
             </article>
         </div>
     </div>

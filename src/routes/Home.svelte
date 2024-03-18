@@ -39,7 +39,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <p class="buttons" style="margin-top: 1em">
               <button class="button is-primary" on:click={()=>gettingStarted=true} class:is-hidden={gettingStarted}>Getting Started</button>
               {#if gettingStarted}<Endpoint/> &nbsp;{/if}
-              <a href="#/starting" class="button is-secondary">Learn more</a>
+              <a href="#/help" class="button is-secondary">Learn more</a>
             </p>
             {/if}
           </div>
