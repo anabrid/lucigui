@@ -20,7 +20,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import AnalogNode from './Node.svelte'
   import PotiEdge from './Edge.svelte'
 
-  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from '@/lib/HybridController'
+  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from '@/HybridController/programming'
   import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './Store'
 
   // have to be declared in node as 'type':'analog'

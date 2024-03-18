@@ -14,7 +14,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     } from '@xyflow/svelte';
 
     import { type EdgeData } from './Store'
-    import { LogicalLane } from '@/lib/HybridController'
+    import { LogicalLane } from '@/HybridController/programming'
     import writableDerived from 'svelte-writable-derived';
   
     type $$Props = EdgeProps;

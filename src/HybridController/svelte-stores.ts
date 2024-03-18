@@ -10,15 +10,15 @@ import { readable, writable, get, derived, type Writable } from 'svelte/store';
 import ClientDefaults from '@/lib/client_defaults';
 
 import {
-    HybridController, type OutputCentricConfig, type LogicalRoute,
+    type OutputCentricConfig, type LogicalRoute,
     type ReducedConfig, type PhysicalRouting,
     type ClusterConfig, default_empty_cluster_config,
     config2routing, routing2config,
     logical2physical,
-    physical2logical,
-    type endpoint_reachability
-} from './HybridController'
-import default_messages from './default_messages.json'
+    physical2logical
+} from './programming'
+import { HybridController, type endpoint_reachability  } from './connection';
+import default_messages from '../lib/default_messages.json'
 import { writableDerived, type MinimalWritable } from 'svelte-writable-derived';
 
 /**

@@ -16,7 +16,7 @@
   // Works but is... plain text.
   import { hostname } from "@/lib/utils";
   import ClientDefaults from '@/lib/client_defaults';
-  import { endpoint } from "./HybridControllerStores";
+  import { endpoint } from "../HybridController/svelte-stores";
 
   const infos = {
     Version: ClientDefaults.app_version, // todo, would be nice to have Gitlab links

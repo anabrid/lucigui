@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { toggle, slugify } from "@/lib/utils";
   import ClientDefaults from '@/lib/client_defaults';
 
-  import { hc, endpoint, endpoint_status } from "@/lib/HybridControllerStores";
+  import { hc, endpoint, endpoint_status } from "@/HybridController/svelte-stores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import Home from "@/routes/Home.svelte";

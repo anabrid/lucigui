@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import {fade} from 'svelte/transition'
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
-  import { hc, endpoint, endpoint_status, hc_status, connected, entities } from '@/lib/HybridControllerStores'
+  import { hc, endpoint, endpoint_status, hc_status, connected, entities } from '@/HybridController/svelte-stores'
   import { hostname } from '@/lib/utils';
   import ClientDefaults from '@/lib/client_defaults';
   import Endpoint from "@/lib/Endpoint.svelte"

@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     const htmlid_prefix = `SettingsNode${component_instance_counter++}`
 
     import { slugify } from '@/lib/utils'
-    import { hc, settings_avail, permissivePropertyStore } from "@/lib/HybridControllerStores"
+    import { hc, settings_avail, permissivePropertyStore } from "@/HybridController/svelte-stores"
     import { getContext } from 'svelte';
     import { writable } from 'svelte/store';
     import { slide } from 'svelte/transition';

@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import FlowView from '@/views/SvelteFlowView/Provider.svelte';
    import DebugView from '@/views/DebugView.svelte';
 
-   import { logical_routes, physical_routes } from '@/lib/HybridControllerStores'
+   import { logical_routes, physical_routes } from '@/HybridController/svelte-stores'
    import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
 
    let show_flow = toggle(true)

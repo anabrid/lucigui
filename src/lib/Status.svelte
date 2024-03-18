@@ -4,7 +4,7 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
-    import { hc } from "@/lib/HybridControllerStores.ts";
+    import { hc } from "@/HybridController/svelte-stores";
 
     // a few helpful names here that will be populated later 
     /*

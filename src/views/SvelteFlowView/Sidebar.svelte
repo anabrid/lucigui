@@ -4,7 +4,7 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
-    import { type ComputeElementName, ComputeElement } from '@/lib/HybridController'
+    import { type ComputeElementName, ComputeElement } from '@/HybridController/programming'
 
 
 

@@ -11,8 +11,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
-    import { cluster_config } from "@/lib/HybridControllerStores";
-    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/lib/HybridController";
+    import { cluster_config } from "@/HybridController/svelte-stores";
+    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/HybridController/programming";
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.

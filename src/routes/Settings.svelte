@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     import { onMount, setContext } from 'svelte';
     import { fade } from "svelte/transition"
-    import { hc, bufferedStore, endpoint, settings_avail, settings_error, permissivePropertyStore } from "@/lib/HybridControllerStores"
+    import { hc, bufferedStore, endpoint, settings_avail, settings_error, permissivePropertyStore } from "@/HybridController/svelte-stores"
     import Setting from "@/views/SettingsNode.svelte"
     import Endpoint from "@/lib/Endpoint.svelte"
     import { writable } from 'svelte/store';
