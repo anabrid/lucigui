@@ -1,0 +1,101 @@
+{
+    "$meta": {
+        "desc": "As logical routes, following /firmware/hybrid-controller-dev/test/integrated/test_lorenz_attractor/",
+        "title": "Lorenz Attractor"
+    },
+    "PhysicalLaneBasedConfig": {
+        "MInt": [
+            {
+                "ic": -1.0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            }
+        ],
+        "routes": [
+            {
+                "cval": -1,
+                "iout": 8,
+                "lane": 0,
+                "uin": 8
+            },
+            {
+                "cval": -0.1,
+                "iout": 9,
+                "lane": 1,
+                "uin": 9
+            },
+            {
+                "cval": -0.2667,
+                "iout": 10,
+                "lane": 2,
+                "uin": 10
+            },
+            {
+                "cval": 1,
+                "iout": 0,
+                "lane": 3,
+                "uin": 8
+            },
+            {
+                "cval": 1,
+                "iout": 1,
+                "lane": 4,
+                "uin": 9
+            },
+            {
+                "cval": -1.5,
+                "iout": 10,
+                "lane": 5,
+                "uin": 0
+            },
+            {
+                "cval": 2.68,
+                "iout": 2,
+                "lane": 6,
+                "uin": 10
+            },
+            {
+                "cval": 1,
+                "iout": 2,
+                "lane": 7,
+                "uin": 5
+            },
+            {
+                "cval": 1,
+                "iout": 3,
+                "lane": 8,
+                "uin": 8
+            },
+            {
+                "cval": -1.536,
+                "iout": 9,
+                "lane": 9,
+                "uin": 1
+            },
+            {
+                "cval": 1.8,
+                "iout": 8,
+                "lane": 10,
+                "uin": 9
+            }
+        ],
+        "Ualt": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+        ]
+    }
+}
