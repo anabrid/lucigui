@@ -13,6 +13,10 @@
 </script>
 
 <script>
+
+  import * as tr from "svelte/transition";
+
+
   // Works but is... plain text.
   import { hostname } from "@/lib/utils";
   import ClientDefaults from '@/lib/client_defaults';
@@ -29,7 +33,7 @@
 
 </script>
 
-<div class="modal is-active" id="about-the-app">
+<div class="modal is-active" id="about-the-app" transition:tr.fade>
     <div class="modal-background" on:click={info_modal_open.toggle}></div>
     <div class="modal-content">
       <div class="card">

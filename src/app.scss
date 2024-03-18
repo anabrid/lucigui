@@ -17,8 +17,22 @@ $primary: $astronaut;
 // @import 'font-awesome/css/font-awesome.css';
 @import 'bulma/bulma.sass';
 
-main.wrapper {
-  //padding: 4%;
+// A vertical container where the last child grows at least the browser size.
+.flex-grow {
+  display: flex;
+  flex-direction: column;
+
+  &>:last-child {
+    flex-grow: 2;
+  }
+}
+
+#app {
+  min-height: 100vh;
+}
+
+#route {
+  flex-grow: 2;
 
   &.page-editor {
     padding: 0; // need the space!

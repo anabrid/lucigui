@@ -24,7 +24,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 </script>
 
-<main in:fade="{{duration: 100}}">
+<main in:fade>
   <section class="hero" class:is-fullheight-with-navbar={!$connected} class:is-medium={$connected}><!-- style="flex-direction: row"> -->
     <div class="hero-body">
       <div class="columns">

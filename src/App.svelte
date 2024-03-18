@@ -4,6 +4,8 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
+  import { setContext } from "svelte";
+  import { slide, fade } from "svelte/transition";
   import Router, { link, querystring } from "svelte-spa-router";
   import active from "svelte-spa-router/active";
   import * as Sentry from "@sentry/svelte"
@@ -44,6 +46,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   }
 
   var endpoint_dropdown_active = false;
+
+  let navbar_visible = toggle(true)
+  setContext("navbar_visible", navbar_visible) // allow any children to toggle
   
   if(ClientDefaults.sentry_dsn) {
     try {
@@ -74,7 +79,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   const navbar_burger_active = toggle(false)
 </script>
 
-<nav class="navbar" role="navigation" aria-label="main navigation">
+{#if $navbar_visible}
+<nav transition:slide class="navbar" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item" href="#/">
       <img src="lucidac-logo-klein.svg" alt="LUCIDAC" />
@@ -138,18 +144,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             (endpoint_dropdown_active = !endpoint_dropdown_active)}
         >
         -->
-
-
 </nav>
-<main class="wrapper page-{active_title}">
+{/if}
 
-  <Router {routes} on:routeLoaded={routeLoaded} />
-
-</main>
+<!-- From a CSS/styling point of view, there is no need for an
+     additional wrapper for the routed main element. -->
+<Router {routes} on:routeLoaded={routeLoaded} />
 
 {#if $info_modal_open}
   <About />
 {/if}
-
-<style type="scss">
-</style>

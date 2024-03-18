@@ -4,7 +4,8 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
-   import {fade} from 'svelte/transition'
+   import { getContext, setContext } from "svelte";
+   import { slide, fade } from 'svelte/transition'
    import { toggle } from '@/lib/utils';
 
    import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -22,7 +23,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    let show_examples = toggle(true)
 
    let show_flow = toggle(true)
-   let show_matrix = toggle(true)
+   let show_matrix = toggle(false)
    let show_code = toggle(false)
    let show_tree = toggle(false)
 
@@ -33,17 +34,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    let compact_matrix = false
    $: console.log("Editor Compact: ", compact_matrix==true, compact_matrix==false)
 
+   let not_fullscreen = getContext("navbar_visible") // well, expanded at least. Don't mess with real fullscreen.
 
 </script>
 
-<main in:fade={{ duration: 100 }} class="container is-fluid" style="margin-top: 1.5rem">
+<main in:fade class="container is-fluid flex-grow" style="margin-top: 1.5rem">
 
-    <div class="block">
+    {#if $not_fullscreen}
+    <div transition:slide class="block">
         <h1 class="title">Analog Programming</h1>
         <p class="subtitle">
             View and edit the programmable analog circuit.
         </p>
     </div>
+    {/if}
 
     <nav class="level block">
         <div class="level-left">
@@ -100,7 +104,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <button class="button">
                         <span class="icon"><FontAwesomeIcon icon={faFileImport} /></span>
                     </button>
-                    <button class="button">
+                    <button class="button" class:is-selected={!$not_fullscreen} on:click={not_fullscreen.toggle}>
                         <span class="icon"><FontAwesomeIcon icon={faExpand} /></span>
                     </button>
                 </div>
@@ -114,19 +118,19 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             -->
 
         {#if $show_examples}
-        <div class="examples">
+        <div class="examples" transition:slide={{ axis: 'x' }}>
             <ExampleCircuits/>
         </div>
         {/if}
 
         {#if $show_flow}
-        <div class="flow">
+        <div class="flow" transition:slide={{ axis: 'x' }}>
             <FlowView/>
         </div>
         {/if}
 
         {#if $show_matrix}
-        <div class="matrix">
+        <div class="matrix" transition:slide={{ axis: 'x' }}>
             <h2>Physical Matrix
                 (<label for="compact-physical-matrix">
                     <input id="compact-physical-matrix" type="checkbox" bind:checked={compact_matrix}>
@@ -137,25 +141,25 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         {/if}
 
         {#if $show_debug_graph}
-        <div class="debug">
+        <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Edges</h2>
             <DebugView bind:view={$edges} />
         </div>
-        <div class="debug">
+        <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Nodes</h2>
             <DebugView bind:view={$nodes} />
         </div>
         {/if}
 
         {#if $show_debug_logical}
-        <div class="debug">
+        <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Logical Routes</h2>
             <DebugView bind:view={$logical_routes} />
         </div>
         {/if}
 
         {#if $show_debug_physical}
-        <div class="debug">
+        <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Physical Routes</h2>
             <DebugView view={$physical_routes} />
         </div>

@@ -49,7 +49,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     */
 
   export let compact = false
-  $: console.log("Compact: ", compact)
 
   const shortTypes = { "Int": "I", "Mul": "M", "Const": "C" }
   const Mname = (clane:number, mblock_as:InformationDirection)  => {
@@ -102,7 +101,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                   {/if}
                   <label for="{htmlid_prefix}_{uci}_{lane}_{clane}"><!--
                     requires no whitespace
-                    -->{#if !compact}<i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>{/if}
+                    -->{#if !compact}<i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>{:else}&nbsp;{/if}
                   </label>
                 </td>
               {/each}
@@ -162,9 +161,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   }
 
   input[type="number"] {
-    width: 6em;
+    width: 3.5em;
     text-align: right; /* Would be nice to be comma aligned! */
     border: none;
+
+    table.compact & {
+      width: 1.5em
+    }
   }
 
   input[type="radio"], input[type="checkbox"] {

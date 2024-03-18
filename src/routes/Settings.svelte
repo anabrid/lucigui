@@ -40,7 +40,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $: section_static_ip_visible = ! $new_settings?.ethernet?.use_dhcp
 </script>
 
-<main in:fade={{ duration: 100 }} class="container is-fullhd" style="margin-top: 1.5rem">
+<main in:fade class="container is-fullhd" style="margin-top: 1.5rem">
     <div class="block">
         <h1 class="title">Settings</h1>
         <p class="subtitle">

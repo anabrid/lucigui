@@ -45,7 +45,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 </script>
 
-<main in:fade="{{duration: 100}}" class="container is-fullhd" style="margin-top: 1.5rem">
+<main in:fade class="container is-fullhd" style="margin-top: 1.5rem">
     <div class="columns">
         <div class="column is-one-quarter">
             <aside class="menu">
