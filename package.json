@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
-    "@sentry/svelte": "^7.105.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
     "@tsconfig/svelte": "^5.0.2",
     "@xyflow/svelte": "^0.0.36",

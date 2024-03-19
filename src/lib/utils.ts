@@ -60,3 +60,22 @@ export function saveJsonAsFile(filename:string , dataObjToWrite:any) {
   link.dispatchEvent(evt);
   link.remove()
 };
+
+/**
+ * Dynamically loads an external javascript at browser runtime.
+ * Usage: loadScript("http://some/where.js").then(()=>{ alert("make us of it") })
+ * Tip: You can compute the subresource integrity with https://www.srihash.org/
+ */
+export function loadScript(url: string, integrity?: string) {
+  var script = document.createElement('script')
+  script.src = url
+  script.async = true
+  if(integrity) {
+      script.integrity = integrity
+      script.crossOrigin = "anonymous"
+  }
+  document.head.appendChild(script);
+  return new Promise<void>((resolve, reject) => {
+    script.onload = () => resolve()
+  })
+}

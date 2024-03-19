@@ -8,10 +8,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { slide, fade } from "svelte/transition";
   import Router, { link, querystring } from "svelte-spa-router";
   import active from "svelte-spa-router/active";
-  import * as Sentry from "@sentry/svelte"
 
   import { toggle, slugify } from "@/lib/utils";
   import ClientDefaults from '@/lib/client_defaults';
+  import { lazy_load_sentry } from '@/lib/sentry.js'
 
   import { hc, endpoint, endpoint_status } from "@/HybridController/svelte-stores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
@@ -49,34 +49,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   let navbar_visible = toggle(true)
   setContext("navbar_visible", navbar_visible) // allow any children to toggle
-  
-  if(ClientDefaults.sentry_dsn) {
-    try {
-      Sentry.init({
-        dsn: ClientDefaults.sentry_dsn,
-        integrations: [
-          Sentry.browserTracingIntegration(),
-          Sentry.replayIntegration({
-            maskAllText: false,
-            blockAllMedia: false,
-          }),
-          Sentry.feedbackIntegration({
-            colorScheme: "system"
-          })
-        ],
-      
-        // Performance Monitoring
-        tracesSampleRate: 0.2, // 1.0, //  Capture 100% of the transactions
-        // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-        tracePropagationTargets: ["*"], // ["localhost", /^https:\/\/anabrid\.dev/, /^((\d+)\.?){4}/],
-        // Session Replay
-        replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-        replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-      });
-    } catch(e) {}
-  }
 
   const navbar_burger_active = toggle(false)
+
+  if(ClientDefaults.sentry_dsn)
+    lazy_load_sentry(ClientDefaults.sentry_dsn)
+
 </script>
 
 {#if $navbar_visible}

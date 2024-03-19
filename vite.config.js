@@ -51,7 +51,7 @@ const client_defaults = {
   endpoint: "http://lucidac-17-40-F4.fritz.box/api",
 
   // Data source name for Senitry performance monitor
-  senitry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
+  sentry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"
 }
 
 // const meta_serialized = Object.entries(meta_variables).map(([k,v]) => ws+`<meta property="luci:${k}" content="${v}" />`).join("\n")

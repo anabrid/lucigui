@@ -30,7 +30,7 @@ export const nlanes = 32
 
 /** range([start=0], end), does not include end.
  *  range(N) makes array [0,....,N-1], as in python. */
-export const range = array.range
+export const range = (N) => [...xrange(N)] // array
 export const xrange = (N) => Array(N).keys() // iterator, slightly less powerful then range.
 //export type span = [number,number]
 //export const inrange = (needle : number, range : span) => (needle >= range[0] && needle <= range[1])
@@ -47,6 +47,15 @@ export const zip = (...arr) => Array(Math.max(...arr.map(a => a.length))).fill()
 export function enumerate<T>(ary:T[]) : Array<[T,number]> { return ary.map((x,idx)=>[x,idx]) }
 export const duplicates = (array) => array.filter((e, i, a) => a.indexOf(e) !== i)
 export function union<T>(a:Array<T>,b:Array<T>) : Array<T> {return [...new Set([...a, ...b])] }
+
+/** Maps {A:a, B:b} to { a:A, b:B } */
+export function reverse(obj : Object) {
+  let new_obj= {}
+  Object.keys(obj).reverse().forEach(function(i) { 
+    new_obj[i] = obj[i];
+  })
+  return new_obj;
+}
 
 export class UniqueCounter {
     count: number;
@@ -496,7 +505,7 @@ interface MBlockSetup {
  **/
 export const StandardLUCIDAC = new class  implements MBlockSetup {
     readonly type2slot = { "Mul": 0, "Int": 1 }
-    readonly slot2type = array.invert(this.type2slot)
+    readonly slot2type = reverse(this.type2slot)
 
     // Constants for any LUCIDAC
     readonly clanes_per_slot = 8
