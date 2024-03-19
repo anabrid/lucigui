@@ -16,7 +16,6 @@
  * HybridControllerStores.ts or the FlowView/Store.ts.
  **/
 
-import array from 'lodash'
 import { logical_routes } from './svelte-stores';
 
 // abbreveating exceptions
@@ -47,7 +46,7 @@ export const zip = (...arr) => Array(Math.max(...arr.map(a => a.length))).fill()
 
 export function enumerate<T>(ary:T[]) : Array<[T,number]> { return ary.map((x,idx)=>[x,idx]) }
 export const duplicates = (array) => array.filter((e, i, a) => a.indexOf(e) !== i)
-const union = array.union // lodash
+export function union<T>(a:Array<T>,b:Array<T>) : Array<T> {return [...new Set([...a, ...b])] }
 
 export class UniqueCounter {
     count: number;
