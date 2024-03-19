@@ -20,7 +20,7 @@ build_headless:
   stage: build
   script:
     - npm install
-    - HEADLESS_BUILD=true npm run build
+    - ENDPOINT="" npm run build
     - cp *.md dist/
   artifacts:
     paths:
