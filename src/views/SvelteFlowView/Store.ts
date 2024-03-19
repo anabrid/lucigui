@@ -20,13 +20,25 @@ import { type Node, type Edge, type Viewport } from '@xyflow/svelte'
 import { writableDerived, propertyStore } from 'svelte-writable-derived'
 
 /**
+ * These NodeData attributes are only relevant for the visualization,
+ * i.e. SvelteFlowView-"internal" and not supposed to be promoted to
+ * the HybridController functions.
+ */
+export type NodeDisplay = {
+  /** Flipped/mirrored visualization, with right-to-left flow
+   *  instead of left-to-right
+   */
+  rtl?: boolean
+}
+
+/**
  * Nodes represent compute elements, @see AssignedElement.
  * These are potentially unrouted or even virtual compute elements.
  * The @see ElementName and id are encoded in the Node id string.
  * The Node Data stores state variables for stateful elements
  * such as Int or Pot.
  */
-export type NodeData = IntState | PotState | undefined
+export type NodeData = IntState | PotState | NodeDisplay | undefined
 export type CircuitNode = Node<NodeData, "analog">
 
 const default_position = { x: 0, y: 0 }
