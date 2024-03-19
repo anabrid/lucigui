@@ -688,7 +688,8 @@ export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRout
             // Have to setup that {source,poti} or {poti,target} type of routes
             let poti = (target_type == Pot) ? target : source
             const default_coefficient_value = 1 // assume the potentiometer is set there intentionally.
-            const coeff = poti?.state !== undefined ? (poti.state as number) : default_coefficient_value
+            /** poti.state should be a @see PotState */
+            const coeff = poti?.state?.coeff !== undefined ? poti.state.coeff : default_coefficient_value
             return {
                 lane: poti.id,
                 coeff,
@@ -732,7 +733,7 @@ export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRout
         }
     })
 
-    console.log("logical2physical routes 2nd", routes)
+    //console.log("logical2physical routes 2nd", routes)
 
     // Pot to route rewriting, cleanup step: Delete marked (=double) lanes and delete unconnected.
     routes = strip_off_routing_errors(
@@ -740,7 +741,7 @@ export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRout
         .map(lr => (!lr.source || !lr.target) ? <RoutingError> { msg: "Unconnected graph (potentially unconnected potentiometers)", lr } : lr)
     )
 
-    console.log("logical2physical routes 3rd", routes)
+    // console.log("logical2physical routes 3rd", routes)
 
     // Handle virtual sinks and sources which require certain lanes or cross lanes
     let pinned = strip_off_routing_errors(
@@ -835,10 +836,14 @@ export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRout
         if(uin == "NotAssignable") return <RoutingError> { msg: "physical source not assignable", lr }
         if(iout == "NotAssignable") return <RoutingError> { msg: "physical target not assignable", lr }
         return <PhysicalRoute> {
-            lane: lr.lane ? lr.lane.id : ctr,
-            uin, iout, cval: lr.coeff,
+            lane: lr.lane !== undefined ? lr.lane : ctr,
+            uin,
+            iout,
+            cval: lr.coeff,
         }
     }))
+
+    //console.log("logical2physical pinned", pinned, "flexible", flexible)
 
     // Correction step: Ensure pinned lanes are not touched and no overlap of lanes
     const pinned_lanes = pinned.map(lane)

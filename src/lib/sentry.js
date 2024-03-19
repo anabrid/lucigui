@@ -31,6 +31,15 @@ export function lazy_load_sentry(dsn) {
                         colorScheme: "system"
                     })
                 ],
+
+                // use Crash Modal for User feedback
+                beforeSend(event, hint) {
+                    // Check if it is an exception, and if so, show the report dialog
+                    if (event.exception && event.event_id) {
+                      Sentry.showReportDialog({ eventId: event.event_id });
+                    }
+                    return event;
+                },              
             
                 // Performance Monitoring
                 tracesSampleRate: 0.2, // 1.0, //  Capture 100% of the transactions
