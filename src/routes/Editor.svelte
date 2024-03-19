@@ -3,17 +3,17 @@ Copyright (c) 2024 anabrid GmbH
 Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
-<script>
+<script lang="ts">
    import { getContext, setContext } from "svelte";
    import { slide, fade } from 'svelte/transition'
-   import { toggle } from '@/lib/utils';
+   import { toggle, saveJsonAsFile } from '@/lib/utils';
 
    import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
    import { faFileExport, faFileImport, faExpand, faDownload, faUpload, faCircleNodes, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 
    import BlockView from '@/views/BlockView.svelte'
    import DeviceTree from '@/views/DeviceTree.svelte'
-   import FlowView from '@/views/SvelteFlowView/Provider.svelte';
+   import FlowView, { type FlowViewCallback } from '@/views/SvelteFlowView/Provider.svelte';
    import DebugView from '@/views/DebugView.svelte';
    import ExampleCircuits from '@/views/ExampleCircuits.svelte';
 
@@ -23,6 +23,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    let show_examples = toggle(true)
 
    let show_flow = toggle(true)
+   let flow_callbacks : FlowViewCallback
    let show_matrix = toggle(false)
    let show_code = toggle(false)
    let show_tree = toggle(false)
@@ -35,6 +36,39 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    $: console.log("Editor Compact: ", compact_matrix==true, compact_matrix==false)
 
    let not_fullscreen = getContext("navbar_visible") // well, expanded at least. Don't mess with real fullscreen.
+
+   // This is just a stub, TODO export with other methods.
+   function fileExport() {
+      let data = {}
+      if($show_flow) {
+        data["SvelteFlowView"] = flow_callbacks.export()
+      }
+
+      saveJsonAsFile("lucidac-config.json", data)
+   }
+
+   let import_files : FileList
+   function fileImport(data) {
+      if("SvelteFlowView" in data) {
+        console.info("Loading SvelteFlowView data", data)
+        if(!$show_flow) show_flow.toggle()
+        flow_callbacks.import(data["SvelteFlowView"])
+      }
+   }
+   $: if(import_files) {
+        import_files[0].text().then(t => {
+            try {
+                fileImport(JSON.parse(t))
+            } catch(e) {
+                alert(`Could not read uploaded file because ${e}: ${JSON.stringify(e)}`)
+            }
+        }, e => alert(`Could not read uploaded file: ${JSON.stringify(e)}`))
+        // console.log(import_files) // fileImport(import_files[0])
+      }
+    
+    
+
+
 
 </script>
 
@@ -97,12 +131,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         <div class="level-right">
             <div class="level-item">
                 <div class="buttons has-addons">
-                    <button class="button">
+                    <button class="button" on:click={fileExport}>
                         <span class="icon"><FontAwesomeIcon icon={faFileExport} /></span>
-                        <!--Save-->
+                        <span>Export</span>
                     </button>
-                    <button class="button">
+                    <button class="button" on:click={()=>document.getElementById("editor-file-uploader").click()}><!-- on:click={()=> fileImport()}> -->
                         <span class="icon"><FontAwesomeIcon icon={faFileImport} /></span>
+                        <input id="editor-file-uploader" type="file" bind:files={import_files} accept="text/json, application/json, text/plain" style="display:none">
+                        <span>Import</span>
                     </button>
                     <button class="button" class:is-selected={!$not_fullscreen} on:click={not_fullscreen.toggle}>
                         <span class="icon"><FontAwesomeIcon icon={faExpand} /></span>
@@ -119,13 +155,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
         {#if $show_examples}
         <div class="examples" transition:slide={{ axis: 'x' }}>
-            <ExampleCircuits/>
+            <ExampleCircuits load={fileImport}/>
         </div>
         {/if}
 
         {#if $show_flow}
         <div class="flow" transition:slide={{ axis: 'x' }}>
-            <FlowView/>
+            <FlowView bind:callbacks={flow_callbacks} />
         </div>
         {/if}
 

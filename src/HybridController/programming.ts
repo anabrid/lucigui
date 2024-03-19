@@ -17,6 +17,7 @@
  **/
 
 import array from 'lodash'
+import { logical_routes } from './svelte-stores';
 
 // abbreveating exceptions
 // tryOr(()=>something, )
@@ -64,7 +65,8 @@ export const next_free = (occupied_numbers: number[]): number => {
 }
 
 /** Internal Configuration for an Int M-Block */
-export type MIntConfig = Array<{ ic: number, k?: number }>  /* fixed size: 8 */
+export type IntState = { ic: number; k?: number }
+export type MIntConfig = Array<IntState>  /* fixed size: 8 */
 
 /** Auxiliary Internal Configuration for an U-Block */
 class UBlockAltSignals {
@@ -191,7 +193,6 @@ export type PhysicalRoute = {
     uin: number,
     cval: number,
     iout: number|undefined, // I matrix does not need to be connected, for instance in ADC and ACL_OUT use
-    pinned_lane?: boolean // whether the lane is pinned within a compilation process
 }
 
 
@@ -215,7 +216,9 @@ export const matrix2routes = (matrix: ReducedConfig): PhysicalRoute[] =>
 // @TODO: Rename to something more sensible.
 // export type LogicalComputingElementType = "Mul" | "Int" | "Extin" | "Extout" | "Daq" | "Const"
 
-/** The information direction indicates an output (source) or an input (sink) */
+/**
+ * The information direction indicates an output (source) or an input (sink).  
+ */
 export type InformationDirection = "Sink"|"Source"
 
 /*
@@ -244,77 +247,87 @@ const valid_lane_range : rangeMap = { "Mul": [0,31], "Int": [0,31], "Extin": [16
  * element, @see LogicalComputeElement. It can also be instanced in terms of
  * a physical, routed computing element. We have no class for that right now.
  * 
+ * This class also describes virtual compute elements:
+ *  
+ * A virtual compute element describes compute elements which are 
+ * supposed to be used primarily in a circuit view: External inputs
+ * and outputs as well as Constants and potentiometers.
+ * 
+ * Note that except potentiometers, all mentioned virtual compute elements
+ * are either Sinks our Sources, i.e. have a clear direction.
+ * 
+ * Virtual compute elements have is_virtual=true. This flag is only used for
+ * book-keeping in @see logical2physical.
  **/
-export class ComputeElement {
+export class ElementDescription {
     name: string
     inputs: string[]
     outputs: string[]
-    is_virtual: boolean
+    is_virtual = false
 
     constructor(name:string, inputs=["in"], outputs=["out"]) {
-        this.name=name, this.inputs=inputs, this.outputs=outputs }
+        this.name=name; this.inputs=inputs; this.outputs=outputs; }
+    make_virtual() { this.is_virtual=true; return this } /* chainable */
     
-    toString = () => this.name
+    toString() { return this.name }
 
     /**
      * The registry shall collect all instances of this class.
      * Actually this is a map from ComputeElementName -> ComputeElement,
      * but we don't have the type ComputeElementName defined yet.
      */
-    static registry : { [name:string]: ComputeElement }
-    static fromString = (name:string) : ComputeElement => this.registry[name]
+    static registry : { [name:string]: ElementDescription }
+    static fromString = (name:string) : ElementDescription => this.registry[name]
+
+    isSink() { return this.outputs.length==0 }
+    isSource() { return this.inputs.length==0 }
 }
 
-/**
- * A real compute element type which knows at which clanes it sits.
+/*
+ * On compute element states:
+ * 
+ * By default, computing elements are stateless. That means they do not have
+ * an internal state during analog computation. In contrast, computing elements
+ * such as @see Int or @see Pot have a state (i.e k0, ic, or coefficient value).
+ * 
+ * 
+ * We introduce a "dual" class hierarchy to represent this state in typescript.
+ * We could also have opted in for actual sane element classes but since everything
+ * is transpiled to JavaScript anyway, this seems to be the better way in terms of
+ * runtime safety.
  */
-export class MblockComputeElement extends ComputeElement {
-    is_virtual = false
-    input2clane : (port: string) => number
-    output2clane : (port: string) => number
+/*
+class ElementState {
+    static registry : { [name:string]: ElementState }
+    static fromString = (name:string) : ElementState => this.registry[name]
 }
+*/
 
 /** A single Multiplier on the LUCIDAC, computes out = -(a*b). */
-export const Mul = new MblockComputeElement("Mul", ["a", "b"])
+export const Mul = new ElementDescription("Mul", ["a", "b"])
 
-/** A single Integrator on the LUCIDAC, computes out = + int(in). */
-export const Int = new MblockComputeElement("Int")
+/** A single Integrator on the LUCIDAC, computes out = + int(in).
+ * @see IntState for stateful data */
+export const Int = new ElementDescription("Int")
 
-/**
- * A virtual compute element describes compute elements which are used
- * primarily in the FlowView: External inputs and outputs as well as
- * Constants.
- * 
- * A virtual compute element can only serve either as input (source) or
- * output (sink). They also have only up to one input or outputs.
- * 
- **/
-export class VirtualComputeElement extends ComputeElement {
-    is_virtual = true
-    direction: InformationDirection
-
-    constructor(name:string, direction:InformationDirection) {
-        if(direction=="Sink") super(name, ["sink"], []);
-        else super(name, [], ["source"])
-        this.direction=direction }
-}
-
-export class VirtualSink extends VirtualComputeElement {
+export class VirtualSink extends ElementDescription {
     /** where instances of this computing element are available */
     available_lanes : number[]
 
     constructor(name:string, lane_range:number[]) {
-        super(name, "Sink")
+        super(name, ["sink"], [])
+        this.make_virtual()
         this.available_lanes=lane_range
     }
 }
 
-export class VirtualSource extends VirtualComputeElement {
+export class VirtualSource extends ElementDescription {
     /** where instances of this computinge element are available */
     available_clanes : number[]
 
     constructor(name:string, available_clanes:number[]) {
-        super(name, "Source")
+        super(name, [], ["source"])
+        this.make_virtual()
         this.available_clanes=available_clanes
     }
 }
@@ -324,8 +337,14 @@ export const Extout = new VirtualSink("Extout", range(8, 16))
 export const Extin = new VirtualSource("Extin", range(8, 16))
 export const Const = new VirtualSource("Const", [8])
 
+/** Potentiometers (DPTs, Digital Potentiometers) as they are available in the C-Block.
+ * This is a "virtual" compute element as it has to be assigned to actual ones.
+ */
+export const Pot = new ElementDescription("Pot").make_virtual()
+export type PotState = { coeff: number }
+
 // See also the ComputeElementName type blow
-ComputeElement.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Const].map(n => [n.name, n]))
+ElementDescription.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Const, Pot].map(n => [n.name, n]))
 
 /**
  * Union type which indicates a valid ComputeElement name.
@@ -333,7 +352,7 @@ ComputeElement.registry = Object.fromEntries([Mul, Int, Daq, Extout, Extin, Cons
  * objects to simplify the data structures in particular for import/export/serialization.
  * No need to copy along basic type structures over and over again.
  */
-export type ComputeElementName = "Mul"|"Int"|"Daq"|"Extout"|"Extin"|"Const"
+export type ElementName = "Mul"|"Int"|"Daq"|"Extout"|"Extin"|"Const"|"Pot"
 
 
 /**
@@ -341,59 +360,97 @@ export type ComputeElementName = "Mul"|"Int"|"Daq"|"Extout"|"Extin"|"Const"
  * If this is a logical compute element, the id is unbound.
  * If this is a physical compute element, the id is bound by the number
  * of available computing elements of this type.
+ * 
+ * Note that this is not a generic of some ElementState hierarchy because
+ * instances of this class are runtime-generated anyway so we loose
+ * typescript information, in the moment.
  **/
-export class AssignedComputeElement {
-    typeName: ComputeElementName;
+export class AssignedElement {
+    /**
+     * This is a string for the sake of a lean runtime structure, i.e. we
+     * do not want AssignedElement references at runtime but a small
+     * AssignedElement object. Use @see type() for actual element access.
+     **/
+    typeName: ElementName;
+
+    /**
+     * An integer value enumerating the element in either some logical or
+     * physical number range.
+     **/
     id: number;
 
-    constructor(typeName: ComputeElementName, id: number) {
-        if(!(typeName in ComputeElement.registry)) throw new TypeError(`Illegal ComputeElementName ${typeName}.`)
-        this.typeName = typeName; this.id = id   }
+    /**
+     * For stateful compute elements, such as Int or Pot, this holds an
+     * object of state variables such as { ic: 0.15 }.
+     */
+    state?: Object;
+
+    constructor(typeName: ElementName, id: number, state?: any) {
+        if(!(typeName in ElementDescription.registry)) throw new TypeError(`Illegal ComputeElementName ${typeName}.`)
+        this.typeName = typeName; this.id = id; if(state) this.state = state }
 
     /// Regexp for string encoding
     static strStructure = /(?<typeName>[a-zA-Z]+)(?<id>\d+)/;
 
     // destruct a node id string to their parts
-    static fromString(s: string): AssignedComputeElement {
+    static fromString(s: string): AssignedElement {
         const r = this.strStructure.exec(s)
         if (!r || !r.groups) { console.error(s, r); throw new TypeError("Invalid AssignedComputeElement identifier, does not match strStructure") }
-        else return new AssignedComputeElement(r.groups.typeName as ComputeElementName, Number(r.groups.id))
+        else return new AssignedElement(
+            r.groups.typeName as ElementName,
+            Number(r.groups.id)
+        )
     }
 
+    /**
+     * String representation.
+     * Note that this representation NEVER exposes the state, in order
+     * to be unique. The state is supposed as internal degree of freedom
+     * that does not change any logical or physical element identification.
+     * The string representation shall be usable as a unique id in the
+     * specific element range.
+     */
     toString(): string { return `${this.typeName}${this.id}` }
-    type() { return ComputeElement.fromString(this.typeName) }
 
-    is_virtual() { return  "virtual" in this.type() }
+    type() { return ElementDescription.fromString(this.typeName) }
 }
+
 
 /**
  * The port of a (numerated) logical or physical Compute Element.
  * The port can either be an input (sink) or output (source), depending
  * on the compute element type.
  **/
-export class AssignedComputeElementPort extends AssignedComputeElement {
-    port: string // typically something like "in"|"out"|"a"|"b"
+export class AssignedElementPort extends AssignedElement {
+    port: string // typically something like "in"|"out"|"a"|"b" or even "source"|"sink"
 
-    constructor(typeName: ComputeElementName, id: number, port: string) {
+    constructor(typeName: ElementName, id: number, port: string) {
         super(typeName, id); this.port = port }
     
     toStringWithPort() : string { return `${this.typeName}${this.id}${this.port}` }
     static strStructure = /(?<typeName>[a-zA-Z]+)(?<id>\d+)(?<port>[a-zA-Z]+)/;
 
-    static fromStringWithPort(base: string, port?: string): AssignedComputeElementPort {
+    static fromStringWithPort(base: string, port?: string): AssignedElementPort {
         if(port) {
-            const r = AssignedComputeElement.fromString(base) as AssignedComputeElementPort
+            const r = AssignedElement.fromString(base) as AssignedElementPort
             r.port = port
             return r
         } else {
             const g = this.strStructure.exec(base)
             if(! g?.groups) { console.error(g,base); throw new TypeError("Invalid AssignedComputeElementPort identifier") }
-            return new AssignedComputeElementPort(
-                g.groups.typeName as ComputeElementName,
+            return new AssignedElementPort(
+                g.groups.typeName as ElementName,
                 Number(g.groups.id),
                 g.groups.port
             )
         }
+    }
+
+    /** 
+     * Check for equality. No magic involved. No syntactic sugar. Just call equals().
+     */
+    equals(other : AssignedElementPort) {
+        return this.typeName == other.typeName && this.id == other.id && this.port == other.port
     }
 
     direction() : InformationDirection|undefined {
@@ -414,7 +471,7 @@ interface MBlockSetup {
      * crosslane suitable for U-Block input OR
      * an mblock input crosslane suitable for I-Block output.
      **/
-    port2clane(cep: AssignedComputeElementPort) : number|"NotAssignable"
+    port2clane(cep: AssignedElementPort) : number|"NotAssignable"
 
     /** 
      * Inverse of port2clane.
@@ -427,7 +484,7 @@ interface MBlockSetup {
      * for instance for the StandardLUCIDAC:
      * [int0,...int7,mul0a,mul0b,...mul3a,mul3b]
      **/
-    clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort
+    clane2port(clane:number, mblock_as:InformationDirection) : AssignedElementPort
 }
 
 /**
@@ -446,7 +503,7 @@ export const StandardLUCIDAC = new class  implements MBlockSetup {
     readonly clanes_per_slot = 8
     readonly num_slots = 8
 
-    port2clane(el : AssignedComputeElementPort) : number|"NotAssignable" {
+    port2clane(el : AssignedElementPort) : number|"NotAssignable" {
         const {id, port} = el
         if(el.type().is_virtual) return "NotAssignable" // throw new Error("Can only assign clanes to computing elements with M-Block equivalent")
         if(id < 0) throw new Error("Expecting id to be greater equal 0")
@@ -465,14 +522,14 @@ export const StandardLUCIDAC = new class  implements MBlockSetup {
         }
     }
 
-    clane2port(clane:number, mblock_as:InformationDirection) : AssignedComputeElementPort {
+    clane2port(clane:number, mblock_as:InformationDirection) : AssignedElementPort {
         const slotlane = clane % this.clanes_per_slot // going from [0,7]
         const slot = clane >= this.num_slots ? 1 : 0
         if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
             throw new Error(`Expecting 0 < clane < 16`)
 
-        let ret = new AssignedComputeElementPort(
-            this.slot2type[slot] as ComputeElementName,
+        let ret = new AssignedElementPort(
+            this.slot2type[slot] as ElementName,
             slotlane,
             (mblock_as=="Source") ? "out" : "in"
         )
@@ -490,14 +547,16 @@ export const StandardLUCIDAC = new class  implements MBlockSetup {
     }
 }
 
-/** Unrouted lane which can probably be mapped to a physical one. */
+/** Unrouted lane which can probably be mapped to a physical one.
+ * @deprecated DONT USE THIS ANY MORE, use Pot instead.
+ */
 export class LogicalLane {
     id: number
 
     constructor(id:number) { this.id = id }
 
     static strStructure = /lane(?<lane>\d+)/
-    static fromString(s: string): LogicalLane {
+    static fromString(s: string): LogicalLane|undefined {
         const r = this.strStructure.exec(s)
         if (!r || !r.groups) { console.error("Invalid LogicalLane identifier, does not match strStructure", s, r);
             return undefined
@@ -514,22 +573,18 @@ export class LogicalLane {
 }
 
 /**
- * This is a logical route, i.e. a connection between two logical computing elements.
+ * This is a logical connection, i.e. a connection between two logical computing elements.
  * 
- * Normally, logical routes are mapped onto Physical Routes. This requires @field coeff
- * to be set with some reasonable lane weight. Logical routes can also connect to a
- * virtual sink out of U block, avoiding the C block. In this case, @field coeff and
- * @field lane shall be undefined. @field lane can also be undefined if there is no
- * particular whish for a physical lane.
+ * In the special case that two LogicalConnections connect two physical computing elements,
+ * they can be mapped directly onto a @see PhysicalRoute (or a @see LogicalRoute). Otherwise,
+ * a routing algorithm has to take place which is implemented by @see physical2logical.
  */
-export type LogicalRoute = {
-    source: AssignedComputeElementPort,
-    target: AssignedComputeElementPort,
-    coeff?: number, ///< coefficient weight on the lane
-    lane?: LogicalLane ///< lane id
+export type LogicalConnection = {
+    source: AssignedElementPort,
+    target: AssignedElementPort
 }
 
-const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() && !lr.target.is_virtual()
+const is_non_virtual = (lr:LogicalConnection) : boolean => !lr.source.type().is_virtual && !lr.target.type().is_virtual
 
 /** Compute the set of logical routes given a physical setup
  *
@@ -537,30 +592,48 @@ const is_non_virtual = (lr:LogicalRoute) : boolean => !lr.source.is_virtual() &&
  * In contrast, Extout as well as Adc usage is not directly visible in the ClusterConfig, i.e.
  * a PhysicalRoute{ uin=0, cval=0 } indicates the usage of ADC0 but any physical route which
  * incidentally also allows ADC0 to listen can not be encoded in the ClusterConfig or PhysicalRoute[].
+ * 
+ * Note that this algorithm will map each lane with a single @see Pot element and fan-outs or
+ * "savings" of additional Pots will not be detected. That means the logical route network will
+ * not be "minimal" in terms of Potentiometers. However, the same is true with any other computing
+ * element. There is simply no optimization taking place here.
  **/
-export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAltSignals) : LogicalRoute[] => {
+export const physical2logical = (routes: PhysicalRoute[], alt_signals?: UBlockAltSignals) : LogicalConnection[] => {
     let const_counter = 0
-    const candidates = routes.map(pr => {
+    const candidates = routes.flatMap(pr => {
         let source = null
         if(alt_signals?.has_acl(alt_signals.clane2acl(pr.uin)))
-            source = new AssignedComputeElementPort("Extin", alt_signals.clane2acl(pr.uin) as number, "Source")
+            source = new AssignedElementPort("Extin", alt_signals.clane2acl(pr.uin) as number, "source")
         else if(alt_signals?.has_alt_signal_ref_halt() && pr.uin == UBlockAltSignals.ref_halt_clane)
-            source = new AssignedComputeElementPort("Const", const_counter++, "Source")
+            source = new AssignedElementPort("Const", const_counter++, "source")
         else
             source = StandardLUCIDAC.clane2port(pr.uin, "Source")
         const target = StandardLUCIDAC.clane2port(pr.iout, "Sink")
-        return {
-            source, target,
-            coeff: pr.cval,
-            lane: new LogicalLane(pr.lane)
-        }
+        const coeff_in = new AssignedElementPort("Pot", pr.lane, "in")
+        const coeff_out = new AssignedElementPort("Pot", pr.lane, "out")
+        return [{ source, target:coeff_in }, {source:coeff_out, target}]
     })
     return candidates
 }
 
-export type RoutingError = { msg: string, lr: LogicalRoute }
-export type PhysicalRouteOrError = PhysicalRoute | RoutingError
-export const is_routing_error = (roe : PhysicalRouteOrError) : boolean => "msg" in roe
+/**
+ * A routed LogicalConnection which maps slightly more nicely to the PhysicalRoute.
+ * This is an *intermediate result* of the logical2physical routing process and shall
+ * not be used anywhere else.
+ **/
+type LogicalRoute = {
+    source?: AssignedElementPort,
+    target?: AssignedElementPort,
+    /** coefficient weight on the lane, if assigned, in range [-20,+20] */
+    coeff?: number,
+    /** lane id, if assigned, in range [0,31] */
+    lane?: number,
+    /** Just a flag for the compiler */
+    mark?: boolean
+}
+
+export type RoutingError = { msg: string, lc?: LogicalConnection, lr?: LogicalRoute }
+export const is_routing_error = (roe : LogicalRoute | PhysicalRoute | RoutingError) : boolean => "msg" in roe
 
 /** Describes the output of a logical->physical "pick&place compiler" process
  * @todo: Consider renaming alt_signals -> Ualt as in @see AuxConfig
@@ -572,28 +645,110 @@ export type PhysicalRouting = {
 }
 
 /**Transformations from Logical to Physical Routes, i.e. a simple "Pick & Place" */
-export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
+export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRouting => {
     let alt_signals = new UBlockAltSignals()
     let errors : RoutingError[] = []
-    const strip_off_routing_errors = (lst : PhysicalRouteOrError[]) =>
+    const strip_off_routing_errors = <R extends LogicalRoute | PhysicalRoute>(lst: (R | RoutingError)[]) : R[] =>
         lst.filter(roe => {
-            if(is_routing_error(roe)) errors.push(roe)
+            if(is_routing_error(roe)) errors.push(roe as RoutingError)
             return !is_routing_error(roe)
-        }) as PhysicalRoute[]
+        }) as R[]
     const lane = (pr : PhysicalRoute) => pr.lane // handy shorthand in .map(lane)
 
-    // First handle virtual elements which require certain lanes or cross lanes
+    // Map LogicalConnection[] to LogicalRoute[], i.e. resolve Pot nodes.
+    // First step, prepare unconnected LogicalRoutes, i.e. LogicalRoutes which either
+    // connect {source, poti} or {poti, target}. These parts are connected in the next
+    // iteration.
+    let routes = strip_off_routing_errors(unconnected.map((lc) : (LogicalRoute|RoutingError) => {
+        const {source,target} = lc
+        const source_type = source.type()
+        const target_type = target.type()
+
+        // basic checks
+        if(source_type.isSink())
+            return <RoutingError> { msg: `Cannot treat element ${source} as a source since it is a Sink`, lc }
+        if(target_type.isSource())
+            return <RoutingError> { msg: `Cannot treat element ${source} as a target since it is a Source`, lc }
+        if(source_type.is_virtual && target_type.is_virtual)
+            return <RoutingError> { msg: `Cannot connect two virtual elements ${source} and ${target}.`, lc }
+
+        if(!source || !target)
+            return <RoutingError> { msg: "Unconnected graph", lc } 
+
+
+        if(source_type == Pot || target_type == Pot) {
+            // Have to setup that {source,poti} or {poti,target} type of routes
+            let poti = (target_type == Pot) ? target : source
+            const default_coefficient_value = 1 // assume the potentiometer is set there intentionally.
+            const coeff = poti?.state !== undefined ? (poti.state as number) : default_coefficient_value
+            return {
+                lane: poti.id,
+                coeff,
+                source: (source_type == Pot) ? undefined : source,
+                target: (target_type == Pot) ? undefined : target
+            }
+        } else if(!source_type.is_virtual && !target_type.is_virtual) {
+            // Can directly connect two physical computing elements with coeff=1
+            const coeff = 1.0
+            return {
+                coeff,
+                source, target,
+                lane: undefined
+            }
+        } else {
+            // physical->virtual or virtual->physical connection. Will be handled later
+            return lc
+        }
+    })) // as LogicalRoute[]
+
+    //console.log("logical2physical routes 1st", routes)
+
+    // The connection-searching algorithm works like the following:
+    //    [physical]--->(poti)   (poti)---->[physical]   Identify two pairs by same lane
+    // In case of a fan-out configuration as in...
+    //    [physical]--->(poti)   (poti)---->[physical]  \  all sharing same poti=
+    //                           (poti)---->[physical]  |  same lane
+    //                           (poti)---->[physical]  /
+    // ...this will complete the right side routes and mark the left side one as to be
+    // deleted, as it is redundant to at least one of the fan out routes.
+    routes.forEach((lr,lridx) => {
+        // probably have to ensure that we touch only these Pot half-connections we 
+        // worked on in the previous step, nothing else.
+        if(!lr.source) {
+            const sridx = routes.findIndex(sr => !sr.target && sr.lane == lr.lane)
+            if(sridx >= 0) {
+                const sr = routes[sridx]
+                routes[lridx].source = sr.source
+                routes[sridx].mark = true
+            }
+        }
+    })
+
+    console.log("logical2physical routes 2nd", routes)
+
+    // Pot to route rewriting, cleanup step: Delete marked (=double) lanes and delete unconnected.
+    routes = strip_off_routing_errors(
+        routes.filter(lr => ! lr?.mark)
+        .map(lr => (!lr.source || !lr.target) ? <RoutingError> { msg: "Unconnected graph (potentially unconnected potentiometers)", lr } : lr)
+    )
+
+    console.log("logical2physical routes 3rd", routes)
+
+    // Handle virtual sinks and sources which require certain lanes or cross lanes
     let pinned = strip_off_routing_errors(
-        unrouted.filter(lr => lr.source.is_virtual || lr.target.is_virtual).map(lr => {
+        routes.filter(lr => lr.source.type().is_virtual || lr.target.type().is_virtual).map(lr => {
         const source_type = lr.source.type()
         const target_type = lr.target.type()
 
-        if(source_type.is_virtual && (source_type as VirtualComputeElement).direction == "Sink")
-            return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a source since it is a Sink`, lr }
-        if(target_type.is_virtual && (target_type as VirtualComputeElement).direction == "Source")
-            return <RoutingError> { msg: `Cannot treat virtual element ${lr.source} as a target since it is a Source`, lr }
+        // moved to above
+        /*
+        if(source_type.isSink())
+            return <RoutingError> { msg: `Cannot treat element ${lr.source} as a source since it is a Sink`, lr }
+        if(target_type.isSource())
+            return <RoutingError> { msg: `Cannot treat element ${lr.source} as a target since it is a Source`, lr }
         if(source_type.is_virtual && target_type.is_virtual)
             return <RoutingError> { msg: `Cannot connect two virtual elements ${lr.source} and ${lr.target}.`, lr }
+        */
 
         if(target_type == Daq || target_type == Extout) {
             // First handle sinks: ADCs (Daq) and ACL_OUT (Extout)
@@ -632,7 +787,7 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
                 lane: 16 + lr.source.id,
                 // In contrast, this is the only clane where ACL_IN[id] can feed in. No choice here.
                 uin:  8 + lr.source.id,
-                cval: lr.coeff,
+                //cval: lr.coeff,
                 iout
             }
         } else if(source_type == Const) {
@@ -665,8 +820,8 @@ export const logical2physical = (unrouted: LogicalRoute[]): PhysicalRouting => {
         )  pinned[idx].lane = next_free(valid_pinned_lanes)
     })
 
-    // Second, handle the real elements, i.e. real routes.
-    let flexible = strip_off_routing_errors(unrouted.filter(is_non_virtual).map((lr, ctr) => {
+    // Handle the real elements, i.e. real routes.
+    let flexible = strip_off_routing_errors(routes.filter(is_non_virtual).map((lr, ctr) => {
         const uin = StandardLUCIDAC.port2clane(lr.source)
         const iout = StandardLUCIDAC.port2clane(lr.target)
         if(uin == "NotAssignable") return <RoutingError> { msg: "physical source not assignable", lr }

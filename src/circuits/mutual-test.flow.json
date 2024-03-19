@@ -1,0 +1,137 @@
+{
+    "SvelteFlowView": {
+        "nodes": [
+            {
+                "id": "Mul0",
+                "position": {
+                    "x": 62.5,
+                    "y": 163.5
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {},
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 62.5,
+                        "y": 163.5
+                    },
+                    "width": 72,
+                    "height": 43
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot0",
+                "position": {
+                    "x": 164.25,
+                    "y": 121.5
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {},
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 164.25,
+                        "y": 121.5
+                    },
+                    "width": 50,
+                    "height": 41
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int0",
+                "position": {
+                    "x": 256.25,
+                    "y": 166
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {},
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 256.25,
+                        "y": 166
+                    },
+                    "width": 44,
+                    "height": 41
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot1",
+                "position": {
+                    "x": 165.75,
+                    "y": 241
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {},
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 165.75,
+                        "y": 241
+                    },
+                    "width": 50,
+                    "height": 41
+                },
+                "selected": false,
+                "dragging": false
+            }
+        ],
+        "edges": [
+            {
+                "source": "Mul0",
+                "sourceHandle": "out",
+                "target": "Pot0",
+                "targetHandle": "in",
+                "id": "xy-edge__Mul0out-Pot0in",
+                "selected": false
+            },
+            {
+                "source": "Pot0",
+                "sourceHandle": "out",
+                "target": "Int0",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot0out-Int0in",
+                "selected": false
+            },
+            {
+                "source": "Int0",
+                "sourceHandle": "out",
+                "target": "Pot1",
+                "targetHandle": "in",
+                "id": "xy-edge__Int0out-Pot1in",
+                "selected": false
+            },
+            {
+                "source": "Pot1",
+                "sourceHandle": "out",
+                "target": "Mul0",
+                "targetHandle": "b",
+                "id": "xy-edge__Pot1out-Mul0b",
+                "selected": false
+            }
+        ],
+        "viewport": {
+            "x": 117.5,
+            "y": -131,
+            "zoom": 2
+        }
+    }
+}

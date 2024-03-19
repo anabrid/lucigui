@@ -6,8 +6,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
 
-    import { AssignedComputeElement } from "@/HybridController/programming";
-    import { node2logical } from './Store'
+    import { AssignedElement } from "@/HybridController/programming";
 
     type $$Props = NodeProps;
 
@@ -16,7 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     export let isConnectable: $$Props["isConnectable"];
     export let selected: $$Props["selected"]
 
-    const logicalElement = AssignedComputeElement.fromString(id);
+    const logicalElement = AssignedElement.fromString(id);
     const type = logicalElement.type()
 
     // TODO: Mark invalid elements, ie. not mappable on physical elements

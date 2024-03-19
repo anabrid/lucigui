@@ -10,7 +10,7 @@ import { readable, writable, get, derived, type Writable } from 'svelte/store';
 import ClientDefaults from '@/lib/client_defaults';
 
 import {
-    type OutputCentricConfig, type LogicalRoute,
+    type OutputCentricConfig, type LogicalConnection,
     type ReducedConfig, type PhysicalRouting,
     type ClusterConfig, default_empty_cluster_config,
     config2routing, routing2config,
@@ -306,6 +306,8 @@ export function bufferedStore<T>(upstream : MinimalWritable<T>) {
     return { subscribe, update:stage.update, set:stage.set, save, reset }
 }
 
+/*
+    //// FIXME: What is this?
 
     // initialize in a non-reactive way
     let current_endpoint = get(hc.endpoint)
@@ -317,7 +319,7 @@ export function bufferedStore<T>(upstream : MinimalWritable<T>) {
     // reset component with respect to store
     function reset() { new_endpoint = current_endpoint }
     endpoint.subscribe((e) => { current_endpoint = e; reset() })
-
+*/
 
 // this would work but the derived store is not writable.
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))
@@ -356,7 +358,7 @@ export const physical_routes = writableDerived<Writable<ClusterConfig>, Physical
  * The reflection step is the compilation or pick&place assignment.
  * Given the small size of the LUCIDAC, this can be computed many times a second.
  **/
-export const logical_routes = writableDerived<Writable<PhysicalRouting>, LogicalRoute[]>(
+export const logical_routes = writableDerived<Writable<PhysicalRouting>, LogicalConnection[]>(
     /* origins */ physical_routes,
     /* derive  */ (physical: PhysicalRouting) => physical2logical(physical.routes, physical.alt_signals),
     /* reflect */ logical2physical

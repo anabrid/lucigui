@@ -8,8 +8,17 @@ import App from './App.svelte'
 var splashscreen = document.getElementById("app-splashscreen")
 if(splashscreen) splashscreen.remove()
 
-const app = new App({
-  target: document.getElementById('app'),
-})
+try {
+  const app = new App({
+    target: document.getElementById('app'),
+  })
+} catch(e) {
+  console.error("Crash: ", e)
+  var errorPanel = document.createElement("div")
+  errorPanel.classList.add("notification")
+  errorPanel.classList.add("danger")
+  errorPanel.innerHTML = `<strong>Application crashed</strong> The application crashed with this error message: ${e}. The only way to recover is to reload the whole page.`
+  document.body.insertBefore(errorPanel, document.body.firstChild)
+}
 
 export default app

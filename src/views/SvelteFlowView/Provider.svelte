@@ -13,11 +13,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
  The whole (sub-)component structure is only coupled to the remaining
  code by global stores provided by @/lib/HybridControllerStores.ts
 -->
-<script>
+<script context="module" lang="ts">
+    import { type ExportFormat } from './Store'
+    export interface FlowViewCallback {
+      export() : ExportFormat
+      import(records : ExportFormat)
+    }
+  </script>
+<script lang="ts">
     import FlowView from '@/views/SvelteFlowView/Main.svelte';
     import { SvelteFlowProvider } from '@xyflow/svelte';
+
+    export let callbacks : FlowViewCallback
  </script>
  
 <SvelteFlowProvider>
-    <FlowView />
+    <FlowView bind:callbacks={callbacks} />
 </SvelteFlowProvider>

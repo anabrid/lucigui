@@ -14,14 +14,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     Controls,
   } from "@xyflow/svelte";
 
+  const flow = useSvelteFlow()
+  
   import "@xyflow/svelte/dist/style.css";
 
+  import { type FlowViewCallback } from "./Provider.svelte";
   import Sidebar from "./Sidebar.svelte";
   import AnalogNode from './Node.svelte'
-  import PotiEdge from './Edge.svelte'
+  // import PotiEdge from './Edge.svelte'
 
-  import { routes2matrix, LogicalLane, type ComputeElementName, AssignedComputeElement } from '@/HybridController/programming'
-  import { type CircuitNode, next_free_logical_lane, next_free_logical_clane, edges, nodes } from './Store'
+  import { routes2matrix, LogicalLane, type ElementName, AssignedElement } from '@/HybridController/programming'
+  import { CircuitStore, type CircuitNode, circuit, edges, nodes, type ExportFormat } from './Store'
 
   // have to be declared in node as 'type':'analog'
   const nodeTypes = {
@@ -29,8 +32,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   }
 
   const edgeTypes = {
-    analog: PotiEdge // for potentiometer
+//    analog: PotiEdge // for potentiometer
   }
+
+
+  ////// TODO: General improvements
+  //////    1) useNodesData() nutzen um weniger haeufige Syncs zu verursachen.
 
   /* Drag and Drop from the sidebar */
   const { screenToFlowPosition } = useSvelteFlow();
@@ -45,7 +52,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   const onDrop = (event) => {
     event.preventDefault();
     if (!event.dataTransfer) return null;
-    const typeName = event.dataTransfer.getData("application/svelteflow") as ComputeElementName;
+    const typeName = event.dataTransfer.getData("application/svelteflow") as ElementName;
 
     const position = screenToFlowPosition({
       x: event.clientX,
@@ -53,11 +60,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     });
 
     const newNode = {
-      id: new AssignedComputeElement(typeName, next_free_logical_clane($nodes, typeName)).toString(),
+      id: new AssignedElement(typeName, $circuit.next_free_logical(typeName)).toString(),
       position,
       origin: [0.5, 0.0],
       type: "analog",
-      data: null
+      data: undefined
     } satisfies CircuitNode;
 
     console.info("onDrop: New node ", newNode);
@@ -68,6 +75,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   /* New connections: Assign real elements */
   const onConnect = (connection) => {
+
+    return; // No need for all that -- now we have potentiometer nodes.
+
     // Manually drawn edge, need to rename it
     // Since edges are lanes, there should be only up to 32 edges in the graph, not taking into
     // account virtual elements. However, in logical language, there are unlimited amount of edges.
@@ -83,7 +93,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       throw new Error("onConnect: Cannot find the edge")
     }
 
-    const target_is_virtual = AssignedComputeElement.fromString($edges[eidx].target).is_virtual()
+    const target_is_virtual = AssignedElement.fromString($edges[eidx].target).type().is_virtual
 
     // Find next free lane
     const new_lane = next_free_logical_lane($edges)
@@ -95,6 +105,18 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     console.info("onConnect: Successfully updated", connection, eidx, $edges)
 
     $edges = $edges // enforce reactivity
+  }
+
+  export let callbacks : FlowViewCallback
+  callbacks = new class implements FlowViewCallback {
+    export() { return flow.toObject() }
+    import(records:ExportFormat) {
+      if(!("edges" in records && "nodes" in records))
+        throw Error("Cannot import FlowView: Missing edges and/or nodes")
+      $nodes = records.nodes
+      $edges = records.edges
+      flow.setViewport(records.viewport)
+    }
   }
 </script>
 

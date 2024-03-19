@@ -4,15 +4,12 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
-    import { type ComputeElementName, ComputeElement } from '@/HybridController/programming'
+    import { type ElementName, ElementDescription } from '@/HybridController/programming'
 
-
-
-    const onDragStart = (event: DragEvent, nodeTypeName: ComputeElementName) => {
+    const onDragStart = (event: DragEvent, nodeTypeName: ElementName) => {
         if (!event.dataTransfer) {
             return null;
         }
-
         event.dataTransfer.setData("application/svelteflow", nodeTypeName);
         event.dataTransfer.effectAllowed = "move";
     };
@@ -22,7 +19,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     <!--<div class="label">You can drag these nodes to the pane below.</div>-->
     <div class="nodes-container">
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        {#each Object.entries(ComputeElement.registry) as [element_name, element] }
+        {#each Object.entries(ElementDescription.registry) as [element_name, element] }
             <div
                 class="input-node node"
                 on:dragstart={(event) => onDragStart(event, element_name)}

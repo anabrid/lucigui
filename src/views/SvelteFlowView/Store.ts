@@ -7,43 +7,37 @@
  *
  */
 
-import { type ComputeElementName, AssignedComputeElement, AssignedComputeElementPort, LogicalLane,
-  type LogicalRoute, UniqueCounter,
+import { type ElementName, AssignedElement, AssignedElementPort, LogicalLane,
+  type LogicalConnection, UniqueCounter,
+  type IntState, type PotState,
   range, next_free, tryOr } from '@/HybridController/programming'
 import { logical_routes } from '@/HybridController/svelte-stores'
 
 import { type Writable } from 'svelte/store'
-import { type Node, type Edge } from '@xyflow/svelte'
-
+import { type Node, type Edge, type Viewport } from '@xyflow/svelte'
 
 // 3rd party: https://www.npmjs.com/package/svelte-writable-derived
 import { writableDerived, propertyStore } from 'svelte-writable-derived'
 
 /**
- * Nodes represent LogicalComputeElements, i.e. unrouted computing elements.
- * The information of the LogicalComputeElement is encoded in the Node id
- * string. This way, no aux data is required and thus NodeData={}.
+ * Nodes represent compute elements, @see AssignedElement.
+ * These are potentially unrouted or even virtual compute elements.
+ * The @see ElementName and id are encoded in the Node id string.
+ * The Node Data stores state variables for stateful elements
+ * such as Int or Pot.
  */
-export type NodeData = null
+export type NodeData = IntState | PotState | undefined
 export type CircuitNode = Node<NodeData, "analog">
 
 const default_position = { x: 0, y: 0 }
 
-export const node2logical = (c: CircuitNode): AssignedComputeElement => AssignedComputeElement.fromString(c.id)
-export const logical2node = (l: AssignedComputeElement): CircuitNode => ({
-  id: l.toString(),
-  position: default_position,
-  data: null,
-  type: "analog"
-})
-
 /**
- * Edges hold all data neccessary to compute a LogicalRoute, i.e. an unrouted
- * connection between two LogicalComputeElements.
+ * Edges hold no information in the current incarnation of the code.
  * 
- * The edge ids encode lane ids which are used for mapping to the physical, routed
- * model, if applicable.
- * 
+ * Edges may be mapped to a physical route.
+ *
+ * The following text is most likely @deprecated:
+ *  
  * We use the edge handles to encode information about computing elements with
  * multiple inputs and/or outputs. The names directly map to the FlowViewNode names,
  * for instance the Mul computing element has targetHandles (=two inputs) "a" and "b".
@@ -51,137 +45,122 @@ export const logical2node = (l: AssignedComputeElement): CircuitNode => ({
  * null.
  * 
  **/
-export type EdgeData = {
-  /**
-   * Coefficient within the C block, float range [-20, +20].
-   * 
-   * The value "virtual" indicates that the edge is virtual and
-   * no coefficient is possible, for instance when connecting to a
-   * VirtualSink which is physically realized as M-Block output signal going
-   * to U-Block and then leaving the U-C-I matrix without passing the C-Block.
-   */
-  weight: number|"virtual"
-
-  // this is encoded in the id:
-  //lane: number, ///< Lane within the C block, int range [0..31]
-}
+export type EdgeData = {}
 export type CircuitEdge = Edge<EdgeData>
 
 let global_next_edge_counter = new UniqueCounter()
 
 const default_svelte_new_edge = /xy-edge__(?<source>[^-]+)-(?<target>[^-]+)/
 
-const edge2logical = (e: CircuitEdge): LogicalRoute => {
-  const r = default_svelte_new_edge.exec(e.id)
-  const coeff = e.data && e.data.weight != "virtual" ? e.data.weight : undefined
-  if(r?.groups) {
-    return {
-      source: AssignedComputeElementPort.fromStringWithPort(r.groups.source),
-      target: AssignedComputeElementPort.fromStringWithPort(r.groups.target),
-      coeff,
-      lane: undefined
+export class CircuitStore {
+  nodes: CircuitNode[]
+  edges: CircuitEdge[]
+
+  constructor(nodes:CircuitNode[]=[], edges:CircuitEdge[]=[]) { this.nodes=nodes; this.edges=edges }
+
+  static node2logical(c: CircuitNode): AssignedElement { return AssignedElement.fromString(c.id) }
+  static logical2node (l: AssignedElement): CircuitNode { return {
+    id: l.toString(),
+    position: default_position,
+    data: l.state as NodeData,
+    type: "analog"
+  }}
+
+  /**
+   * This collects the stateful data, if neccessary, from the
+   * respective nodes.
+   * 
+   * Note: Can be speed up by looking up data only for stateful elements.
+   */
+  edge2logical(e: CircuitEdge) : LogicalConnection  {
+    const r = default_svelte_new_edge.exec(e.id)
+    let source : AssignedElementPort
+    let target : AssignedElementPort
+    if(r?.groups) {
+      source = AssignedElementPort.fromStringWithPort(r.groups.source)
+      target = AssignedElementPort.fromStringWithPort(r.groups.target)
+    } else {
+      source = AssignedElementPort.fromStringWithPort(e.source, e.sourceHandle)
+      target = AssignedElementPort.fromStringWithPort(e.target, e.targetHandle)
+    }
+    const sourceId = source.toString()
+    const targetId = target.toString()
+    const sourceNode = this.nodes.find(n => n.id == sourceId)
+    const targetNode = this.nodes.find(n => n.id == targetId)
+    source.state = sourceNode?.data
+    target.state = targetNode?.data
+    return { source, target }
+  }
+
+  static logical2edge(l: LogicalConnection): CircuitEdge { return {
+    //id: LogicalLane.any().toString(),
+    id: global_next_edge_counter.next().toString(),
+    source: l.source.toString(),
+    target: l.target.toString(),
+    sourceHandle: l.source.port,
+    targetHandle: l.target.port,
+  //  data: { weight: l.target.type().is_virtual ? "virtual" : l.coeff },
+  //  type: "analog"
+  }}
+
+  /** Retrieves next free id in a list of nodes.
+   * This will always return an id, even if it is bigger then the number of lanes/clanes,
+   * as we argue in the logical compute element space which is of infinite size. */
+  next_free_logical(typeName: ElementName): number {
+    const occupied = this.nodes.map(CircuitStore.node2logical).filter(lc => lc.typeName == typeName).map(lc => lc.id)
+    return next_free(occupied)
+  }
+
+  static fromRoutes(routes: LogicalConnection[], prev: CircuitStore): CircuitStore {
+    console.log("lucidac2graph starting with ", routes);
+    const prev_nodes = prev ? prev.nodes : [];
+    try {
+      // A Set of node ids, such as "Mul0"
+      const existing_nodes = new Set(prev_nodes.map(n => n.id))
+  
+      const new_nodes = routes.flatMap((/*element*/lr, /*idx*/_lane) => {
+          const source_str = lr.source.toString()
+          const target_str = lr.target.toString()
+          return [
+            existing_nodes.has(source_str) ? undefined : CircuitStore.logical2node(lr.source),
+            existing_nodes.has(target_str) || source_str == target_str ? undefined : CircuitStore.logical2node(lr.target)
+          ]
+        }).filter(k => k !== undefined) as CircuitNode[]
+
+      //console.info("lucidac2graph success: ", ret_val)
+      return new CircuitStore(
+        prev_nodes.concat(new_nodes),
+        routes.map((e) => this.logical2edge(e))
+      )
+    } catch (err) {
+      console.error("lucidac2graph failure: ", err, routes, prev);
+      throw err
     }
   }
-  return {
-    source: AssignedComputeElementPort.fromStringWithPort(e.source, e.sourceHandle),
-    target: AssignedComputeElementPort.fromStringWithPort(e.target, e.targetHandle),
-    coeff,
-    lane: LogicalLane.fromString(e.id) ?? undefined
+
+  toRoutes() : LogicalConnection[] {
+    // This is also called when dragging stuff.
+    // Should probably debounce in order to reduce load
+    const routes = this.edges.map((e) => this.edge2logical(e))
+    //console.info("graph2lucidac:", graph, routes);
+    return routes
   }
 }
 
-const logical2edge = (l: LogicalRoute): CircuitEdge => ({
-  id: LogicalLane.any().toString(),
-  source: l.source.toString(),
-  target: l.target.toString(),
-  sourceHandle: l.source.port,
-  targetHandle: l.target.port,
-  data: { weight: l.target.is_virtual ? "virtual" : l.coeff },
-  type: "analog"
-})
-
-type CircuitStore = { nodes: CircuitNode[], edges: CircuitEdge[] }
-
-/// Retrieves next free id in a list of nodes.
-/// This will always return an id, even if it is bigger then the number of clanes,
-/// as we argue in the logical compute element space which is of infinite size.
-export function next_free_logical_clane(nodes: CircuitNode[], typeName: ComputeElementName): number {
-  const occupied_clanes = nodes.map(node2logical)
-    .filter(lc => lc.typeName == typeName)
-    .map(lc => lc.id)
-  //return new LogicalComputeElement(type, /* id: */ next_free(occupied_clanes))
-  return next_free(occupied_clanes)
-}
-
-export function next_free_logical_lane(edges: CircuitEdge[]) : number {
-  const occupied_lanes = edges.map(edge2logical).filter(e => e.lane !== undefined).map(e => e.lane.id)
-  //return { id: next_free(occupied_lanes), data: { weight: 1 } } as CircuitEdge
-  return next_free(occupied_lanes)
-}
-
-export function lucidac2graph(routes: LogicalRoute[], prev: CircuitStore): CircuitStore {
-  console.log("lucidac2graph starting with ", routes);
-  const prev_nodes = prev ? prev.nodes : [];
-  try {
-    // A Set of node ids, such as "Mul0"
-    const existing_nodes = new Set(prev_nodes.map(n => n.id))
-
-    const new_nodes = routes.filter(r => r.coeff > 0)
-      .flatMap((/*element*/logical_route, /*idx*/_lane) => {
-        const source_str = logical_route.source.toString()
-        const target_str = logical_route.target.toString()
-        return [
-          existing_nodes.has(source_str) ? undefined : logical2node(logical_route.source),
-          existing_nodes.has(target_str) || source_str == target_str ? undefined : logical2node(logical_route.target)
-        ]
-      })
-      .filter((k) => k !== undefined);
-
-    const ret_val = {
-      nodes: prev_nodes.concat(new_nodes),
-      edges: routes.map(logical2edge)
-    }
-    //console.info("lucidac2graph success: ", ret_val)
-    return ret_val
-  } catch (err) {
-    console.error("lucidac2graph failure: ", err, routes, prev);
-    throw err
-  }
-}
-
-function graph2lucidac(graph: CircuitStore): LogicalRoute[] {
-  // This is also called when dragging stuff.
-  // Should probably debounce in order to reduce load
-  const routes = graph.edges.map(edge2logical)
-  //console.info("graph2lucidac:", graph, routes);
-  return routes
-}
-
-
-export default function writableDerived<S extends Stores, T>(
-  origins: S,
-  derive: (values: StoresValues<S>) => T,
-  reflect: (reflecting: T, old: StoresValues<S>) => SetValues<S>,
-  initial?: T
-): Writable<T>;
-
-export default function writableDerived<S extends Stores, T>(
-  origins: S,
-  derive: (values: StoresValues<S>, set: (value: T) => void, update: Updater<T>) => void,
-  reflect: (reflecting: T, old: StoresValues<S>) => SetValues<S>,
-  initial?: T
-): Writable<T>;
-
+/** Basically spilled out by useSvelteFlow().toObject().
+ * Note that { nodes, edges } is also the CircuitStore signature. */
+export type ExportFormat = { nodes: Node[], edges: Edge[], viewport: Viewport }
 
 /**
  * The svelteflow circuit store, storing edges and routes suitable for svelteflow.
  * It is derived from the LogicalRoute store and can write back thanks to the
  * mappings defined in this file.
  */
-export const circuit = writableDerived<Writable<LogicalRoute[]>, CircuitStore>(
+export const circuit = writableDerived<Writable<LogicalConnection[]>, CircuitStore>(
   /* base    */ logical_routes,
-  /* derive  */ (base, _set, update) => update(cur_derived => lucidac2graph(base, cur_derived)),
-  /* reflect */ graph2lucidac,
+  /* derive  */ (base, _set, update) => update(cur_derived => CircuitStore.fromRoutes(base, cur_derived)),
+  /* reflect */ (reflecting) => reflecting.toRoutes(),
+  /* initial */ new CircuitStore()
 )
 
 // stores to be used by SvelteFlow
