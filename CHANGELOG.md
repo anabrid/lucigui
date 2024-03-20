@@ -6,7 +6,7 @@ The project uses [Semantic Versioning](https://semver.org/) as well as
 tries to follow the »[Keep a Changelog](https://keepachangelog.com/)« suggestion.
 However, our changelog is for humans so we will deviate when neccessary.
 
-## [Unreleased]
+## [0.4.0] - 2024-03-20
 
 Here to be dragons.
 
