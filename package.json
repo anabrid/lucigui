@@ -22,16 +22,22 @@
     "release": "release-it"
   },
   "release-it": {
-    "npm": { "publish": false },
-    "git": { 
-      "changelog": "vipe <(git log --pretty=format:\"* %s (%h)\" ${from}...${to})",
-      "push": false, "tagName": "v${version}", "commitMessage": "Release v${version}\n\n${changelog}" },
-    "hooks": {
-      "after:bump:release": "vipe "
+    "npm": {
+      "publish": false
+    },
+    "git": {
+      "push": false,
+      "tagName": "v${version}"
+    },
+    "plugins": {
+      "@release-it/keep-a-changelog": {
+        "filename": "CHANGELOG.md"
+      }
     }
   },
   "devDependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@release-it/keep-a-changelog": "^5.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
     "@tsconfig/svelte": "^5.0.2",
     "@xyflow/svelte": "^0.0.36",
