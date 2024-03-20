@@ -31,10 +31,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     </div>
 </aside>
 
-<style>
+<style lang="scss">
     aside {
         width: 100%;
-        background: #f4f4f4;
+        //background: #f4f4f4;
         font-size: 12px;
         display: flex;
         flex-direction: column;

@@ -64,7 +64,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       position,
       origin: [0.5, 0.0],
       type: "analog",
-      data: undefined
+      data: {}
     } satisfies CircuitNode;
 
     console.info("onDrop: New node ", newNode);

@@ -7,39 +7,54 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
    import { faLeftRight } from '@fortawesome/free-solid-svg-icons'
 
-
+    import { type NodeData } from './Store';
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
-
     import { AssignedElement } from "@/HybridController/programming";
 
-    type $$Props = NodeProps;
+    type $$Props = NodeProps<NodeData>;
 
-    export let id: $$Props["id"];
-    //export let data: $$Props["data"];
-    export let isConnectable: $$Props["isConnectable"];
-    export let selected: $$Props["selected"]
+    export let id: $$Props['id']; id;
+    export let data: $$Props['data']; data;
+    export let dragHandle: $$Props['dragHandle'] = undefined; dragHandle;
+    export let type: $$Props['type']  = undefined; type;
+    export let selected: $$Props['selected'] = undefined; selected;
+    export let isConnectable: $$Props['isConnectable'] = undefined; isConnectable;
+    export let zIndex: $$Props['zIndex'] = undefined; zIndex;
+    export let width: $$Props['width'] = undefined; width;
+    export let height: $$Props['height'] = undefined; height;
+    export let dragging: $$Props['dragging']; dragging;
+    export let targetPosition: $$Props['targetPosition'] = undefined; targetPosition;
+    export let sourcePosition: $$Props['sourcePosition'] = undefined; sourcePosition;
+
+//    export let data: $$Props["data"] = { rtl: false }
 
     const logicalElement = AssignedElement.fromString(id);
-    const type = logicalElement.type()
+    const desc = logicalElement.type()
+
+    $: {
+        if(!data) data = {}
+        if(!("rtl" in data)) data.rtl = false
+        data = data
+    }
 
     // TODO: Mark invalid elements, ie. not mappable on physical elements
     const valid = true
 </script>
 
-<div class="node ltr" class:invalid={!valid} class:selected={selected}>
+<div class="node" class:rtl={data.rtl} class:ltr={!data.rtl} class:invalid={!valid} class:selected={selected}>
     <div class="node-box">
         <div class="input-handles">
-            {#if type.inputs.length == 2}
+            {#if desc.inputs.length == 2}
             <Handle
                 type="target"
-                position={Position.Left}
+                position={data.rtl ? Position.Right : Position.Left}
                 id="a"
                 style="top: 30%"
                 {isConnectable}
             />
             <Handle
                 type="target"
-                position={Position.Left}
+                position={data.rtl ? Position.Right : Position.Left}
                 id="b"
                 style="top: 70%"
                 {isConnectable}
@@ -48,10 +63,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <span>&sum;</span>
             <span>&sum;</span>
             {/if}
-            {:else if type.inputs.length == 1}
+            {:else if desc.inputs.length == 1}
             <Handle
                 type="target"
-                position={Position.Left}
+                position={data.rtl ? Position.Right : Position.Left}
                 id="in"
                 style="top: 50%"
                 {isConnectable}
@@ -62,12 +77,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             {/if}
         </div>
         <div class="node-label">
-            {#if type.name == "Int"}
+            {#if desc.name == "Int"}
             <img src="latex-int.svg">
-            {:else if type.name == "Mul"}
+            {:else if desc.name == "Mul"}
             <img src="latex-mul.svg">
             {:else}
-            <i>{ type.name }</i>
+            <i>{ desc.name }</i>
             {/if}
             {#if !selected}
             <sub>
@@ -80,7 +95,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         </div>
         {#if selected}
         <table>
-            {#if type.name == "Int"}
+            {#if desc.name == "Int"}
             <tr>
                 <td>ic=</td>
                 <td><input value="123"></td>
@@ -89,7 +104,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 <td>k<sub>0</sub>=</td>
                 <td><input value="1000"></td>
             </tr>
-            {:else if type.name == "Pot"}
+            {:else if desc.name == "Pot"}
             <tr>
                 <td>coeff=</td>
                 <td><input value="1"></td>
@@ -103,18 +118,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         {/if}
     </div>
     <div class="caret">
-        {#if selected}
-        <button class="button is-small" name="swap">
-            <span class="icon is-small"><FontAwesomeIcon icon={faLeftRight} /></span>
-        </button>
-        {/if}
         <svg viewBox="0 0 10 10" preserveAspectRatio="none">
             <path d="M 0,10 10,5 0,0" vector-effect="non-scaling-stroke" />
         </svg>
     </div>
-    {#if type.outputs.length == 1 }
-    <Handle type="source" position={Position.Right} id="out" {isConnectable} />
+    {#if desc.outputs.length == 1 }
+    <Handle type="source" position={data.rtl ? Position.Left : Position.Right} id="out" {isConnectable} />
     {/if}
+    {#if selected}
+    <button class="button is-small" name="swap" on:click={()=> data.rtl = !data.rtl}>
+        <span class="icon is-small"><FontAwesomeIcon icon={faLeftRight} /></span>
+        <span>Mirror</span>
+    </button>
+    {/if}
+
 </div>
 
 <!--
@@ -145,10 +162,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     .node {
         display: flex;
         flex-direction: row;
+        &.rtl { flex-direction: row-reverse; }
+
 
         height: $node-height;
-
-
 
         &.ltr {
             border-right: 0;
@@ -160,9 +177,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         display: flex;
         flex-direction: row;
 
+
         border: $border-size solid $border-color;
         background-color: white;
-        border-right: none;
+        .ltr & { border-right: none; }
+        .rtl & { border-left:  none; }
 
         .selected & {
             background-color: #eff0ff;
@@ -183,9 +202,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             stroke: $border-color;
             stroke-width: $border-size;
             paint-order: fill markers stroke;
+
+            .rtl & { transform: scale(-1,1) }
         }
-        // for RTL:
-        // transform: scale(-1,1);
 
         .selected & svg {
             fill: #eff0ff;
@@ -199,6 +218,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         font-size: 70%;
         text-align: center;
         width: 1em;
+
+        .rtl & { order: 3 }
     }
 
     table {
@@ -209,23 +230,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         td, th {
             padding: 0
         }
-        input {
-            width: 3em;
-            padding: 0;
-        }
     }
 
-    input {
-        width: 1.5em;
+    input:not([type="checkbox"]) {
+        width: 3em;
         font-size: 80%;
-        padding: 2px;
+        padding: 0;
         border: none
     }
 
     button[name="swap"] {
         font-size: 40%;
         position: absolute;
-        top: 30%;
+        top: -44%;
+        left: 24%;
     }
 
     .invalid {

@@ -49,13 +49,7 @@ export const duplicates = (array) => array.filter((e, i, a) => a.indexOf(e) !== 
 export function union<T>(a:Array<T>,b:Array<T>) : Array<T> {return [...new Set([...a, ...b])] }
 
 /** Maps {A:a, B:b} to { a:A, b:B } */
-export function reverse(obj : Object) {
-  let new_obj= {}
-  Object.keys(obj).reverse().forEach(function(i) { 
-    new_obj[i] = obj[i];
-  })
-  return new_obj;
-}
+export const reverse = (obj : Object) => Object.fromEntries(Object.entries(obj).map(kv=>kv.reverse()))
 
 export class UniqueCounter {
     count: number;
@@ -394,7 +388,7 @@ export class AssignedElement {
     state?: Object;
 
     constructor(typeName: ElementName, id: number, state?: any) {
-        if(!(typeName in ElementDescription.registry)) throw new TypeError(`Illegal ComputeElementName ${typeName}.`)
+        if(!(typeName in ElementDescription.registry)) throw new TypeError(`Illegal ElementDescription: ${typeName}.`)
         this.typeName = typeName; this.id = id; if(state) this.state = state }
 
     /// Regexp for string encoding
@@ -509,7 +503,7 @@ export const StandardLUCIDAC = new class  implements MBlockSetup {
 
     // Constants for any LUCIDAC
     readonly clanes_per_slot = 8
-    readonly num_slots = 8
+    readonly num_slots = 2
 
     port2clane(el : AssignedElementPort) : number|"NotAssignable" {
         const {id, port} = el
@@ -532,7 +526,7 @@ export const StandardLUCIDAC = new class  implements MBlockSetup {
 
     clane2port(clane:number, mblock_as:InformationDirection) : AssignedElementPort {
         const slotlane = clane % this.clanes_per_slot // going from [0,7]
-        const slot = clane >= this.num_slots ? 1 : 0
+        const slot = clane >= this.clanes_per_slot ? 1 : 0
         if(clane < 0 && clane > this.num_slots * this.clanes_per_slot)
             throw new Error(`Expecting 0 < clane < 16`)
 
@@ -851,7 +845,7 @@ export const logical2physical = (unconnected: LogicalConnection[]): PhysicalRout
     flexible.forEach((pr,idx) => {
         if(pinned_lanes.includes(pr.lane) ||
            duplicates(flexible.map(lane)).includes(pr.lane))
-           pinned[idx].lane = next_free(union(pinned_lanes, flexible.map(lane)))
+           flexible[idx].lane = next_free(union(pinned_lanes, flexible.map(lane)))
     })
 
     return { routes: union(pinned, flexible), errors, alt_signals }

@@ -74,7 +74,7 @@ export class CircuitStore {
   static logical2node (l: AssignedElement): CircuitNode { return {
     id: l.toString(),
     position: default_position,
-    data: l.state as NodeData,
+    data: (l.state as NodeData) || {},
     type: "analog"
   }}
 

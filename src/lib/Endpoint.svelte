@@ -39,20 +39,29 @@
     const leftButtonCommunicationLabels  = { offline: "LUCIDAC @", connecting: "Connecting...", online: "Connected:", failed: "Unreachable:" }
     const rightButtonCommunicationLabels = { offline: "Connect", connecting: "Cancel", online: "Ping", failed: "Retry" }
 
-    $: leftButtonLabel = editing ? (url_valid ? "Valid URL: " : "Invalid URL: ") : leftButtonCommunicationLabels[$endpoint_status]
+    $: leftButtonLabel = editing ? (!$new_endpoint ? "Connect to:" : (url_valid ? "Valid URL: " : "Invalid URL: ")) : leftButtonCommunicationLabels[$endpoint_status]
+    //$: leftButtonLabel = editing ? (url_valid ? "Valid URL: " : "Invalid URL: ") : leftButtonCommunicationLabels[$endpoint_status]
     $: rightButtonLabel = editing ? (url_valid ? "Connect" : "Cancel" ) : rightButtonCommunicationLabels[$endpoint_status]
 
     let rightButtonIcon = undefined
 
+    export let cancel_callback : (() => void)|undefined
+
+    function submit() { new_endpoint.save() }
+    function cancel() {
+        new_endpoint.reset()
+        if(cancel_callback) cancel_callback()
+    }
+
     const communicationAction = {
-        offline() { new_endpoint.save() },
+        offline() { submit() },
         connecting() { window.alert("Ha. Currently things are not cancable.")  },
         online() { window.alert("Will implement ping function in future") },
         failed() { /* could call hc.connect(null, true); */ window.alert("not now") }
     }
 
     const leftButtonAction = () => {}
-    const rightButtonAction = () => (editing ? (url_valid ? new_endpoint.save() : new_endpoint.reset()) : communicationAction[$endpoint_status]())
+    const rightButtonAction = () => (editing ? (url_valid ? submit() : cancel()) : communicationAction[$endpoint_status]())
 
     export let show_only_action_button = false
 
@@ -73,7 +82,7 @@
         -->
     </span>
     <span class="control is-expanded" class:is-hidden={show_only_action_button}>
-      <input class="input" class:is-success={url_valid} class:is-danger={!url_valid} type="url"
+      <input class="input" class:is-success={url_valid} class:is-danger={!url_valid && $new_endpoint} type="url"
         on:click={(e)=>e.target.select()}
         on:focus={() => input_focus = true}
         on:blur={() => input_focus = false}

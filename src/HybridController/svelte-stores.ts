@@ -196,6 +196,11 @@ class SvelteHybridController {
     //  onMount latest).
     // They also need to be downloaded any time the hc endpoint changes.
 
+    // TODO:
+    // The stores currently have no protection against !this.remote.is_connected().
+    // If not connected, the hc.query() just will raise an Error. Mabye this should
+    // be better guarded
+
     status = new Syncable(() => this.remote.query("status"))
     entities = new Syncable(() => this.remote.get_entities())
     config = new Syncable(() => this.remote.get_config(), () => this.remote.set_config())
@@ -269,6 +274,8 @@ export const hc_status_avail = hc.status.status // because status_status is bone
 export const settings = hc.settings.value
 export const settings_avail = hc.settings.status
 export const settings_error = hc.settings.error
+export const hc_circuit = hc.config.value
+export const hc_circuit_avail = hc.config.status
 
 // sometimes an even simpler version is needed
 export const connected = derived(hc.endpoint_status, (status) => status == "online")
@@ -288,7 +295,7 @@ export function bufferedStore<T>(upstream : MinimalWritable<T>) {
     let stage = writable(get<T>(upstream))
 
     // helper functions enriching this store
-    function save() { upstream.set(stage) } // delayed storage write
+    function save() { upstream.set(get<T>(stage)) } // delayed storage write
     function reset() { stage.set(get<T>(upstream)) }
 
     // clumsy way to track upstream changes without leaking store subscriptions

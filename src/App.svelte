@@ -13,8 +13,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import ClientDefaults from '@/lib/client_defaults';
   import { lazy_load_sentry } from '@/lib/sentry.js'
 
+  import Endpoint from "@/lib/Endpoint.svelte"
   import { hc, endpoint, endpoint_status } from "@/HybridController/svelte-stores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
+
+  import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+  import { faLink, faLinkSlash } from '@fortawesome/free-solid-svg-icons'
 
   import Home from "@/routes/Home.svelte";
   import Help from "@/routes/Help.svelte";
@@ -47,14 +51,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   var endpoint_dropdown_active = false;
 
+  // This is for fullscreen display, allows to completely hide the navbar.
   let navbar_visible = toggle(true)
   setContext("navbar_visible", navbar_visible) // allow any children to toggle
 
-  const navbar_burger_active = toggle(false)
+  // this is for mobile devices, with a collapsible navigation bar
+  const navbar_burger_active = toggle(true)
 
   if(ClientDefaults.sentry_dsn)
     lazy_load_sentry(ClientDefaults.sentry_dsn)
 
+//  const navbar_online_labels = { offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }
+//  let navbar_online_label = ""
+//  $: navbar_online_label = navbar_online_labels[$endpoint_status]
+  const navbar_show_endpoint_widget = toggle(false)
 </script>
 
 {#if $navbar_visible}
@@ -73,7 +83,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       aria-label="menu"
       aria-expanded="false"
       data-target="navbarBasicExample"
-      class:is-active={$navbar_burger_active}
+      class:is-active={!$navbar_burger_active}
       on:click={navbar_burger_active.toggle}
     >
       <span aria-hidden="true"></span>
@@ -88,6 +98,28 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       {/each}
     </div>
     <div class="navbar-end">
+      <div class="navbar-item">
+        {#if !$navbar_show_endpoint_widget}
+        <a role="button" on:click={navbar_show_endpoint_widget.toggle} class="navbar-link">
+          <span class="icon">
+            {#if $endpoint_status == "offline"}<FontAwesomeIcon icon={faLinkSlash} />
+            {:else if $endpoint_status == "connecting"}<FontAwesomeIcon icon={faLink} fade />
+            {:else if $endpoint_status == "online"}<FontAwesomeIcon icon={faLink} />
+            {:else if $endpoint_status == "failed"}<FontAwesomeIcon icon={faLinkSlash} style={{color:"red"}} />
+            {/if}
+          </span>
+          <span>{{ offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }[$endpoint_status]}</span>
+        </a>
+        {:else}
+        <Endpoint/>
+        &nbsp;
+        <button class="button" on:click={navbar_show_endpoint_widget.toggle}>Close</button>
+        {/if}
+      </div>
+      <div class="navbar-item">
+        <a class="navbar-item" on:click={info_modal_open.toggle}>About</a>
+      </div>
+      <!--
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">
           Headless
@@ -101,14 +133,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             Reachable: {$endpoint_status}
           </div>
           <hr class="navbar-divider">
+          {#if $endpoint_status == "online"}
           <a class="navbar-item">
-            Login (if connected...)
+            Login
           </a>
           <hr class="navbar-divider">
+          {/if}
           <a class="navbar-item" on:click={info_modal_open.toggle}>
-            About
+            About this application
           </a>
         </div>
+      -->
       </div>
     </div>
 

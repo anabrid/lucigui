@@ -84,6 +84,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                         {#each Object.entries(options) as [k,v]}
                         <option value={v}>{k}</option>
                         {/each}
+                        <!-- This is only for cosmetic reasons if the value is "undefined",
+                             could also say #if !($value in options) -->
+                        {#if $value === undefined}
+                        <option value={$value}></option>
+                        {/if}
                     </select>
                 </span>
                 {:else}

@@ -5,7 +5,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
   import Status from '@/lib/Status.svelte'
-  import {fade} from 'svelte/transition'
+  import { slide, fade } from 'svelte/transition'
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
   import { hc, endpoint, endpoint_status, hc_status, connected, entities } from '@/HybridController/svelte-stores'
@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import DebugView from '@/views/DebugView.svelte';
   import { onMount } from 'svelte';
 
-  onMount(() => { hc.status.download() })
+  // onMount(() => { hc.status.download() }) // needs guard against bool($endpoint), see below.
 
   let gettingStarted = false
 
@@ -27,7 +27,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <main in:fade>
   <section class="hero" class:is-fullheight-with-navbar={!$connected} class:is-medium={$connected}><!-- style="flex-direction: row"> -->
     <div class="hero-body">
-      <div class="columns">
+      <div class="columns" style="align-items: center">
         <div class="column is-half">
           <p class="title">
             Configure {!ClientDefaults.has_default_endpoint&&!$connected?"any":"your"} luci with ease
@@ -46,7 +46,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
           <div style="max-width: 70%">
               {#if $endpoint_status == "connecting"}
-              <span class="icon-text">
+              <span class="icon-text" transition:fade>
                 <span class="icon"><FontAwesomeIcon icon={faNetworkWired} beat /></span>
                 <span>Connecting...</span>
               </span>
@@ -76,8 +76,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
               {/if}
 
               {#if gettingStarted && $endpoint_status == "offline"}
-              <div class="notification content">
-                <!--<button class="delete"></button>-->
+              <div class="notification content" transition:slide>
+                <button class="delete" on:click={()=>gettingStarted=false}></button>
                 <p>This web application allows you to configure and control
                   suitable LUCIDACs which have a <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a> setting
                   that allows access from anywhere or at least from <tt>{hostname}</tt>.

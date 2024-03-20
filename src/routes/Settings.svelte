@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     import { slide } from 'svelte/transition';
     import { toggle } from '@/lib/utils';
 
-    onMount(() => { hc.settings.download() })
+    // onMount(() => { hc.settings.download() }) // next line should do it too, is guarded against bool($endpoint)
     // Download settings whenever endpoint changes (to non-null).
     $: $endpoint, $endpoint && hc.settings.download()
 

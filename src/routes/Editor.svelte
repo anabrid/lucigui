@@ -17,23 +17,24 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import DebugView from '@/views/DebugView.svelte';
    import ExampleCircuits from '@/views/ExampleCircuits.svelte';
 
-   import { logical_routes, physical_routes } from '@/HybridController/svelte-stores'
+   import { hc_circuit_avail, logical_routes, physical_routes, cluster_config } from '@/HybridController/svelte-stores'
    import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
 
    let show_examples = toggle(true)
 
    let show_flow = toggle(true)
    let flow_callbacks : FlowViewCallback
-   let show_matrix = toggle(false)
+   let show_matrix = toggle(true)
    let show_code = toggle(false)
    let show_tree = toggle(false)
 
-   let show_debug_graph = toggle(true)
-   let show_debug_logical = toggle(true)
-   let show_debug_physical = toggle(true)
+   let show_debug_graph = toggle(false)
+   let show_debug_logical = toggle(false)
+   let show_debug_physical = toggle(false)
+   let show_debug_cluster_config = toggle(false)
 
-   let compact_matrix = false
-   $: console.log("Editor Compact: ", compact_matrix==true, compact_matrix==false)
+   let headless = false
+   $: headless = $hc_circuit_avail != "set"
 
    let not_fullscreen = getContext("navbar_visible") // well, expanded at least. Don't mess with real fullscreen.
 
@@ -87,12 +88,12 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         <div class="level-left">
             <div class="level-item">
                 <div class="buttons has-addons">
-                    <button class="button is-primary">
+                    <button class="button is-primary" disabled={headless}>
                         <!-- Write configuration to Lucidac ("upload") -->
                         <span class="icon"><FontAwesomeIcon icon={faDownload} /></span>
                         <span>Configure</span>
                     </button>
-                    <button class="button">
+                    <button class="button" disabled={headless}>
                         <!-- Read new configuration from Lucidac--> 
                         <span class="icon"><FontAwesomeIcon icon={faUpload} /></span>
                         <span>Readout</span>
@@ -125,6 +126,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <button class="button" class:is-selected={$show_debug_graph} on:click={show_debug_graph.toggle}>Debug Graph</button>
                     <button class="button" class:is-selected={$show_debug_logical} on:click={show_debug_logical.toggle}>Logical</button>
                     <button class="button" class:is-selected={$show_debug_physical} on:click={show_debug_physical.toggle}>Physical</button>
+                    <button class="button" class:is-selected={$show_debug_cluster_config} on:click={show_debug_cluster_config.toggle}>Cluster</button>
                 </div>
             </div>
         </div>
@@ -155,7 +157,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
         {#if $show_examples}
         <div class="examples" transition:slide={{ axis: 'x' }}>
-            <ExampleCircuits load={fileImport}/>
+            <ExampleCircuits load={fileImport} close={show_examples.toggle}/>
         </div>
         {/if}
 
@@ -167,12 +169,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
         {#if $show_matrix}
         <div class="matrix" transition:slide={{ axis: 'x' }}>
-            <h2>Physical Matrix
-                (<label for="compact-physical-matrix">
-                    <input id="compact-physical-matrix" type="checkbox" bind:checked={compact_matrix}>
-                Compact</label>)
-            </h2>
-            <BlockView bind:compact={compact_matrix} />
+            <BlockView />
         </div>
         {/if}
 
@@ -200,6 +197,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <DebugView view={$physical_routes} />
         </div>
         {/if}
+
+        {#if $show_debug_cluster_config}
+        <div class="debug" transition:slide={{ axis: 'x' }}>
+            <h2>UCI-Cluster</h2>
+            <DebugView view={$cluster_config} />
+        </div>
+        {/if}
     </div><!--/views-->
 </main>
 
@@ -222,14 +226,19 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             font-weight: bold;
         }
 
-        &>div:not(:last-child) {
-            border-right: 1px solid #000;
+        &>div:not(:last-child):not(.examples) {
+            // border-right: 1px solid #000;
         }
     }
 
-    :global(pre) {
+    :global(.views pre) {
         padding: 0;
-        max-width: 20em;
+        max-width: 25em;
         overflow: scroll;
+        position: relative;
+        box-shadow: -2px 0 16px rgba(0,0,0,0.05);
+        border-left: 1px solid #aaa;
+        font-size: 82%;
+        line-height: 115%;
     }
 </style>

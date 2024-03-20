@@ -11,8 +11,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
+    import { slide, fade } from 'svelte/transition'
+    import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+    import { faArrowDown } from '@fortawesome/free-solid-svg-icons'
+
     import { cluster_config } from "@/HybridController/svelte-stores";
     import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/HybridController/programming";
+
+    import { toggle } from '@/lib/utils';
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.
@@ -48,7 +54,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     })
     */
 
-  export let compact = false
+  export let compact = toggle(false)
+  export let headers = toggle(true)
 
   const shortTypes = { "Int": "I", "Mul": "M", "Const": "C" }
   const Mname = (clane:number, mblock_as:InformationDirection)  => {
@@ -64,15 +71,66 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 </script>
 
-<div class="entities">
-  <!--
-  {#if !$config_loaded}
-    <p>Attention, working with defaults, will be overwritten when loading from server</p>
-  {/if}
-  -->
-    <table class:compact={compact}>
+<section>
+
+<nav class="level">
+  <!-- Left side -->
+  <div class="level-left">
+    <div class="level-item">
+      <p class="subtitle is-5">
+        Physical <strong>UCI-Matrix</strong> View
+      </p>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="level-right">
+    <div class="level-item">
+      <div class="buttons has-addons">
+        <button class="button" class:is-selected={$headers} on:click={headers.toggle}>Header</button>
+        <button class="button" class:is-selected={$compact} on:click={compact.toggle}>Compact</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+    <table class:compact={$compact}>
+      {#if $headers && !$compact}
+      <thead transition:slide>
+        <tr class="blocks">
+          {#each xrange(StandardLUCIDAC.num_slots) as i}
+            <td colspan={StandardLUCIDAC.clanes_per_slot}>M<b>{ StandardLUCIDAC.slot2type[i] }</b>Block</td>
+          {/each}
+          <td>
+            C
+          </td>
+          {#each xrange(StandardLUCIDAC.num_slots) as i}
+            <td colspan={StandardLUCIDAC.clanes_per_slot}>M<b>{ StandardLUCIDAC.slot2type[i] }</b>Block</td>
+          {/each}
+        </tr>
+        <tr>
+          {#each "uci" as uci}
+            {#if uci == "u" || uci == "i"}
+              {#each xrange(ncrosslanes) as clane}
+                {@const label = Mname(clane, uci == "u" ? "Source" : "Sink") }
+                <td><label><i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub></label>
+                  <span style="display:block"><FontAwesomeIcon icon={faArrowDown} rotation={uci == "u" ? 0 : 180} /></span>
+                </td>
+              {/each}
+            {:else}
+                <td>coeff
+                  <span style="display:block"><FontAwesomeIcon icon={faArrowDown} rotation={270} /></span>
+                </td>
+            {/if}
+          {/each}
+        </tr>
+      </thead>
+      {/if}
+      <tbody>
       {#each xrange(nlanes) as lane}
-        <tr class:active={$cluster_config.c[lane] != 0}>
+        <!-- this active condition checks on undefined/null and real numerical 0 -->
+        <tr class:active={$cluster_config.c[lane]}>
           {#each "uci" as uci}
             {#if uci == "u" || uci == "i"}
               {#each xrange(ncrosslanes) as clane}
@@ -101,7 +159,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                   {/if}
                   <label for="{htmlid_prefix}_{uci}_{lane}_{clane}"><!--
                     requires no whitespace
-                    -->{#if !compact}<i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>{:else}&nbsp;{/if}
+                    -->{#if !$compact}<i>{label.shortTypeName}</i>{#if label.interestingInOut}<sup>{label.port}</sup>{/if}<sub>{label.id}</sub>{:else}&nbsp;{/if}
                   </label>
                 </td>
               {/each}
@@ -119,36 +177,52 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
           {/each}
         </tr>
       {/each}
+      </tbody>
     </table>
-</div>
+</section>
 
 <style lang="scss">
+  section {
+    margin-left: 32px;
+  }
+
   table {
     border-collapse: collapse;
     line-height: 1.3em;
   }
   td,
   th {
-    border: 1px solid #dedede;
     padding: 0;
+
+    tbody & { border: 1px solid #dedede; }
+  }
+
+  thead {
+    text-align: center !important;
+    .blocks td {
+      border: 1px solid #dedede;
+    }
   }
 
   label {
     /* Filling whole td */
-    cursor: pointer;
     display: block;
     text-align: center;
-    color: #fff;
     width: 1.3em;
     height: 1.3em;
     position: relative;
+
+    tbody & {
+      cursor: pointer;
+      color: #fff;
+    }
 
     table.compact & {
       width: .3em;
       height: auto;
     }
 
-    &:hover {
+    tbody &:hover {
       background-color: #c0d8ff;
       color: #aaa;
     }
@@ -188,7 +262,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     position: relative;
   }
 
-  td:hover::after {
+  tbody td:hover::after {
     content: "";
     position: absolute;
     background-color: #fefedb;
@@ -200,7 +274,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   }
 
   /* regular row hovering */
-  tr:hover {
+  tbody tr:hover {
     &,
     label {
       background-color: #fefedb;
