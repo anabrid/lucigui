@@ -22,13 +22,12 @@ build_headless:
     - npm install
     - ENDPOINT="" npm run build
     - cp *.md dist/
-#    - cd dist && tar cvfz lucidac-gui-headless.tar.gz .
-#    - echo ANABRID_BUILD_JOB_ID=$CI_JOB_ID > .anabrid_build_result.env
+    - echo HEADLESS_JOB_ID=$CI_JOB_ID > .anabrid_build_result.env
   artifacts:
     paths:
       - dist
-#    reports:
-#      dotenv: .anabrid_build_result.env
+    reports:
+      dotenv: .anabrid_build_result.env
 
 build_for_teensy:
   stage: build
@@ -36,13 +35,12 @@ build_for_teensy:
     - npm install
     - npm run build
     - cp *.md dist/
-#    - cd dist && tar cvfz lucidac-gui-teensy.tar.gz .
-#    - echo ANABRID_BUILD_JOB_ID=$CI_JOB_ID > .anabrid_build_result.env
+    - echo EMBEDDED_JOB_ID=$CI_JOB_ID > .anabrid_build_result.env
   artifacts:
     paths:
       - dist
-#    reports:
-#      dotenv: .anabrid_build_result.env
+    reports:
+      dotenv: .anabrid_build_result.env
 
 upload_headless_to_webserver:
   stage: deploy
@@ -52,28 +50,49 @@ upload_headless_to_webserver:
   script:
     - chmod 600 "$SSH_PRIVATE_KEY_FILE_STAGING"
     - echo "ai.svenk.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBE2YTwpWWq4ceRXHbCFHlw5kmRVLQjKbdYeFAAyYUDXFRhCjRknE6DKlGIIciKOqzAMiFGz5/vxb6tKMCKBeFU0=" > ~/userknown.txt
-    - echo -e "cd anabrid.dev/lucidac-gui/main/\nput -R dist/*" | sftp -o "UserKnownHostsFile=~/userknown.txt" -i"$SSH_PRIVATE_KEY_FILE_STAGING" $DEPLOY_STAGING_SSH_HOST
+    - echo cd anabrid.dev/lucidac-gui/main/ >> sftp-commands.txt
+    - echo "put -R dist/*" >> sftp-commands.txt
+    - cat sftp-commands.txt | sftp -o "UserKnownHostsFile=~/userknown.txt" -i"$SSH_PRIVATE_KEY_FILE_STAGING" $DEPLOY_STAGING_SSH_HOST
 
-#
-#gitlab_release:
-#  stage: deploy
-#  image: registry.gitlab.com/gitlab-org/release-cli:latest
-#  rules:
-#    - if: $CI_COMMIT_TAG
-#  needs:
-#    - job: build_headless
-#      artifacts: true
-#    - job: build_for_teensy
-#      artifacts: true
-#  script:
-#    - echo "Releasing artifacts built in build_job ${ANABRID_BUILD_JOB_ID}."
-#  release:
-#    name: 'LUCIDAC Firmware v$CI_COMMIT_TAG'
-#    description: 'LUCIDAC firmware release version $CI_COMMIT_TAG.'
-#    # tag_name is a mendatory field and can not be an empty string
-#    tag_name: '$CI_COMMIT_TAG'
-#    assets:
-#      links:
-#        - name: 'Firmware binary hex file'
-#          url: '$CI_PROJECT_URL/-/jobs/${ANABRID_BUILD_JOB_ID}/artifacts/raw/dist/dist.tar.gz'
-#          link_type: package
+upload_release_to_webserver:
+  stage: deploy
+  image: svenk/latex
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs:
+    - build_headless
+  script:
+    - chmod 600 "$SSH_PRIVATE_KEY_FILE_STAGING"
+    - echo "ai.svenk.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBE2YTwpWWq4ceRXHbCFHlw5kmRVLQjKbdYeFAAyYUDXFRhCjRknE6DKlGIIciKOqzAMiFGz5/vxb6tKMCKBeFU0=" > ~/userknown.txt
+    - echo mkdir anabrid.dev/lucidac-gui/${CI_COMMIT_TAG} >> sftp-commands.txt
+    - echo cd anabrid.dev/lucidac-gui/${CI_COMMIT_TAG}/ >> sftp-commands.txt
+    - echo "put -R dist/*" >> sftp-commands.txt
+    - cat sftp-commands.txt | sftp -o "UserKnownHostsFile=~/userknown.txt" -i"$SSH_PRIVATE_KEY_FILE_STAGING" $DEPLOY_STAGING_SSH_HOST
+
+gitlab_release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs:
+    - job: build_headless
+      artifacts: true
+    - job: build_for_teensy
+      artifacts: true
+  script:
+    - echo "Releasing artifacts built in build jobs ${HEADLESS_JOB_ID}."
+    - echo "and ${EMBEDDED_JOB_ID}."
+    # by the way, git is available in image, can also accumulate interesting information for changelog
+  release:
+    name: 'LUCIDAC-GUI v$CI_COMMIT_TAG'
+    # TODO: Would be nice to load changelog here.
+    description: 'LUCIDAC-GUI CI-triggered release version $CI_COMMIT_TAG. See CHANGELOG for details.'
+    # tag_name is a mendatory field and can not be an empty string
+    tag_name: '$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'Static HTML/JS/CSS Bundle for headless use'
+          url: '$CI_PROJECT_URL/-/jobs/${HEADLESS_JOB_ID}/artifacts/download'
+          filepath: lucidac-gui-v$CI_COMMIT_TAG.zip
+        - name: 'Static HTML/JS/CSS Bundle for embedded use'
+          url: '$CI_PROJECT_URL/-/jobs/${EMBEDDED_JOB_ID}/artifacts/download'
