@@ -6,10 +6,15 @@ The project uses [Semantic Versioning](https://semver.org/) as well as
 tries to follow the »[Keep a Changelog](https://keepachangelog.com/)« suggestion.
 However, our changelog is for humans so we will deviate when neccessary.
 
+## [Unreleased]
+
+Minor bugfixes.
+
 ## [0.4.0] - 2024-03-20
 
-Here to be dragons.
+First release ready to be alpha tested by wider audience, i.e. other people
+in anabrid.
 
-## [0.3.0] -- February 2024
+## [0.3.0] -- Started around 2024-02-15
 
-Early development.
+First steps in vite.

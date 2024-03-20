@@ -97,14 +97,26 @@ Make sure you have a running version of nodejs or in particular `npm`, the node 
 If you want to build the compiled code locally, run  `npm run build`.
 Afterwards, you can serve the code without any node dependency for instance with `cd dist && python -m http.server`.
 
+### Useful commands
+
+* `npm run release` -- creates a release (`git tag` + `package.json`; Gitlab-Release is done in CI)
+* `npx vite-bundle-visualizer` -- allows to inspect a bundle and identify wasteful dependencies or problems in tree shaking
+
+### Debugging and Developing tips
 If you want to use an IDE, we suggest to use vscode or IntelliJ with the svelte plugins for developing.
 
-When debugging in browser, the JavaScript console is your friend.
-You can load the JavaScript HybridController client directly into the browser console and then examine
-how replies look like with the following:
+When debugging in browser, the JavaScript console is your friend. While Svelte components are not easy to examine,
+our modules expose some variables in the `window` scope, that means you can do something like
 
 ```
-var hc; import("http://localhost:5173/src/lib/HybridController.ts").then(module => { hc = module; })
+hc.remote.query("status)
+get(hc.endpoint)
+```
+
+and similar. Note that you can also load ECMASCript modules via something like
+
+```
+var hc; import("http://localhost:5173/src/HybridController/connection.ts").then(module => { hc = module; })
 await hc.query("status)
 ```
 

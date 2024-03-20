@@ -93,6 +93,7 @@ gitlab_release:
       links:
         - name: 'Static HTML/JS/CSS Bundle for headless use'
           url: '$CI_PROJECT_URL/-/jobs/${HEADLESS_JOB_ID}/artifacts/download'
-          filepath: lucidac-gui-v$CI_COMMIT_TAG.zip
+          filepath: /lucidac-gui-headless-v$CI_COMMIT_TAG.zip
         - name: 'Static HTML/JS/CSS Bundle for embedded use'
           url: '$CI_PROJECT_URL/-/jobs/${EMBEDDED_JOB_ID}/artifacts/download'
+          filepath: /lucidac-gui-embedded-v$CI_COMMIT_TAG.zip
