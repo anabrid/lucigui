@@ -24,7 +24,7 @@
   "release-it": {
     "npm": { "publish": false },
     "git": { 
-      "changelog": "git log --pretty=format:\"* %s (%h)\" ${from}...${to} | vipe",
+      "changelog": "vipe <(git log --pretty=format:\"* %s (%h)\" ${from}...${to})",
       "push": false, "tagName": "v${version}", "commitMessage": "Release v${version}\n\n${changelog}" },
     "hooks": {
       "after:bump:release": "vipe "
