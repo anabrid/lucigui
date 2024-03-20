@@ -8,6 +8,8 @@ However, our changelog is for humans so we will deviate when neccessary.
 
 ## [Unreleased]
 
+## [0.4.1] - 2024-03-20
+
 Minor bugfixes.
 
 ## [0.4.0] - 2024-03-20

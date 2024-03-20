@@ -2,7 +2,7 @@
   "name": "lucidac-gui",
   "description": "Browser based (SPA) configuration and programming utility for LUCIDAC",
   "private": false,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "license": "(MIT OR GPL-2.0-or-later)",
   "author": {
