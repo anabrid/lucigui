@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
     import { type NodeData } from './Store';
     import { Handle, Position, type NodeProps } from "@xyflow/svelte";
-    import { AssignedElement } from "@/HybridController/programming";
+    import { AssignedElement } from "@/HybridController/types";
 
     type $$Props = NodeProps<NodeData>;
 

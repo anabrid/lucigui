@@ -12,13 +12,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     const htmlid_prefix = `SettingsNode${component_instance_counter++}`
 
     import { slugify } from '@/lib/utils'
-    import { hc, settings_avail, permissivePropertyStore } from "@/HybridController/svelte-stores"
+    import { permissivePropertyStore, SvelteHybridController } from "@/HybridController/svelte-stores"
     import { getContext } from 'svelte';
-    import { writable } from 'svelte/store';
     import { slide } from 'svelte/transition';
 
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
     import { faPlug } from '@fortawesome/free-solid-svg-icons'
+
+    const hc = getContext("hc") as SvelteHybridController
+    const settings = hc.settings
+    const settings_avail = hc.settings.status
 
     export let name : string; // Settings Name to show
     type form_element = "input" | "url" | "number" | "checkbox" | "password" | "select" | "user-pass"

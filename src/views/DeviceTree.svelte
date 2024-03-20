@@ -3,15 +3,18 @@ Copyright (c) 2024 anabrid GmbH
 Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
-<script>
+<script lang="ts">
+    import { getContext } from 'svelte';
     import DeviceTreeNode from './DeviceTreeNode.svelte'
+    import type { SvelteHybridController } from '@/HybridController/svelte-stores';
 
-    import { hc } from "@/HybridController/svelte-stores";
+    const hc = getContext("hc") as SvelteHybridController
+    const value = hc.config.value
     
   </script>
 
   <div class="entities">
       <ul>
-        <DeviceTreeNode k="DeviceTree" v={hc.config.$value} />
+        <DeviceTreeNode k="DeviceTree" v={$value} />
       </ul>
   </div>

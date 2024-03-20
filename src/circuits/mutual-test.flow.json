@@ -1,4 +1,8 @@
 {
+    "_meta": {
+        "desc": "A small test circuit for circular references",
+        "title": "Circular reference"
+    },
     "SvelteFlowView": {
         "nodes": [
             {
@@ -12,14 +16,16 @@
                     0
                 ],
                 "type": "analog",
-                "data": {},
+                "data": {
+                    "rtl": false
+                },
                 "computed": {
                     "positionAbsolute": {
                         "x": 62.5,
                         "y": 163.5
                     },
-                    "width": 72,
-                    "height": 43
+                    "width": 58,
+                    "height": 40
                 },
                 "selected": false,
                 "dragging": false
@@ -35,14 +41,16 @@
                     0
                 ],
                 "type": "analog",
-                "data": {},
+                "data": {
+                    "rtl": false
+                },
                 "computed": {
                     "positionAbsolute": {
                         "x": 164.25,
                         "y": 121.5
                     },
-                    "width": 50,
-                    "height": 41
+                    "width": 62,
+                    "height": 40
                 },
                 "selected": false,
                 "dragging": false
@@ -58,14 +66,16 @@
                     0
                 ],
                 "type": "analog",
-                "data": {},
+                "data": {
+                    "rtl": false
+                },
                 "computed": {
                     "positionAbsolute": {
                         "x": 256.25,
                         "y": 166
                     },
-                    "width": 44,
-                    "height": 41
+                    "width": 51,
+                    "height": 40
                 },
                 "selected": false,
                 "dragging": false
@@ -81,14 +91,16 @@
                     0
                 ],
                 "type": "analog",
-                "data": {},
+                "data": {
+                    "rtl": true
+                },
                 "computed": {
                     "positionAbsolute": {
                         "x": 165.75,
                         "y": 241
                     },
-                    "width": 50,
-                    "height": 41
+                    "width": 62,
+                    "height": 40
                 },
                 "selected": false,
                 "dragging": false
@@ -129,9 +141,9 @@
             }
         ],
         "viewport": {
-            "x": 117.5,
-            "y": -131,
-            "zoom": 2
+            "x": 24.261295343207053,
+            "y": -153.0234653310011,
+            "zoom": 1.492364554617407
         }
     }
 }

@@ -12,17 +12,20 @@
   export const info_modal_open = toggle(false)
 </script>
 
-<script>
-
+<script lang="ts">
   import * as tr from "svelte/transition";
-
 
   // Works but is... plain text.
   import { hostname } from "@/lib/utils";
   import ClientDefaults from '@/lib/client_defaults';
-  import { endpoint } from "../HybridController/svelte-stores";
+  import type { SvelteHybridController } from "@/HybridController/svelte-stores";
+  import { getContext } from "svelte";
 
-  const infos = {
+  const hc = getContext("hc") as SvelteHybridController
+  const endpoint = hc.endpoint
+
+  let infos = {}
+  $: infos = {
     Version: ClientDefaults.app_version, // todo, would be nice to have Gitlab links
     Commit: ClientDefaults.app_githash,
     Date: ClientDefaults.app_build_date,

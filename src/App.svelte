@@ -5,6 +5,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
   import { setContext } from "svelte";
+  import { get } from "svelte/store";
   import { slide, fade } from "svelte/transition";
   import Router, { link, querystring } from "svelte-spa-router";
   import active from "svelte-spa-router/active";
@@ -14,7 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { lazy_load_sentry } from '@/lib/sentry.js'
 
   import Endpoint from "@/lib/Endpoint.svelte"
-  import { hc, endpoint, endpoint_status } from "@/HybridController/svelte-stores";
+  import { SvelteHybridController } from "@/HybridController/svelte-stores";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -65,6 +66,29 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 //  let navbar_online_label = ""
 //  $: navbar_online_label = navbar_online_labels[$endpoint_status]
   const navbar_show_endpoint_widget = toggle(false)
+
+
+  /**
+   * This is the Svelte-flaveoured HybridController global app singleton.
+   * It is not a store but a collection of many stores (@see Syncable<T> for
+   * details).
+   **/
+  const hc = new SvelteHybridController(ClientDefaults.endpoint_url)
+
+  // expose to global window for fabulous debugging in browser console
+  window.hc = hc
+  window.get = get // svelte store get
+
+  // expose to all child components
+  setContext("hc", hc)
+
+  // aliasing neccessary for svelte reactivity
+  const endpoint = hc.endpoint
+  const endpoint_status = hc.endpoint_status
+
+  // debugging
+  hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val))
+  hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val))
 </script>
 
 {#if $navbar_visible}

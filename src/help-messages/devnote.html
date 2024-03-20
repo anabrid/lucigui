@@ -1,33 +1,55 @@
 <h2 class="title">On using this app</h2>
 <h3 class="subtitle">Readme for first time users</h3>
 <div class="content">
-<p>Please note that this application is in early development. You are very much invited
-    to test out what is already possible and report problems, expectations, inconsistencies
-    bugs, etc in form of a <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues/new">new ticket</a>
-    on our <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues">bug tracker</a>.
-    You can also submit a
-    <a href="mailto:gitlab+lucidac-software-lucidac-gui-257-d1ykn0opqs6ae6xzq8v71ibwa-issue@anabrid.dev">new ticket by mail</a>.
+
+<div class="notification is-primary">
+    Hallo <strong>Anabrid-Mitarbeiter!</strong>
+    Bitte schaut euch die folgenden Kurzinstruktionen an bevor ihr
+    diese Web-Anwendung durchklickt!
+</div>
+
+<p>Please note that this application is still in heavy development. <strong>You are very much invited</strong>
+    to test out what is already possible and report not only <strong>problems</strong> and bugs,
+    but also <strong>expectations or nice-to-have features</strong>. Please use one of the 
+    following channels to do so:
 </p>
-<p>
-    Please note that this website basically works on mobile phones, but is not
-    (yet) tailored to be used on your smartphone or tablet. That is, it is currently
-    best to be used on a desktop or laptop!
-</p>
+<ul>
+    <li><strong>Open a <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues/new">new ticket</a></strong>
+        in the <a href="https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues">bug tracker</a> of our gitlab project</li>
+    <li>You can also submit a
+        <a href="mailto:gitlab+lucidac-software-lucidac-gui-257-d1ykn0opqs6ae6xzq8v71ibwa-issue@anabrid.dev">new ticket by mail</a>.</li>
+    <li>Use the <strong>Sentry "Report a Bug"</strong> button (but read the limitations below)</li>
+    <li>Only as fallback: Make screenshots, write on Mattermost</li>
+</ul>
+<p>Please consider the following <strong>limitations</strong>:</p>
+<ul>
+    <li><strong>Limited mobile support</strong>:
+        Please note that this website basically works on mobile phones, but is <strong>not</strong>
+        (yet) tailored to be used on your <strong>smartphone or tablet</strong>. That is, it is currently
+        best to be used on a desktop or laptop!
+    <li>Please <strong>disable your adblocker</strong> for this page, if applicable, in order to allow
+        sentry to work (see below).</li>
+</ul>
+<h3>On the error tracking software Sentry</h3>
 <p>
     To simplify user reports even further, we use the
     Application Perfromance Monitoring & Error Tracking Software
-    <a href="https://sentry.io/">sentry</a>. This allows you to report a bug
+    <a href="https://sentry.io/">sentry</a>. This allows you to report user feedback
     even easier by clicking the <em>report a bug</em> button in the lower right,
     which will automatically also include a screenshot and internal debugging details.
     A few comments about sentry:
 </p>
 <ul>
-    <li>Sentry may be blocked by your adblocker because it can also be used for tracking users (which we don't do).
-        Consider disabling your adblocker for this page.</li>
-    <li>Sentry is known not to work too well with Firefox (it silently ignores your bug reports).
+    <li>We see the issue that sentry silently ignores user feedback. Therefore
+        <strong>do not write long texts</strong> in the feedback form but use a
+        well tested media instead (such as gitlab ticket).
+    </li>
+    <li>Sentry may be <strong>blocked by your adblocker</strong> because it can also be used for tracking users (which we don't do).
+        Please consider disabling your adblocker for this page.</li>
+    <li>Sentry is known not to work too well with <strong>Firefox</strong> (it silently ignores your bug reports).
         Consider using Chrome or similar browsers (Edge, Safari).
     </li>
-    <li>We will provide an opt-in/opt-out for sentry performance monitoring in the future to comply with
+    <li>Note: We will provide an opt-in/opt-out for sentry performance monitoring in the future to comply with
         GDPR. Currently the software is in development. We probably also will get rid of sentry in favour
         of another solution.
     </li>

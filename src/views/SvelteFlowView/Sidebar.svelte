@@ -4,7 +4,7 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
-    import { type ElementName, ElementDescription } from '@/HybridController/programming'
+    import { type ElementName, ElementDescription } from '@/HybridController/types'
 
     const onDragStart = (event: DragEvent, nodeTypeName: ElementName) => {
         if (!event.dataTransfer) {

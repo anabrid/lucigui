@@ -14,19 +14,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
  code by global stores provided by @/lib/HybridControllerStores.ts
 -->
 <script context="module" lang="ts">
+  // delete me
     import { type ExportFormat } from './Store'
     export interface FlowViewCallback {
       export() : ExportFormat
       import(records : ExportFormat)
     }
-  </script>
+</script>
 <script lang="ts">
     import FlowView from '@/views/SvelteFlowView/Main.svelte';
     import { SvelteFlowProvider } from '@xyflow/svelte';
 
-    export let callbacks : FlowViewCallback
+    export let view
  </script>
  
 <SvelteFlowProvider>
-    <FlowView bind:callbacks={callbacks} />
+    <FlowView bind:this={view} />
 </SvelteFlowProvider>

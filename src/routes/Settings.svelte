@@ -4,14 +4,18 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
-    import { onMount, setContext } from 'svelte';
+    import { getContext, onMount, setContext } from 'svelte';
     import { fade } from "svelte/transition"
-    import { hc, bufferedStore, endpoint, settings_avail, settings_error, permissivePropertyStore } from "@/HybridController/svelte-stores"
+    import { bufferedStore, SvelteHybridController } from "@/HybridController/svelte-stores"
     import Setting from "@/views/SettingsNode.svelte"
     import Endpoint from "@/lib/Endpoint.svelte"
-    import { writable } from 'svelte/store';
     import { slide } from 'svelte/transition';
     import { toggle } from '@/lib/utils';
+
+    const hc = getContext("hc") as SvelteHybridController
+    const endpoint = hc.endpoint
+    const settings_avail = hc.settings.status
+    const settings_error = hc.settings.error
 
     // onMount(() => { hc.settings.download() }) // next line should do it too, is guarded against bool($endpoint)
     // Download settings whenever endpoint changes (to non-null).

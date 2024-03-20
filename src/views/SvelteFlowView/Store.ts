@@ -7,11 +7,10 @@
  *
  */
 
-import { type ElementName, AssignedElement, AssignedElementPort, LogicalLane,
-  type LogicalConnection, UniqueCounter,
-  type IntState, type PotState,
-  range, next_free, tryOr } from '@/HybridController/programming'
-import { logical_routes } from '@/HybridController/svelte-stores'
+import { type ElementName, AssignedElement, AssignedElementPort,
+  type LogicalConnection, type IntState, type PotState, type CircuitFileFormat } from '@/HybridController/types'
+import { range, next_free, tryOr, UniqueCounter } from "@/HybridController/utils"
+import { SvelteHybridController } from '@/HybridController/svelte-stores'
 
 import { type Writable } from 'svelte/store'
 import { type Node, type Edge, type Viewport } from '@xyflow/svelte'
@@ -161,21 +160,21 @@ export class CircuitStore {
 
 /** Basically spilled out by useSvelteFlow().toObject().
  * Note that { nodes, edges } is also the CircuitStore signature. */
-export type ExportFormat = { nodes: Node[], edges: Edge[], viewport: Viewport }
+export type ExportFormat = { nodes: CircuitNode[], edges: CircuitEdge[], viewport: Viewport }
+
+export interface FlowCircuitFileFormat extends CircuitFileFormat {
+  SvelteFlowView?: ExportFormat
+}
 
 /**
  * The svelteflow circuit store, storing edges and routes suitable for svelteflow.
  * It is derived from the LogicalRoute store and can write back thanks to the
  * mappings defined in this file.
  */
-export const circuit = writableDerived<Writable<LogicalConnection[]>, CircuitStore>(
-  /* base    */ logical_routes,
-  /* derive  */ (base, _set, update) => update(cur_derived => CircuitStore.fromRoutes(base, cur_derived)),
-  /* reflect */ (reflecting) => reflecting.toRoutes(),
-  /* initial */ new CircuitStore()
-)
-
-// stores to be used by SvelteFlow
-export const edges = propertyStore(circuit, "edges")
-export const nodes = propertyStore(circuit, "nodes")
-
+export const deriveCircuitFrom = (hc: SvelteHybridController) => 
+  writableDerived<Writable<LogicalConnection[]>, CircuitStore>(
+    /* base    */ hc.logical_routes,
+    /* derive  */ (base, _set, update) => update(cur_derived => CircuitStore.fromRoutes(base, cur_derived)),
+    /* reflect */ (reflecting) => reflecting.toRoutes(),
+    /* initial */ new CircuitStore()
+  )

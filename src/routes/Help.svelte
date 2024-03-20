@@ -7,9 +7,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import {fade} from 'svelte/transition'
    import { link, querystring } from "svelte-spa-router";
 
-   import ClientDefaults from '@/lib/client_defaults';
-   import About, { info_modal_open } from "@/lib/About.svelte"
-
    import devnote from "@/help-messages/devnote.html?raw"
    import starting from "@/help-messages/getting-started.html?raw"
 

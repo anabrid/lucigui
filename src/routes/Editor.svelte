@@ -13,17 +13,22 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
    import BlockView from '@/views/BlockView.svelte'
    import DeviceTree from '@/views/DeviceTree.svelte'
-   import FlowView, { type FlowViewCallback } from '@/views/SvelteFlowView/Provider.svelte';
+   import FlowView from '@/views/SvelteFlowView/Provider.svelte'
+   import FlowViewMain from "@/views/SvelteFlowView/Main.svelte"
    import DebugView from '@/views/DebugView.svelte';
-   import ExampleCircuits from '@/views/ExampleCircuits.svelte';
+   import ExampleCircuits from '@/views/ExampleCircuits.svelte'
 
-   import { hc_circuit_avail, logical_routes, physical_routes, cluster_config } from '@/HybridController/svelte-stores'
-   import { edges, nodes, circuit } from '@/views/SvelteFlowView/Store'
+   import { SvelteHybridController } from '@/HybridController/svelte-stores'
+   import { type FlowCircuitFileFormat } from "@/views/SvelteFlowView/Store";
+    
+   const hc = getContext("hc") as SvelteHybridController
+   const hc_circuit_avail = hc.config.status
+   const cluster_config = hc.cluster_config    
 
    let show_examples = toggle(true)
 
+   let flowView : FlowViewMain
    let show_flow = toggle(true)
-   let flow_callbacks : FlowViewCallback
    let show_matrix = toggle(true)
    let show_code = toggle(false)
    let show_tree = toggle(false)
@@ -40,22 +45,30 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
    // This is just a stub, TODO export with other methods.
    function fileExport() {
-      let data = {}
-      if($show_flow) {
-        data["SvelteFlowView"] = flow_callbacks.export()
+      let data : FlowCircuitFileFormat = {}
+      data["_meta"] = {
+        title: "Export from Lucidac-GUI Editor"
       }
+      if($show_flow) {
+        data["SvelteFlowView"] = flowView.exportFlow()
+      }
+      data["ClusterConfig"] = $cluster_config
 
       saveJsonAsFile("lucidac-config.json", data)
    }
 
    let import_files : FileList
-   function fileImport(data) {
-      if("SvelteFlowView" in data) {
-        console.info("Loading SvelteFlowView data", data)
+   function fileImport(data : FlowCircuitFileFormat) {
+      if("SvelteFlowView" in data && data.SvelteFlowView) {
+        console.info("Editor.fileImport: Loading as SvelteFlowView data", data)
         if(!$show_flow) show_flow.toggle()
-        flow_callbacks.import(data["SvelteFlowView"])
+        flowView.importFlow(data.SvelteFlowView)
+      } else {
+        console.info("Editor.fileImport: Delegating to SvelteHybridController", data)
+        hc.read_from(data)
       }
    }
+
    $: if(import_files) {
         import_files[0].text().then(t => {
             try {
@@ -163,7 +176,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
         {#if $show_flow}
         <div class="flow" transition:slide={{ axis: 'x' }}>
-            <FlowView bind:callbacks={flow_callbacks} />
+            <FlowView bind:view={flowView} />
         </div>
         {/if}
 
@@ -176,32 +189,32 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         {#if $show_debug_graph}
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Edges</h2>
-            <DebugView bind:view={$edges} />
+            <DebugView store={flowView.edges} />
         </div>
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Nodes</h2>
-            <DebugView bind:view={$nodes} />
+            <DebugView store={flowView.nodes} />
         </div>
         {/if}
 
         {#if $show_debug_logical}
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Logical Routes</h2>
-            <DebugView bind:view={$logical_routes} />
+            <DebugView store={hc.logical_routes} />
         </div>
         {/if}
 
         {#if $show_debug_physical}
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Physical Routes</h2>
-            <DebugView view={$physical_routes} />
+            <DebugView store={hc.physical_routes} />
         </div>
         {/if}
 
         {#if $show_debug_cluster_config}
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>UCI-Cluster</h2>
-            <DebugView view={$cluster_config} />
+            <DebugView store={hc.cluster_config} />
         </div>
         {/if}
     </div><!--/views-->

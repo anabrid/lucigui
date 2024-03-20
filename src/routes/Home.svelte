@@ -3,17 +3,26 @@ Copyright (c) 2024 anabrid GmbH
 Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
-<script>
-  import Status from '@/lib/Status.svelte'
+<script lang="ts">
+  import { getContext, onMount } from 'svelte';
+  import { derived } from 'svelte/store';
   import { slide, fade } from 'svelte/transition'
+
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
-  import { hc, endpoint, endpoint_status, hc_status, connected, entities } from '@/HybridController/svelte-stores'
+
+  import { SvelteHybridController } from '@/HybridController/svelte-stores'
   import { hostname } from '@/lib/utils';
   import ClientDefaults from '@/lib/client_defaults';
   import Endpoint from "@/lib/Endpoint.svelte"
   import DebugView from '@/views/DebugView.svelte';
-  import { onMount } from 'svelte';
+
+  const hc = getContext("hc") as SvelteHybridController
+  const endpoint = hc.endpoint
+  const endpoint_status = hc.endpoint_status
+  const hc_status = hc.status.value
+  const connected = derived(hc.endpoint_status, (status) => status == "online")
+  const entities = hc.entities.value
 
   // onMount(() => { hc.status.download() }) // needs guard against bool($endpoint), see below.
 

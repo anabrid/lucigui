@@ -3,18 +3,18 @@
         "desc": "As logical routes, following /firmware/hybrid-controller-dev/test/integrated/test_lorenz_attractor/",
         "title": "Lorenz Attractor"
     },
-    "MIntConfig": [
-        {
-            "ic": -1.0
-        },
-        {
-            "ic": 0
-        },
-        {
-            "ic": 0
-        }
-    ],
-    "PhysicalRouting": {
+    "RoutesConfig": {
+        "MInt": [
+            {
+                "ic": -1.0
+            },
+            {
+                "ic": 0
+            },
+            {
+                "ic": 0
+            }
+        ],
         "routes": [
             {
                 "cval": -1,
@@ -83,7 +83,7 @@
                 "uin": 9
             }
         ],
-        "alt_signals": [
+        "Ualt": [
             false,
             false,
             false,

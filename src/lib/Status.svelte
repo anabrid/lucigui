@@ -4,7 +4,9 @@ Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script>
-    import { hc } from "@/HybridController/svelte-stores";
+    import { getContext } from "svelte";
+
+    const hc = getContext("hc")
 
     // a few helpful names here that will be populated later 
     /*

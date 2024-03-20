@@ -5,6 +5,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
   import { writable } from "svelte/store";
+  import { getContext } from "svelte";
+  import { propertyStore } from "svelte-writable-derived";
   import {
     SvelteFlow,
     useSvelteFlow,
@@ -23,8 +25,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import AnalogNode from './Node.svelte'
   // import PotiEdge from './Edge.svelte'
 
-  import { routes2matrix, LogicalLane, type ElementName, AssignedElement } from '@/HybridController/programming'
-  import { CircuitStore, type CircuitNode, circuit, edges, nodes, type ExportFormat } from './Store'
+  import { type ElementName, AssignedElement } from '@/HybridController/types'
+  import { type CircuitNode, type ExportFormat, deriveCircuitFrom } from './Store'
+  import type { SvelteHybridController } from "@/HybridController/svelte-stores";
+
+  const hc = getContext("hc") as SvelteHybridController
+  export const circuit = deriveCircuitFrom(hc)
+
+  // stores to be used by SvelteFlow
+  export const edges = propertyStore(circuit, "edges")
+  export const nodes = propertyStore(circuit, "nodes")
 
   // have to be declared in node as 'type':'analog'
   const nodeTypes = {
@@ -107,16 +117,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $edges = $edges // enforce reactivity
   }
 
-  export let callbacks : FlowViewCallback
-  callbacks = new class implements FlowViewCallback {
-    export() { return flow.toObject() }
-    import(records:ExportFormat) {
+//  export let callbacks : FlowViewCallback
+//  callbacks = new class implements FlowViewCallback {
+  export function exportFlow() : ExportFormat { return flow.toObject() }
+
+  export function importFlow(records:ExportFormat) {
       if(!("edges" in records && "nodes" in records))
         throw Error("Cannot import FlowView: Missing edges and/or nodes")
       $nodes = records.nodes
       $edges = records.edges
       flow.setViewport(records.viewport)
-    }
   }
 </script>
 

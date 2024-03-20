@@ -3,15 +3,17 @@
     in a defered way
 -->
 <script lang="ts">
-    import { hc, bufferedStore, endpoint, endpoint_status } from "../HybridController/svelte-stores";
+    import { SvelteHybridController, bufferedStore } from "../HybridController/svelte-stores";
     import { type endpoint_reachability } from "../HybridController/connection"
     import { isValidHttpUrl } from "./utils"
-    import { get } from 'svelte/store'
+    import { getContext } from "svelte";
 
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
     import { faRedo } from '@fortawesome/free-solid-svg-icons'
-    import About from "./About.svelte";
-    import { ConnectionLineType } from "@xyflow/svelte";
+    
+    const hc = getContext("hc") as SvelteHybridController
+    const endpoint = hc.endpoint
+    const endpoint_status = hc.endpoint_status
 
     // This component is basically a fancy input box for a delayed write
     const new_endpoint = bufferedStore(hc.endpoint)

@@ -11,14 +11,20 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     const htmlid_prefix = `BlockView${component_instance_counter++}`
 
+    import { getContext } from 'svelte';
     import { slide, fade } from 'svelte/transition'
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-    import { faArrowDown } from '@fortawesome/free-solid-svg-icons'
+    import { faArrowDown, faTableColumns } from '@fortawesome/free-solid-svg-icons'
 
-    import { cluster_config } from "@/HybridController/svelte-stores";
-    import { reduced2output, output2reduced, xrange, nlanes, ncrosslanes, StandardLUCIDAC, type InformationDirection } from "@/HybridController/programming";
+    import { SvelteHybridController } from "@/HybridController/svelte-stores";
+    import { xrange } from "@/HybridController/utils"
+    import { nlanes, ncrosslanes, type InformationDirection } from "@/HybridController/types"
+    import { StandardLUCIDAC } from "@/HybridController/programming";
 
     import { toggle } from '@/lib/utils';
+
+    const hc = getContext("hc") as SvelteHybridController
+    const cluster_config = hc.cluster_config
    
     // real matrix representation for u and i, col-major: [cols... [rows], ...]
     // A valid matrix has zero or one element per row.
@@ -55,7 +61,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     */
 
   export let compact = toggle(false)
-  export let headers = toggle(true)
+  export let headers = toggle(false)
 
   const shortTypes = { "Int": "I", "Mul": "M", "Const": "C" }
   const Mname = (clane:number, mblock_as:InformationDirection)  => {
@@ -87,7 +93,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   <div class="level-right">
     <div class="level-item">
       <div class="buttons has-addons">
-        <button class="button" class:is-selected={$headers} on:click={headers.toggle}>Header</button>
+        <button class="button" class:is-selected={$headers} on:click={headers.toggle}>
+          <span class="icon"><FontAwesomeIcon icon={faTableColumns} /></span>
+          <span>Header</span>
+        </button>
         <button class="button" class:is-selected={$compact} on:click={compact.toggle}>Compact</button>
       </div>
     </div>

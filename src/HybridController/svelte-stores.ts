@@ -7,19 +7,20 @@
  */
 
 import { readable, writable, get, derived, type Writable } from 'svelte/store';
-import ClientDefaults from '@/lib/client_defaults';
+import { writableDerived, type MinimalWritable } from 'svelte-writable-derived';
 
+import type {
+    OutputCentricConfig, LogicalConnection,
+    ReducedConfig, PhysicalRouting,
+    ClusterConfig, CircuitFileFormat
+} from './types'
 import {
-    type OutputCentricConfig, type LogicalConnection,
-    type ReducedConfig, type PhysicalRouting,
-    type ClusterConfig, default_empty_cluster_config,
+    default_empty_cluster_config,
     config2routing, routing2config,
     logical2physical,
     physical2logical
 } from './programming'
 import { HybridController, type endpoint_reachability  } from './connection';
-import default_messages from '../lib/default_messages.json'
-import { writableDerived, type MinimalWritable } from 'svelte-writable-derived';
 
 /**
  * @file
@@ -183,8 +184,24 @@ class Syncable<T> {
  * A "buffering" Hybrid Controller that is full of svelte stores.
  * It mimics how the actual HybridController works (which does not save so many
  * things).
- */
-class SvelteHybridController {
+ * 
+ * Note that the default API to this class are the stores, typically you
+ * don't need any method invocation. See implementation for details.
+ * 
+ * Further note: In Svelte, you typically have to make store aliases because
+ * <input bind:value={$something}> works, but bind:value={hc.$something} does
+ * not work reactively. The same is true with reactive statements such as
+ * $: foo = hc.$bar (does not work but foo=$bar does).
+ * A typical usage pattern in *.svelte files is therefore:
+ * 
+ *    const my_alias = instance.status.value
+ * 
+ * and then use $my_alias for binding and reactivity.
+ * 
+ * @note An instance of this class is used as singleton in App.svelte,
+ *       accessible in all nested *.svelte files as getContext("hc").
+ **/
+export class SvelteHybridController {
     private remote = new HybridController()
 
     // TODO:
@@ -244,41 +261,81 @@ class SvelteHybridController {
         if(endpoint) this.endpoint.set(endpoint)
         this.endpoint.subscribe(e => this.connect(e))
     }
+
+
+    //// Derived cluster configurations
+
+    /**
+     * Base store for the UCI configuration in ClusterConfig format (includes ReducedConfig
+     * for UCI matrix).
+     * 
+     * We use this representation of LUCIDAC configuration as the base in the overall
+     * client application and convert to upstream OutputCentricConfig only on request
+     * (i.e. when writing to the hardware).
+     * 
+     * This also means this configuration is the root in the hierarchy of derived stores
+     * in this Svelte application.
+     **/
+    cluster_config = writable<ClusterConfig>(default_empty_cluster_config())
+
+    /**
+     * Lane-picture representation of the configuration, derived from matrix picture.
+     * 
+     * Note how the mapping from physical lanes to matrix misses routing errors which
+     * itself appeared as part of the mapping from LogicalRoute[]. However, this store
+     * has not type PhysicalRoute[] as it would still require to provide the alt_signals
+     * which result in the compilation process.
+     **/
+    physical_routes = writableDerived<Writable<ClusterConfig>, PhysicalRouting>(
+        /* origins  */ this.cluster_config,
+        /* derive   */ config2routing,
+        /* reflect  */(reflecting: PhysicalRouting, old: ClusterConfig) => routing2config(reflecting, old.MInt)
+    )
+    // export const physical_routes = derived(routes, lrs => logical2physical(lrs))
+
+    /**
+     * Unrouted Logical Connection picture representation.
+     * 
+     * The reflection step is the compilation or pick&place assignment.
+     * Given the small size of the LUCIDAC, this can be computed many times a second.
+     **/
+    logical_routes = writableDerived<Writable<PhysicalRouting>, LogicalConnection[]>(
+        /* origins */ this.physical_routes,
+        /* derive  */ (physical: PhysicalRouting) => physical2logical(physical.routes, physical.alt_signals),
+        /* reflect */ logical2physical
+    )
+    // export const logical_routes = writable<LogicalRoute[]>([])
+
+
+    /**
+     * Allow to read from a serialization file format.
+     * 
+     * @todo: Codebase should generate JSON schemas for various types
+     *  such as the CircuitFileFormat and then test against that schema
+     *  for easy verification.
+     * 
+     * Currently no verification is done!
+     */
+    read_from(obj: CircuitFileFormat) {
+        if("RoutesConfig" in obj) {
+            console.info("SvelteHybridController.read_from: Interpreting as RoutesConfig")
+            this.physical_routes.set(obj["RoutesConfig"])
+        } else if("ClusterConfig" in obj) {
+            console.info("SvelteHybridController.read_from: Interpreting as ClusterConfig")
+            this.cluster_config.set(obj["ClusterConfig"])
+        } else if("SendEnvelope" in obj) {
+            console.info("SvelteHybridController.read_from: Interpreting as SendEnvelope")
+            if(obj["type"] != "set_config")
+                throw Error("SendEnvelope must be of type=set_config")
+            const msg = obj["msg"] as OutputCentricConfig
+            const reduced = output2reduced(msg)
+            this.cluster_config.set(reduced)
+        } else {
+            throw Error("Missing any suitable serialization format.")
+        }
+    }
 }
 
-/**
- * This is the Svelte-flaveoured HybridController global app singleton.
- * It is not a store but a collection of many stores (@see Syncable<T> for
- * details).
- **/
-export const hc = new SvelteHybridController(ClientDefaults.endpoint_url)
-
-// expose to global window for fabulous debugging in browser console
-window.hc = hc
-window.get = get // svelte store get
-
-// debugging
-hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val))
-hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val))
-
-// svelte <input bind:value={$something}> works, but bind:value={hc.$something} not,
-// therefore provide aliases that can be used as global variables
-// The same is true with reactive statements such as $: foo = hc.$bar (does not work but foo=$bar does)
-
-export const endpoint = hc.endpoint
-export const endpoint_status = hc.endpoint_status
-export const entities = hc.entities.value
-export const entities_avail = hc.entities.status
-export const hc_status = hc.status.value
-export const hc_status_avail = hc.status.status // because status_status is bones
-export const settings = hc.settings.value
-export const settings_avail = hc.settings.status
-export const settings_error = hc.settings.error
-export const hc_circuit = hc.config.value
-export const hc_circuit_avail = hc.config.status
-
-// sometimes an even simpler version is needed
-export const connected = derived(hc.endpoint_status, (status) => status == "online")
 
 /**
  * A buffered store is like a writable-derived store but with delayed write back.
@@ -313,66 +370,8 @@ export function bufferedStore<T>(upstream : MinimalWritable<T>) {
     return { subscribe, update:stage.update, set:stage.set, save, reset }
 }
 
-/*
-    //// FIXME: What is this?
-
-    // initialize in a non-reactive way
-    let current_endpoint = get(hc.endpoint)
-    let new_endpoint = current_endpoint
-
-    // this component is mostly about a delayed storage write
-    function connect() { $endpoint = new_endpoint }
-
-    // reset component with respect to store
-    function reset() { new_endpoint = current_endpoint }
-    endpoint.subscribe((e) => { current_endpoint = e; reset() })
-*/
 
 // this would work but the derived store is not writable.
 // export const cluster_config = derived(config, ($config) => output2reduced($config[hc.mac]["/0"]))
-
-/**
- * Base store for the UCI configuration in ClusterConfig format (includes ReducedConfig
- * for UCI matrix).
- * 
- * We use this representation of LUCIDAC configuration as the base in the overall
- * client application and convert to upstream OutputCentricConfig only on request
- * (i.e. when writing to the hardware).
- * 
- * This also means this configuration is the root in the hierarchy of derived stores
- * in this Svelte application.
- **/
-export const cluster_config = writable<ClusterConfig>(default_empty_cluster_config())
-
-/**
- * Lane-picture representation of the configuration, derived from matrix picture.
- * 
- * Note how the mapping from physical lanes to matrix misses routing errors which
- * itself appeared as part of the mapping from LogicalRoute[]. However, this store
- * has not type PhysicalRoute[] as it would still require to provide the alt_signals
- * which result in the compilation process.
- **/
-export const physical_routes = writableDerived<Writable<ClusterConfig>, PhysicalRouting>(
-    /* origins  */ cluster_config,
-    /* derive   */ config2routing,
-    /* reflect  */(reflecting: PhysicalRouting, old: ClusterConfig) => routing2config(reflecting, old.MInt)
-)
-// export const physical_routes = derived(routes, lrs => logical2physical(lrs))
-
-/**
- * Unrouted Logical Connection picture representation.
- * 
- * The reflection step is the compilation or pick&place assignment.
- * Given the small size of the LUCIDAC, this can be computed many times a second.
- **/
-export const logical_routes = writableDerived<Writable<PhysicalRouting>, LogicalConnection[]>(
-    /* origins */ physical_routes,
-    /* derive  */ (physical: PhysicalRouting) => physical2logical(physical.routes, physical.alt_signals),
-    /* reflect */ logical2physical
-)
-// export const logical_routes = writable<LogicalRoute[]>([])
-
-
-
 
 

@@ -1,8 +1,7 @@
 import { v4 as uuid } from 'uuid';
-
+import { type SendEnvelope, type RecvEnvelope } from './types'
 
 export type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
-
 
 /**
  * The actual HybridController client class for the LUCIDAC.
@@ -44,6 +43,13 @@ export class HybridController {
 
     is_connectable() { return Boolean(this.endpoint); }
 
+    /**
+     * Synchronous query-reply call to the HybridController.
+     * 
+     * This send a message to the HybridController and await the answers,
+     * which is checked for correctness at envelope-level.
+     * That is, the return value shall always be the msg object.
+     */
     async query(msg_type: string, msg = {}) {
         console.info("HybridController: query", this, msg)
         const envelope_sent = {
@@ -51,7 +57,27 @@ export class HybridController {
             type: msg_type,
             msg: msg
         }
+        const envelope_recv = await this.query_envelope(envelope_sent)
+
+        if ("error" in envelope_recv) {
+            const json_recv = JSON.stringify(envelope_recv)
+            throw new Error(`HybridController returned error, sent ${JSON.stringify(envelope_sent)}, received ${json_recv}`)
+        }
+        if (envelope_recv['type'] == envelope_sent['type']) {
+            return envelope_recv['msg'];
+        } else {
+            console.error("HybridController: Deviation from Query-Response principle. Sent this:", envelope_sent, "Received unexpected return message:", envelope_recv)
+            return envelope_recv
+        }
+    }
+
+    /**
+     * Synchronous query-reply call to the HybridController, at envelope level.
+     * You may want to use the higher level @see query method instead.
+     */
+    async query_envelope(envelope_sent: SendEnvelope) : Promise<RecvEnvelope> {
         const json_sent = JSON.stringify(envelope_sent);
+
         if(!this.is_connectable())
             throw new Error("Requiring an endpoint to be set")
 
@@ -75,16 +101,7 @@ export class HybridController {
         }
 
         const envelope_recv = await resp.json()
-        if ("error" in envelope_recv) {
-            const json_recv = JSON.stringify(envelope_recv)
-            throw new Error(`HybridController returned error, sent ${json_sent}, received ${json_recv}`)
-        }
-        if (envelope_recv['type'] == envelope_sent['type']) {
-            return envelope_recv['msg'];
-        } else {
-            console.error("HybridController: Deviation from Query-Response principle. Sent this:", envelope_sent, "Received unexpected return message:", envelope_recv)
-            return envelope_recv
-        }
+        return envelope_recv
     }
 
     async get_entities() {
