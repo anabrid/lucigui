@@ -316,7 +316,7 @@ export class SvelteHybridController {
      * 
      * Currently no verification is done!
      */
-    read_from(obj: CircuitFileFormat) {
+    read_config_from(obj: CircuitFileFormat) {
         if("RoutesConfig" in obj) {
             console.info("SvelteHybridController.read_from: Interpreting as RoutesConfig")
             this.physical_routes.set(obj["RoutesConfig"])

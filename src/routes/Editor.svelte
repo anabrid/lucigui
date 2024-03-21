@@ -29,7 +29,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
    let flowView : FlowViewMain
    let show_flow = toggle(true)
-   let show_matrix = toggle(true)
+   let show_matrix = toggle(false)
    let show_code = toggle(false)
    let show_tree = toggle(false)
 
@@ -65,7 +65,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         flowView.importFlow(data.SvelteFlowView)
       } else {
         console.info("Editor.fileImport: Delegating to SvelteHybridController", data)
-        hc.read_from(data)
+        hc.read_config_from(data)
       }
    }
 

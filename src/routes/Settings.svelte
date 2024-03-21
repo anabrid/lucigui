@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     import Setting from "@/views/SettingsNode.svelte"
     import Endpoint from "@/lib/Endpoint.svelte"
     import { slide } from 'svelte/transition';
-    import { toggle } from '@/lib/utils';
+    import { saveJsonAsFile, toggle } from '@/lib/utils';
 
     const hc = getContext("hc") as SvelteHybridController
     const endpoint = hc.endpoint
@@ -42,6 +42,30 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     //section_static_ip_visible = permissivePropertyStore(new_settings, [""]) hc.settings.$value || !hc.settings.$value.use_dhcp
     let section_static_ip_visible = true
     $: section_static_ip_visible = ! $new_settings?.ethernet?.use_dhcp
+
+    // Todo Settings Serialization:
+    // Should also store as metadata firmware version, etc.
+    // for later use.
+
+    const fileExport = () => saveJsonAsFile("lucidac-settings.json", $new_settings)
+
+    let import_files : FileList
+    function fileImport(data) {
+        console.info("Settings.fileImport: Loading", data)
+        $new_settings = data
+    }
+
+    $: if(import_files) {
+            import_files[0].text().then(t => {
+                try {
+                    fileImport(JSON.parse(t))
+                } catch(e) {
+                    alert(`Could not read uploaded file because ${e}: ${JSON.stringify(e)}`)
+                }
+            }, e => alert(`Could not read uploaded file: ${JSON.stringify(e)}`))
+        }
+        
+    
 </script>
 
 <main in:fade class="container is-fullhd" style="margin-top: 1.5rem">
@@ -65,8 +89,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 <button class="button"
                     class:is-danger={$advanced} class:is-light={$advanced}
                     on:click={advanced.toggle}>{$advanced?"Hide":"Show"} advanced settings</button>
-                <button class="button">Download to file</button>
-                <button class="button">Restore from file</button>
+                <button class="button" on:click={fileExport}>Download to file</button>
+                <button class="button" on:click={()=>document.getElementById("settings-file-uploader").click()}>
+                    Restore from file
+                    <input id="settings-file-uploader" type="file" bind:files={import_files} accept="text/json, application/json, text/plain" style="display:none">
+                </button>
             </p>
         </div>
     </nav>

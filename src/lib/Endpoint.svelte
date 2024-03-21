@@ -25,7 +25,7 @@
     // for me the <input type=url> validation does not work out of box,
     // so we basically redo it in svelte
     let url_valid = true
-    $: url_valid = isValidHttpUrl(new_endpoint?.toString())
+    $: url_valid = isValidHttpUrl($new_endpoint)
 
     // this are all the different states this component can be in, just for tracking.
     type component_state = "editing"|"invalid"|endpoint_reachability
