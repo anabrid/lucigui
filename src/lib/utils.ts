@@ -1,4 +1,4 @@
-import { zip } from "@/HybridController/utils";
+import { zip } from "@/lucicon/utils";
 import {writable} from "svelte/store";
 
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
   import type { GlobalConstants } from "@/lib/client_defaults";
-  import type { SvelteHybridController } from "@/HybridController/svelte";
+  import type { SvelteHybridController } from "@/lucicon/svelte";
   import { hostname } from "@/lib/utils";
 
   const hc = getContext("hc") as SvelteHybridController

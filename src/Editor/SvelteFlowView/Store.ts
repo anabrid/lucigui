@@ -8,9 +8,9 @@
  */
 
 import { type ElementName, AssignedElement, AssignedElementPort,
-  type LogicalConnection, type IntState, type PotState, type CircuitFileFormat } from '@/HybridController/types'
-import { range, next_free, tryOr, uniqueByKey, UniqueCounter } from "@/HybridController/utils"
-import { SvelteHybridController } from '@/HybridController/svelte'
+  type LogicalConnection, type IntState, type PotState, type CircuitFileFormat } from '@/lucicon/types'
+import { range, next_free, tryOr, uniqueByKey, UniqueCounter } from "@/lucicon/utils"
+import { SvelteHybridController } from '@/lucicon/svelte'
 
 import { type Writable } from 'svelte/store'
 import { type Node, type Edge, type Viewport } from '@xyflow/svelte'

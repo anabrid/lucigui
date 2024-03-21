@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { lazy_load_sentry } from "@/lib/sentry.js";
 
   import Endpoint from "@/Home/Endpoint.svelte";
-  import { SvelteHybridController } from "@/HybridController/svelte";
+  import { SvelteHybridController } from "./lucicon/svelte";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";

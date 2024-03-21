@@ -3,9 +3,9 @@
     in a defered way
 -->
 <script lang="ts">
-    import { SvelteHybridController, bufferedStore } from "../HybridController/svelte";
-    import { type endpoint_reachability } from "../HybridController/connection"
-    import { isValidHttpUrl } from "../lib/utils"
+    import { SvelteHybridController, bufferedStore } from "@/lucicon/svelte";
+    import { type endpoint_reachability } from "@/lucicon/connection"
+    import { isValidHttpUrl } from "@/lib/utils"
     import { getContext } from "svelte";
 
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';

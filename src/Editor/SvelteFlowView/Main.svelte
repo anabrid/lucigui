@@ -26,9 +26,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import AnalogNode from './Node.svelte'
   // import PotiEdge from './Edge.svelte'
 
-  import { type ElementName, AssignedElement } from '@/HybridController/types'
+  import { type ElementName, AssignedElement } from '@/lucicon/types'
   import { type CircuitNode, type ExportFormat, deriveCircuitFrom, CircuitStore } from './Store'
-  import type { SvelteHybridController } from "@/HybridController/svelte";
+  import type { SvelteHybridController } from "@/lucicon/svelte";
 
   const hc = getContext("hc") as SvelteHybridController
   export const circuit = deriveCircuitFrom(hc)

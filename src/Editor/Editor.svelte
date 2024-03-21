@@ -18,7 +18,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import DebugView from '@/lib/Debug.svelte';
    import ExampleCircuits from './ExampleCircuits.svelte'
 
-   import { SvelteHybridController } from '@/HybridController/svelte'
+   import { SvelteHybridController } from '@/lucicon/svelte'
    import { type FlowCircuitFileFormat } from "./SvelteFlowView/Store";
     
    const hc = getContext("hc") as SvelteHybridController

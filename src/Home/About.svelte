@@ -18,7 +18,7 @@
   // Works but is... plain text.
   import { hostname } from "@/lib/utils";
   import type { ProgramConstants } from '@/lib/client_defaults';
-  import type { SvelteHybridController } from "@/HybridController/svelte";
+  import type { SvelteHybridController } from "@/lucicon/svelte";
   import { getContext } from "svelte";
 
   const hc = getContext("hc") as SvelteHybridController
