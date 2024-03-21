@@ -11,8 +11,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 
-  import { SvelteHybridController } from '@/HybridController/svelte'
-  import { hostname, is_https } from '@/lib/utils';
+  import { SvelteHybridController, permissiveLookup } from '@/HybridController/svelte'
+  import { hostname, humanReadableTimeSpan, is_https } from '@/lib/utils';
   import type { GlobalConstants } from "@/lib/client_defaults";
   import Endpoint from "@/lib/Endpoint.svelte"
   import DebugView from '@/views/DebugView.svelte';
@@ -33,10 +33,44 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // Download status whenever endpoint changes (to non-null).
   $: $endpoint, $endpoint && hc.status.download()
 
+  const stats = derived(hc.status.value, (status)=> ([
+      {
+        title: "Uptime",
+        prop: ["time", "uptime_millis"],
+        map: v => {
+          if(v) {
+            return humanReadableTimeSpan(new Date((new Date()).getTime() - v /* ms */))
+          }
+        }
+      },
+      {
+        title: "Total OP time",
+        prop: ["stats", "total_optime_ms"]
+        // can use Intl.RelativeTimeFormat.formatToParts() to get sth like "15 minutes"
+      },
+      {
+        title: "Firmware version",
+        prop: ["dist", "FIRMWARE_VERSION"]
+      },
+      {
+        title: "Firmware date",
+        prop: ["dist", "FIRMWARE_DATE"]
+      },
+      {
+        title: "Firmware sha256 short",
+        prop: ["flashimage", "sha256sum"],
+        map: v => v?.substring(0,8)
+      }
+    ].map(entry => {
+      const map = entry?.map || (v=>v)
+      entry.value = map(permissiveLookup(status, entry.prop))
+      return entry
+    })))
+
 </script>
 
-<main in:fade>
-  <section class="hero" class:is-fullheight-with-navbar={!$connected} class:is-medium={$connected}><!-- style="flex-direction: row"> -->
+<main in:fade class="is-flex is-flex-direction-column">
+  <section class="hero is-flex-grow-2" class:is-fullheight-with-navbar={!$connected} class:is-medium={$connected}><!-- style="flex-direction: row"> -->
     <div class="hero-body">
       <div class="columns" style="align-items: center">
         <div class="column is-half">
@@ -83,6 +117,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 {/if}
               </div>
               {:else if $endpoint_status == "online"}
+                <p>You could name your LUCIDAC here...</p>
               {:else}<!-- offline -->
               {/if}
 
@@ -137,37 +172,17 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   </section>
   
   {#if $endpoint_status == "online" && $hc_status}
-  {#key $hc_status}
-  <div class="tile is-ancestor">
-    <div class="tile is-parent">
-      <div class="tile is-child box content">
-        <dl>
-          <dt>Uptime</dt>
-          <dd>{$hc_status.time.uptime_millis}</dd>
+  <section class="grid container is-fluid">
+    {#each $stats as entry}
+      <div class="cell">
+        <h4 class="title is-4">{entry.title}</h4>
+        <h4 class="subtitle is-4">{entry.value}</h4>
+      </div>
+    {/each}
+    </section>
 
-          <dt>Uptime as lookup</dt>
-          <dd>{hc.status.lookup(["time", "uptime_millis"])}</dd>
-
-          <dt>Total OP time (not yet existent)</dt>
-          <dd>{hc.status.lookup(["stats","total_optime_ms"])}</dd>
-        </dl>
-      </div>
-      <div class="tile is-child box content">
-        <dl>
-          <dt>Firmware version</dt>
-          <dd>{$hc_status.dist.FIRMWARE_VERSION}</dd>
-          <dt>Firmware date</dt>
-          <dd>{$hc_status.dist.FIRMWARE_DATE}</dd>
-          <dt>Flash image</dt>
-          <dd>size: {$hc_status.flashimage.size}, sha256short: {$hc_status.flashimage.sha256sum.substring(0,8)}</dd>
-        </dl>
-      </div>
-      <div class="tile is-child box">
-        <DebugView view={$hc_status} />
-      </div>
-    </div>
-  </div>
-  {/key}
+  <!-- include this if you want to inspect what is available -->
+  <!--   <DebugView store={hc_status} /> -->
   {/if}
 
 </main>

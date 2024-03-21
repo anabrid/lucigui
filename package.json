@@ -61,7 +61,7 @@
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/svelte-fontawesome": "^0.2.2",
-    "bulma": "^0.9.4",
+    "bulma": "^1.0.0",
     "uuid": "^9.0.1"
   }
 }

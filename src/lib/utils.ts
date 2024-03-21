@@ -1,3 +1,4 @@
+import { zip } from "@/HybridController/utils";
 import {writable} from "svelte/store";
 
 
@@ -81,4 +82,27 @@ export function loadScript(url: string, integrity?: string) {
   return new Promise<void>((resolve, reject) => {
     script.onload = () => resolve()
   })
+}
+
+export function millisecondUptimeToDate(ms) {
+  const now = new Date().getTime()
+  return new Date(now - ms/1000/1000)
+}
+
+export function humanReadableTimeSpan(from: Date, to?: Date) {
+  if(!to) to = new Date()
+  let diff = to.getTime() - from.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  diff -=  days * (1000 * 60 * 60 * 24);
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  diff -= hours * (1000 * 60 * 60);
+  const mins = Math.floor(diff / (1000 * 60));
+  diff -= mins * (1000 * 60);
+  const seconds = Math.floor(diff / (1000));
+  diff -= seconds * (1000);
+
+  const k = ["days", "hours", "minutes", "seconds"]
+  const v = [days, hours, mins, seconds]
+  console.log("time:", from, to, diff, v)
+  return zip(k,v).map(([k,v]) => v ? `${v} ${k}` : "").filter(s=>s).join(", ")
 }
