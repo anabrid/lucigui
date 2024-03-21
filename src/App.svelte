@@ -129,7 +129,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     >
       <div class="navbar-start">
         {#each zip([urls, titles]) as [href, title]}
-          <a {href} use:link use:active class="navbar-item">{title}</a>
+          <a {href} use:link use:active={{className:"is-active"}} class="navbar-item">{title}</a>
         {/each}
       </div>
       <div class="navbar-end">

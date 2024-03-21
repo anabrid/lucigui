@@ -38,24 +38,25 @@ $laser-lemon: #fcff5a;
   }
 }
 
-nav .active {
-  color: $astronaut;
-  text-decoration: underline;
-}
-
 button.is-selected {
   background-color: $laser-lemon;
   color: $astronaut;
 }
 
-.content tt {
-  background-color: hsl(0, 0%, 96%); // like <pre>
-  display: inline-block;
-  padding: 2px;
-  margin: -2px 0;
+.content {
+  a[href] {
+    text-decoration: underline;
+  }
 
-  .notification & {
-    background-color: hsl(0, 0%, 90%); // because/if background is same color
+  tt {
+    background-color: hsl(0, 0%, 96%); // like <pre>
+    display: inline-block;
+    padding: 2px;
+    margin: -2px 0;
+
+    .notification & {
+      background-color: hsl(0, 0%, 90%); // because/if background is same color
+    }
   }
 }
 
