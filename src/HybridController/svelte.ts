@@ -278,6 +278,10 @@ export class SvelteHybridController {
      **/
     cluster_config = writable<ClusterConfig>(default_empty_cluster_config())
 
+    clear_config() {
+        this.cluster_config.set(default_empty_cluster_config())
+    }
+
     /**
      * Lane-picture representation of the configuration, derived from matrix picture.
      * 

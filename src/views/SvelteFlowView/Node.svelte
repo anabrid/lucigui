@@ -42,6 +42,22 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 </script>
 
 <div class="node" class:rtl={data.rtl} class:ltr={!data.rtl} class:invalid={!valid} class:selected={selected}>
+    {#if desc.name == "Pot"}
+        <Handle type="target" position={data.rtl ? Position.Right : Position.Left} id="in" {isConnectable} />
+        <Handle type="source" position={data.rtl ? Position.Left : Position.Right}  id="out" {isConnectable} />
+        <div class="round-node-box">
+            <div>
+                {#if selected}
+                    <input type="number" class="hide_spin" bind:value={data.coeff}
+                        on:focus={()=> setTimeout(()=>selected=true, 0)}>
+                {:else}
+                    {#if data.coeff !== undefined && data.coeff !== null}
+                        {data.coeff}
+                    {/if}
+                {/if}
+            </div>
+        </div>
+    {:else}
     <div class="node-box">
         <div class="input-handles">
             {#if desc.inputs.length == 2}
@@ -98,13 +114,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             {#if desc.name == "Int"}
             <tr>
                 <td>ic=</td>
-                <td><input value="123"></td>
+                <td><input type="number" class="hide_spin" bind:value={data.ic}></td>
             </tr>
             <tr>
                 <td>k<sub>0</sub>=</td>
-                <td><input value="1000"></td>
+                <td><input type="number" class="hide_spin" bind:value={data.k}></td>
             </tr>
             {:else if desc.name == "Pot"}
+            <!-- unreachable branch, Pot now displayed differently -->
             <tr>
                 <td>coeff=</td>
                 <td><input value="1"></td>
@@ -112,7 +129,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             {/if}
             <tr>
                 <td>id=</td>
-                <td><input bind:value={logicalElement.id}></td>
+                <td><input type="number" class="hide_spin" bind:value={logicalElement.id}></td>
             </tr>
         </table>
         {/if}
@@ -125,11 +142,18 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     {#if desc.outputs.length == 1 }
     <Handle type="source" position={data.rtl ? Position.Left : Position.Right} id="out" {isConnectable} />
     {/if}
+    {/if} <!-- end of if Pot -->
     {#if selected}
-    <button class="button is-small" name="swap" on:click={()=> data.rtl = !data.rtl}>
-        <span class="icon is-small"><FontAwesomeIcon icon={faLeftRight} /></span>
-        <span>Mirror</span>
-    </button>
+        <button class="button is-small" name="swap" on:click={()=> data.rtl = !data.rtl}>
+            <span class="icon is-small"><FontAwesomeIcon icon={faLeftRight} /></span>
+            <span>Mirror</span>
+        </button>
+    {:else}
+        {#if desc.name == "Int" && data.ic}
+        <div class="above-panel">
+            {data.ic}
+        </div>
+        {/if}
     {/if}
 
 </div>
@@ -174,17 +198,35 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
     .node-box {
         flex-grow: 2;
-        display: flex;
         flex-direction: row;
 
-
-        border: $border-size solid $border-color;
-        background-color: white;
         .ltr & { border-right: none; }
         .rtl & { border-left:  none; }
+    }
+
+    .node-box, .round-node-box {
+        display: flex;
+        border: $border-size solid $border-color;
+        background-color: white;
 
         .selected & {
             background-color: #eff0ff;
+        }
+    }
+
+    .round-node-box { // potentiometers
+        width: $node-height;
+        height: $node-height;
+        border: $border-size solid $border-color;
+        border-radius: calc($node-height/2);
+
+        justify-content: center;
+        align-items: center;
+
+        input {
+            width: 2em;
+            text-align: center;
+            background-color: transparent;
         }
     }
 
@@ -240,11 +282,26 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     }
 
     button[name="swap"] {
-        font-size: 40%;
         position: absolute;
         top: -44%;
         left: 24%;
+        font-size: 40%;
     }
+
+    .above-panel {
+        $above-panel-height: 12px;
+
+        position: absolute;
+        top: calc(-1.0 * $above-panel-height + 1px);
+        left: 0;
+        height: $above-panel-height;
+        font-size: 50%;
+
+        border: $border-size solid $border-color;
+        border-bottom: none;
+    }
+
+
 
     .invalid {
         color: red;

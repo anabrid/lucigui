@@ -45,7 +45,7 @@ nav .active {
 }
 
 button.is-selected {
-  background-color: $electric-green;
+  background-color: $laser-lemon;
   color: $astronaut;
 }
 
@@ -58,6 +58,18 @@ button.is-selected {
   .notification & {
     background-color: hsl(0, 0%, 90%); // because/if background is same color
   }
+}
+
+/* Chrome, Safari, Edge, Opera */
+input[type="number"].hide_spin {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* firefox */
+  -moz-appearance: textfield;
 }
 
 /*

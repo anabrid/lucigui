@@ -1,0 +1,646 @@
+{
+    "_meta": {
+        "title": "Hyperjerk system based on hc3-1.pdf. Flow is (probably) correct but other representations are not due to incomplete mapping int ics."
+    },
+    "SvelteFlowView": {
+        "nodes": [
+            {
+                "id": "Int0",
+                "position": {
+                    "x": 113.7049890817949,
+                    "y": 98.02169214247846
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "ic": 0.045
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 113.7049890817949,
+                        "y": 98.02169214247846
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int1",
+                "position": {
+                    "x": 324.25162663324807,
+                    "y": 100
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "ic": 0.12
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 324.25162663324807,
+                        "y": 100
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int2",
+                "position": {
+                    "x": 502.6832969393165,
+                    "y": 100.7049890817949
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "ic": 0.065
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 502.6832969393165,
+                        "y": 100.7049890817949
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int3",
+                "position": {
+                    "x": 681.5,
+                    "y": 100.5
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "ic": 0.085
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 681.5,
+                        "y": 100.5
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot0",
+                "position": {
+                    "x": 231.61822051188102,
+                    "y": 99.36334061213671
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "coeff": -1
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 231.61822051188102,
+                        "y": 99.36334061213671
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot1",
+                "position": {
+                    "x": 415,
+                    "y": 101.5
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "coeff": -1
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 415,
+                        "y": 101.5
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot2",
+                "position": {
+                    "x": 597.3199563271797,
+                    "y": 101.27331877572658
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false,
+                    "coeff": -0.4
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 597.3199563271797,
+                        "y": 101.27331877572658
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Mul0",
+                "position": {
+                    "x": 363.2733187757266,
+                    "y": 187.28850438521266
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 363.2733187757266,
+                        "y": 187.28850438521266
+                    },
+                    "width": 58,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot3",
+                "position": {
+                    "x": 476.4783078575215,
+                    "y": 164.01518560948608
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": -0.4
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 476.4783078575215,
+                        "y": 164.01518560948608
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot4",
+                "position": {
+                    "x": 471.4783078575215,
+                    "y": 210.51518560948608
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": -0.4
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 471.4783078575215,
+                        "y": 210.51518560948608
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot5",
+                "position": {
+                    "x": 177.13557866486838,
+                    "y": 236.232107034271
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": 10
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 177.13557866486838,
+                        "y": 236.232107034271
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot6",
+                "position": {
+                    "x": 252.09002183641007,
+                    "y": 187.220174691281
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": 0.25
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 252.09002183641007,
+                        "y": 187.220174691281
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot7",
+                "position": {
+                    "x": 114.66160479683799,
+                    "y": 153.06832969393167
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": -10
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 114.66160479683799,
+                        "y": 153.06832969393167
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot8",
+                "position": {
+                    "x": 214.3839520316203,
+                    "y": 40.47505459102533
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": true,
+                    "coeff": 123
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 214.3839520316203,
+                        "y": 40.47505459102533
+                    },
+                    "width": 40,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            }
+        ],
+        "edges": [
+            {
+                "source": "Int0",
+                "sourceHandle": "out",
+                "target": "Pot0",
+                "targetHandle": "in",
+                "id": "xy-edge__Int0out-Pot0in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot0",
+                "sourceHandle": "out",
+                "target": "Int1",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot0out-Int1in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int1",
+                "sourceHandle": "out",
+                "target": "Pot1",
+                "targetHandle": "in",
+                "id": "xy-edge__Int1out-Pot1in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot1",
+                "sourceHandle": "out",
+                "target": "Int2",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot1out-Int2in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int2",
+                "sourceHandle": "out",
+                "target": "Pot2",
+                "targetHandle": "in",
+                "id": "xy-edge__Int2out-Pot2in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot2",
+                "sourceHandle": "out",
+                "target": "Int3",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot2out-Int3in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int2",
+                "sourceHandle": "out",
+                "target": "Pot3",
+                "targetHandle": "in",
+                "id": "xy-edge__Int2out-Pot3in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int2",
+                "sourceHandle": "out",
+                "target": "Pot4",
+                "targetHandle": "in",
+                "id": "xy-edge__Int2out-Pot4in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot3",
+                "sourceHandle": "out",
+                "target": "Mul0",
+                "targetHandle": "a",
+                "id": "xy-edge__Pot3out-Mul0a",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot4",
+                "sourceHandle": "out",
+                "target": "Mul0",
+                "targetHandle": "b",
+                "id": "xy-edge__Pot4out-Mul0b",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Mul0",
+                "sourceHandle": "out",
+                "target": "Pot6",
+                "targetHandle": "in",
+                "id": "xy-edge__Mul0out-Pot6in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int1",
+                "sourceHandle": "out",
+                "target": "Pot8",
+                "targetHandle": "in",
+                "id": "xy-edge__Int1out-Pot8in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot8",
+                "sourceHandle": "out",
+                "target": "Int0",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot8out-Int0in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int0",
+                "sourceHandle": "out",
+                "target": "Pot7",
+                "targetHandle": "in",
+                "id": "xy-edge__Int0out-Pot7in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot7",
+                "sourceHandle": "out",
+                "target": "Int0",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot7out-Int0in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Int3",
+                "sourceHandle": "out",
+                "target": "Pot5",
+                "targetHandle": "in",
+                "id": "xy-edge__Int3out-Pot5in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot5",
+                "sourceHandle": "out",
+                "target": "Int0",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot5out-Int0in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "source": "Pot6",
+                "sourceHandle": "out",
+                "target": "Int0",
+                "targetHandle": "in",
+                "id": "xy-edge__Pot6out-Int0in",
+                "type": "smoothstep",
+                "selected": false
+            }
+        ],
+        "viewport": {
+            "x": -18.83820338481587,
+            "y": -12.803454082076541,
+            "zoom": 1.7595420592615976
+        }
+    },
+    "ClusterConfig": {
+        "u": [
+            8,
+            9,
+            10,
+            10,
+            10,
+            11,
+            0,
+            8,
+            9
+        ],
+        "i": [
+            9,
+            10,
+            11,
+            0,
+            1,
+            8,
+            8,
+            8,
+            8
+        ],
+        "c": [
+            -1,
+            -1,
+            -0.4,
+            -0.4,
+            -0.4,
+            10,
+            0.25,
+            -10,
+            123,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        "MInt": [
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            }
+        ],
+        "Ualt": {
+            "signals": [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+            ]
+        }
+    }
+}

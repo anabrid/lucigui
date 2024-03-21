@@ -2,6 +2,7 @@
     import lorenz from "@/circuits/lorenz.routes.json"
     import lorenz_manually from "@/circuits/lorenz.flow.json"
     import test from "@/circuits/mutual-test.flow.json"
+    import hyperjerk from "@/circuits/hyperjerk.flow.json"
 
     // Function to be called to load stuff
     export let load : (any) => void
@@ -32,7 +33,7 @@
             </p>
           </div>
           <div class="buttons are-small">
-             <a on:click={load(lorenz)} class="button is-primary is-link">Load Lorenz</a>
+             <a on:click={load(lorenz)} class="button is-primary">Load Lorenz</a>
              <a class="button" href="https://analogparadigm.com/downloads/alpaca_2.pdf" target="_blank">
                 Read more
              </a>
@@ -55,7 +56,7 @@
           </p>
         </div>
         <div class="buttons are-small">
-           <a on:click={load(lorenz_manually)} class="button is-primary is-link">Load Lorenz</a>
+           <a on:click={load(lorenz_manually)} class="button is-primary">Load Lorenz</a>
         </div>
       </div>
   </article>
@@ -73,10 +74,28 @@
               Example circuit for demonstrating circular references.
           </p>
           <div class="buttons are-small">
-             <a on:click={load(test)} class="button is-primary is-link">Load testcase</a>
+             <a on:click={load(test)} class="button is-primary">Load testcase</a>
           </div>
         </div>
     </article>
+
+    <article class="media">
+      <figure class="media-left">
+        <p class="image is-64x64">
+          
+        </p>
+      </figure>
+      <div class="media-content">
+        <p class="content">
+            <strong>Hyperjerk</strong> <small>(testing)</small>
+            <br>
+            Example circuit for a hyperjerk chaotic system.
+        </p>
+        <div class="buttons are-small">
+           <a on:click={load(hyperjerk)} class="button is-primary">Load testcase</a>
+        </div>
+      </div>
+  </article>
 </section>
 
 <style lang="scss">

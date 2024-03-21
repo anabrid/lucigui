@@ -80,10 +80,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         // console.log(import_files) // fileImport(import_files[0])
       }
     
-    
-
-
-
+    function new_document() {
+        hc.clear_config()
+        // TODO: Clearing HC should be enough.
+        if(flowView) flowView.clear()
+    }
 </script>
 
 <main in:fade class="container is-fluid flex-grow" style="margin-top: 1.5rem">
@@ -115,6 +116,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             </div>
             <div class="level-item">
                 <div class="buttons">
+                    <button class="button" on:click={new_document}>
+                        <span>Clear</span>
+                    </button>
                     <button class="button" class:is-selected={$show_examples} on:click={show_examples.toggle}>
                         <span>Examples</span>
                     </button>

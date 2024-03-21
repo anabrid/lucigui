@@ -27,7 +27,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // import PotiEdge from './Edge.svelte'
 
   import { type ElementName, AssignedElement } from '@/HybridController/types'
-  import { type CircuitNode, type ExportFormat, deriveCircuitFrom } from './Store'
+  import { type CircuitNode, type ExportFormat, deriveCircuitFrom, CircuitStore } from './Store'
   import type { SvelteHybridController } from "@/HybridController/svelte";
 
   const hc = getContext("hc") as SvelteHybridController
@@ -126,6 +126,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       $nodes = records.nodes
       $edges = records.edges
       flow.setViewport(records.viewport)
+      // ggf. flow.fitView()
   }
 
   function getLayoutedElements(nodes, edges) {
@@ -167,6 +168,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   }
 
   $: $edges, $edges.forEach((e,i) => $edges[i].type = "smoothstep")
+
+  export function clear() {
+    $circuit = new CircuitStore()
+    // TODO: Why is the above not enough?
+    $edges = []
+    $nodes = []
+  }
 
 </script>
 
