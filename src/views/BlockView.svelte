@@ -16,7 +16,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
     import { faArrowDown, faTableColumns } from '@fortawesome/free-solid-svg-icons'
 
-    import { SvelteHybridController } from "@/HybridController/svelte-stores";
+    import { SvelteHybridController } from "@/HybridController/svelte";
     import { xrange } from "@/HybridController/utils"
     import { nlanes, ncrosslanes, type InformationDirection } from "@/HybridController/types"
     import { StandardLUCIDAC } from "@/HybridController/programming";

@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 <script lang="ts">
     import { getContext, onMount, setContext } from 'svelte';
     import { fade } from "svelte/transition"
-    import { bufferedStore, SvelteHybridController } from "@/HybridController/svelte-stores"
+    import { bufferedStore, SvelteHybridController } from "@/HybridController/svelte"
     import Setting from "@/views/SettingsNode.svelte"
     import Endpoint from "@/lib/Endpoint.svelte"
     import { slide } from 'svelte/transition';

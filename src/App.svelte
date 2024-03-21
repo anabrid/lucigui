@@ -11,22 +11,22 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
 
   import { toggle, slugify } from "@/lib/utils";
-  import ClientDefaults from '@/lib/client_defaults';
-  import { lazy_load_sentry } from '@/lib/sentry.js'
+  import ClientDefaults from "@/lib/client_defaults";
+  import { lazy_load_sentry } from "@/lib/sentry.js";
 
-  import Endpoint from "@/lib/Endpoint.svelte"
-  import { SvelteHybridController } from "@/HybridController/svelte-stores";
+  import Endpoint from "@/lib/Endpoint.svelte";
+  import { SvelteHybridController } from "@/HybridController/svelte";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
-  import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faLink, faLinkSlash } from '@fortawesome/free-solid-svg-icons'
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faLink, faLinkSlash } from "@fortawesome/free-solid-svg-icons";
 
   import Home from "@/routes/Home.svelte";
   import Help from "@/routes/Help.svelte";
   import Settings from "@/routes/Settings.svelte";
   import Editor from "@/routes/Editor.svelte";
-  
-  import About, { info_modal_open } from "@/lib/About.svelte"
+
+  import About, { info_modal_open } from "@/lib/About.svelte";
 
   const nav = [Home, Settings, Editor, Help];
   const urls = ["/", "/settings", "/editor", "/help"];
@@ -36,7 +36,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   let routes = Object.fromEntries(zip([urls, nav]));
 
   // add some special rules
-  routes["/help/:topic?"] = Help
+  routes["/help/:topic?"] = Help;
 
   let active_title = "";
 
@@ -47,133 +47,147 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     // inserting the device name would also be handy
     document.title = `${titles[route_id]} (${ClientDefaults.app_name})`;
 
-    active_title = slugify(titles[route_id])
+    active_title = slugify(titles[route_id]);
   }
 
   var endpoint_dropdown_active = false;
 
   // This is for fullscreen display, allows to completely hide the navbar.
-  let navbar_visible = toggle(true)
-  setContext("navbar_visible", navbar_visible) // allow any children to toggle
+  let navbar_visible = toggle(true);
+  setContext("navbar_visible", navbar_visible); // allow any children to toggle
 
   // this is for mobile devices, with a collapsible navigation bar
-  const navbar_burger_active = toggle(true)
+  const navbar_burger_active = toggle(true);
 
-  if(ClientDefaults.sentry_dsn)
-    lazy_load_sentry(ClientDefaults.sentry_dsn)
+  if (ClientDefaults.sentry_dsn) lazy_load_sentry(ClientDefaults.sentry_dsn);
 
-//  const navbar_online_labels = { offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }
-//  let navbar_online_label = ""
-//  $: navbar_online_label = navbar_online_labels[$endpoint_status]
-  const navbar_show_endpoint_widget = toggle(false)
-
+  //  const navbar_online_labels = { offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }
+  //  let navbar_online_label = ""
+  //  $: navbar_online_label = navbar_online_labels[$endpoint_status]
+  const navbar_show_endpoint_widget = toggle(false);
 
   /**
    * This is the Svelte-flaveoured HybridController global app singleton.
    * It is not a store but a collection of many stores (@see Syncable<T> for
    * details).
    **/
-  const hc = new SvelteHybridController(ClientDefaults.endpoint_url)
+  const hc = new SvelteHybridController(ClientDefaults.endpoint_url);
 
   // expose to global window for fabulous debugging in browser console
-  window.hc = hc
-  window.get = get // svelte store get
+  window.hc = hc;
+  window.get = get; // svelte store get
 
   // expose to all child components
-  setContext("hc", hc)
+  setContext("hc", hc);
 
   // aliasing neccessary for svelte reactivity
-  const endpoint = hc.endpoint
-  const endpoint_status = hc.endpoint_status
+  const endpoint = hc.endpoint;
+  const endpoint_status = hc.endpoint_status;
 
   // debugging
-  hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val))
-  hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val))
+  hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val));
+  hc.endpoint_status.subscribe((val) =>
+    console.info("hc.endpoint_status = ", val),
+  );
 </script>
 
 {#if $navbar_visible}
-<nav transition:slide class="navbar" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="#/">
-      <img src="lucidac-logo-klein.svg" alt="LUCIDAC" />
-    </a>
+  <nav
+    transition:slide
+    class="navbar"
+    role="navigation"
+    aria-label="main navigation"
+  >
+    <div class="navbar-brand">
+      <a class="navbar-item" href="#/">
+        <img src="lucidac-logo-klein.svg" alt="LUCIDAC" />
+      </a>
 
-    <!-- svelte-ignore a11y-missing-attribute -->
-    <!-- svelte-ignore a11y-interactive-supports-focus -->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <a
-      role="button"
-      class="navbar-burger"
-      aria-label="menu"
-      aria-expanded="false"
-      data-target="navbarBasicExample"
+      <!-- svelte-ignore a11y-missing-attribute -->
+      <!-- svelte-ignore a11y-interactive-supports-focus -->
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <a
+        role="button"
+        class="navbar-burger"
+        aria-label="menu"
+        aria-expanded="false"
+        data-target="navbarBasicExample"
+        class:is-active={!$navbar_burger_active}
+        on:click={navbar_burger_active.toggle}
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div
+      class="navbar-menu is-primary"
       class:is-active={!$navbar_burger_active}
-      on:click={navbar_burger_active.toggle}
     >
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
-  <div class="navbar-menu is-primary" class:is-active={!$navbar_burger_active}>
-    <div class="navbar-start">
-      {#each zip([urls, titles]) as [href, title]}
-        <a {href} use:link use:active class="navbar-item">{title}</a>
-      {/each}
-    </div>
-    <div class="navbar-end">
-      <div class="navbar-item">
-        {#if !$navbar_show_endpoint_widget}
-        <a role="button" on:click={navbar_show_endpoint_widget.toggle} class="navbar-link">
-          <span class="icon">
-            {#if $endpoint_status == "offline"}<FontAwesomeIcon icon={faLinkSlash} />
-            {:else if $endpoint_status == "connecting"}<FontAwesomeIcon icon={faLink} fade />
-            {:else if $endpoint_status == "online"}<FontAwesomeIcon icon={faLink} />
-            {:else if $endpoint_status == "failed"}<FontAwesomeIcon icon={faLinkSlash} style={{color:"red"}} />
-            {/if}
-          </span>
-          <span>{{ offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }[$endpoint_status]}</span>
-        </a>
-        {:else}
-        <Endpoint/>
-        &nbsp;
-        <button class="button" on:click={navbar_show_endpoint_widget.toggle}>Close</button>
-        {/if}
+      <div class="navbar-start">
+        {#each zip([urls, titles]) as [href, title]}
+          <a {href} use:link use:active class="navbar-item">{title}</a>
+        {/each}
       </div>
-      <div class="navbar-item">
-        <a class="navbar-item" on:click={info_modal_open.toggle}>About</a>
-      </div>
-      <!--
-      <div class="navbar-item has-dropdown is-hoverable">
-        <a class="navbar-link">
-          Headless
-        </a>
-    
-        <div class="navbar-dropdown is-right">
-          <div class="navbar-item">
-            Endpoint URL: {$endpoint}
-          </div>
-          <div class="navbar-item">
-            Reachable: {$endpoint_status}
-          </div>
-          <hr class="navbar-divider">
-          {#if $endpoint_status == "online"}
-          <a class="navbar-item">
-            Login
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a on:click={navbar_show_endpoint_widget.toggle} class="navbar-link">
+            <span class="icon">
+              {#if $endpoint_status == "offline"}<FontAwesomeIcon
+                  icon={faLinkSlash}
+                />
+              {:else if $endpoint_status == "connecting"}<FontAwesomeIcon
+                  icon={faLink}
+                  fade
+                />
+              {:else if $endpoint_status == "online"}<FontAwesomeIcon
+                  icon={faLink}
+                />
+              {:else if $endpoint_status == "failed"}<FontAwesomeIcon
+                  icon={faLinkSlash}
+                  style={{ color: "red" }}
+                />
+              {/if}
+            </span>
+            <span
+              >{{
+                offline: "Headless",
+                connecting: "Connecting...",
+                online: "Connected",
+                failed: "Connection failure",
+              }[$endpoint_status]}</span
+            >
           </a>
-          <hr class="navbar-divider">
-          {/if}
-          <a class="navbar-item" on:click={info_modal_open.toggle}>
-            About this application
-          </a>
+          <div class="navbar-dropdown is-right" style="width: 30em">
+            <div class="navbar-item">
+              <strong>Endpoint</strong>
+            </div>
+            <div class="navbar-item" style="white-space: wrap">
+              <p>
+                You can use this widget to control the connection to a LUCIDAC
+                endpoint. If you don't have a LUCIDAC, you can still use some
+                parts of this application in <em>headless</em> mode.
+              </p>
+            </div>
+            <div class="navbar-item">
+              <Endpoint />
+            </div>
+          </div>
         </div>
-      -->
+        {#if $endpoint_status == "online"}
+          <div class="navbar-item">
+            <a class="navbar-item">Login</a>
+          </div>
+        {/if}
+        <div class="navbar-item">
+          <a class="navbar-item" on:click={info_modal_open.toggle}>About</a>
+        </div>
       </div>
     </div>
 
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!--
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!--
         <div
           class="dropdown"
           class:is-active={endpoint_dropdown_active}
@@ -181,7 +195,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             (endpoint_dropdown_active = !endpoint_dropdown_active)}
         >
         -->
-</nav>
+  </nav>
 {/if}
 
 <!-- From a CSS/styling point of view, there is no need for an

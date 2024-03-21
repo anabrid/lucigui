@@ -18,7 +18,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import DebugView from '@/views/DebugView.svelte';
    import ExampleCircuits from '@/views/ExampleCircuits.svelte'
 
-   import { SvelteHybridController } from '@/HybridController/svelte-stores'
+   import { SvelteHybridController } from '@/HybridController/svelte'
    import { type FlowCircuitFileFormat } from "@/views/SvelteFlowView/Store";
     
    const hc = getContext("hc") as SvelteHybridController
@@ -142,6 +142,13 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     <button class="button" class:is-selected={$show_debug_cluster_config} on:click={show_debug_cluster_config.toggle}>Cluster</button>
                 </div>
             </div>
+            {#if $show_flow}
+            <div class="level-item">
+                <div class="buttons has-addons">
+                    <button class="button" on:click={flowView.forceLayout}>Relayout</button>
+                </div>
+            </div>
+            {/if}
         </div>
         <div class="level-right">
             <div class="level-item">
@@ -247,7 +254,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     :global(.views pre) {
         padding: 0;
         max-width: 25em;
-        overflow: scroll;
+        overflow: visible;
         position: relative;
         box-shadow: -2px 0 16px rgba(0,0,0,0.05);
         border-left: 1px solid #aaa;

@@ -3,7 +3,7 @@
     in a defered way
 -->
 <script lang="ts">
-    import { SvelteHybridController, bufferedStore } from "../HybridController/svelte-stores";
+    import { SvelteHybridController, bufferedStore } from "../HybridController/svelte";
     import { type endpoint_reachability } from "../HybridController/connection"
     import { isValidHttpUrl } from "./utils"
     import { getContext } from "svelte";

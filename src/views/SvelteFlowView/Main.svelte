@@ -15,6 +15,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     BackgroundVariant,
     Controls,
   } from "@xyflow/svelte";
+  import dagre from '@dagrejs/dagre';
 
   const flow = useSvelteFlow()
   
@@ -27,7 +28,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   import { type ElementName, AssignedElement } from '@/HybridController/types'
   import { type CircuitNode, type ExportFormat, deriveCircuitFrom } from './Store'
-  import type { SvelteHybridController } from "@/HybridController/svelte-stores";
+  import type { SvelteHybridController } from "@/HybridController/svelte";
 
   const hc = getContext("hc") as SvelteHybridController
   export const circuit = deriveCircuitFrom(hc)
@@ -117,8 +118,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $edges = $edges // enforce reactivity
   }
 
-//  export let callbacks : FlowViewCallback
-//  callbacks = new class implements FlowViewCallback {
   export function exportFlow() : ExportFormat { return flow.toObject() }
 
   export function importFlow(records:ExportFormat) {
@@ -128,6 +127,45 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       $edges = records.edges
       flow.setViewport(records.viewport)
   }
+
+  function getLayoutedElements(nodes, edges) {
+    const dagreGraph = new dagre.graphlib.Graph()
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+    dagreGraph.setGraph({ rankdir: "LR" });
+
+    const nodeWidth = 150
+    const nodeHeight = 30
+
+    nodes.forEach((node) => {
+      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    });
+
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    nodes.forEach((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+
+      // We are shifting the dagre node position (anchor=center center) to the top left
+      // so it matches the React Flow node anchor point (top left).
+      node.position = {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2
+      };
+    });
+
+    return { nodes, edges };
+  }
+
+  export function forceLayout() {
+    const layoutedElements = getLayoutedElements($nodes, $edges)
+    $nodes = layoutedElements.nodes
+    $edges = layoutedElements.edges
+  }
+
 </script>
 
 <main style="height: 100%; min-height: 300px; min-width: 500px">

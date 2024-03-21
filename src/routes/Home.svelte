@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 
-  import { SvelteHybridController } from '@/HybridController/svelte-stores'
+  import { SvelteHybridController } from '@/HybridController/svelte'
   import { hostname } from '@/lib/utils';
   import ClientDefaults from '@/lib/client_defaults';
   import Endpoint from "@/lib/Endpoint.svelte"

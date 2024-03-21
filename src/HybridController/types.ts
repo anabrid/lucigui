@@ -24,14 +24,14 @@ export class UBlockAltSignals {
         if(acl_idx < 0 || acl_idx > 7) throw new TypeError(`Expected Extin ACL index in [0,7] but got ${acl_idx}.`)
         this.signals[acl_idx] = enable
     }
-    has_acl = (acl_idx?:number) => acl_idx ? this.signals[acl_idx] : false
+    has_acl(acl_idx?:number) { return  acl_idx ? this.signals[acl_idx] : false }
 
-    acl2clane = (acl_idx:number) => acl_idx + 8 // ACL_IN[idx] is on clane idx+8
-    clane2acl = (clane:number) => clane>8 ? (clane - 8) : undefined
+    acl2clane(acl_idx:number) { return acl_idx + 8 } // ACL_IN[idx] is on clane idx+8
+    clane2acl(clane:number) { return clane>8 ? (clane - 8) : undefined }
 
     /// Enable or disable the constant input on clane 7
-    set_alt_signal_ref_half = (enable:boolean=true) => this.signals[8] = enable
-    has_alt_signal_ref_halt = () => this.signals && this.signals[8]
+    set_alt_signal_ref_half(enable:boolean=true) { this.signals[8] = enable }
+    has_alt_signal_ref_halt() { return this.signals && this.signals[8] }
 
     static ref_halt_clane = 7 // ref halt is on clane 7
 }
@@ -44,9 +44,16 @@ export class UBlockAltSignals {
  * @todo: rename u/c/i to U/C/I
  */
 export interface ReducedConfig {
-    "u": Array<number|null|undefined>, /* 32 numbers where each is in range [0,15] and defines the input crosslane for the given output lane */
-    "c": Array<number|null|undefined>, /* 32 coefficients in value [-20,+20] */
-    "i": Array<number|null|undefined>, /* 32 numbers where each is in range [0,15] and defines the output crosslane for the given input lane */
+    /** 32 numbers where each is in range [0,15] and defines the input crosslane for the given output lane */
+    u: Array<number|null|undefined>,
+    /** 32 coefficients in value [-20,+20] */
+    c: Array<number|null|undefined>,
+    /**
+     * 32 numbers where each is in range [0,15] and defines the output crosslane for the given input lane.
+     * This is basically "Iin" or "/I": "inputs" compare to the "Iout" and "Uin" naming in the route.
+     * This is different from @see OutputCentriconfig where i has only a length of 16 and is a list of lists.
+     **/
+    i: Array<number|null|undefined>,
 }
 
 /**
@@ -99,14 +106,21 @@ export interface OutputCentricConfig {
 
 /**
  * This 4-tuple defines a physical route: [ lane, uin, cval, iout ]
- * with lane:[0,32], uin:[0,16], iou:[0,16] and cval:[-20.0, 20.0]
- * This typescript type misses all that semantics.
+ * The same type is used in the firmware as well as various other clients.
  **/
 export type PhysicalRoute = {
+    /** Lane id (in c-block), in range [0,31] */
     lane: number,
+    /** UBlock input crosslane = Mblock output crosslane, range [0,15] */
     uin: number,
+    /** Coefficient value, float in range [-20.0, +20.0] */
     cval: number,
-    iout: number|undefined, // I matrix does not need to be connected, for instance in ADC and ACL_OUT use
+    /**
+     * IBlock output crosslane = Mblock input crosslane, range [0,15].
+     * The I-matrix does not need to be connected, for instance in ADC and ACL_OUT use.
+     * Therefore, undefined is allowed.
+     **/
+    iout: number|undefined,
 }
 
 

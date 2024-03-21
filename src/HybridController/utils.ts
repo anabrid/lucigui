@@ -15,6 +15,10 @@ export const span = (start, end) => range(end-start).map(i=>i+start)
 //export type span = [number,number]
 //export const inrange = (needle : number, range : span) => (needle >= range[0] && needle <= range[1])
 export const times = (N, val) => Array.from({ length: N }, (v, i) => val)
+/** Creates an array with length N and values val()  */
+export const times_new = (N, val) => Array.from({ length: N }, (v, i) => val())
+/** Fills up array with value val up to target_length. It is fill(any,any,N).length == N. */
+export const fill = (base, val, target_length) => base.concat(times(target_length - base.length, val))
 // slow but safe. The clone shall not be reactive or so.
 // Maybe use sructured clone instead.
 export const deepcopy = (obj) => JSON.parse(JSON.stringify(obj))

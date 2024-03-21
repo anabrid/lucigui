@@ -19,7 +19,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "release": "release-it"
+    "release": "release-it",
+    "test": "vitest"
   },
   "release-it": {
     "npm": {
@@ -37,6 +38,7 @@
     }
   },
   "devDependencies": {
+    "@dagrejs/dagre": "^1.1.1",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
@@ -53,7 +55,8 @@
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^5.1.0",
-    "vite-bundle-visualizer": "^1.1.0"
+    "vite-bundle-visualizer": "^1.1.0",
+    "vitest": "^1.4.0"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.5.1",

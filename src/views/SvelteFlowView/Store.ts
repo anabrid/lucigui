@@ -10,7 +10,7 @@
 import { type ElementName, AssignedElement, AssignedElementPort,
   type LogicalConnection, type IntState, type PotState, type CircuitFileFormat } from '@/HybridController/types'
 import { range, next_free, tryOr, UniqueCounter } from "@/HybridController/utils"
-import { SvelteHybridController } from '@/HybridController/svelte-stores'
+import { SvelteHybridController } from '@/HybridController/svelte'
 
 import { type Writable } from 'svelte/store'
 import { type Node, type Edge, type Viewport } from '@xyflow/svelte'

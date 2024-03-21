@@ -40,7 +40,7 @@ import {
     type LogicalRoute
 } from './types'
 
-import { duplicates, next_free, range, reverse, span, times, union, zip } from './utils'
+import { duplicates, next_free, range, reverse, span, times, times_new, union, zip } from './utils'
 
 
 export const default_empty_cluster_config = () : ClusterConfig => ({
@@ -49,30 +49,80 @@ export const default_empty_cluster_config = () : ClusterConfig => ({
     Ualt: new UBlockAltSignals()
 })
 
-export function output2reduced(cluster_config: OutputCentricConfig): ReducedConfig {
-    console.log("output2reduced: ", cluster_config)
-    let matrix = {
-        "u": cluster_config["config"]["/0"]["/U"]["outputs"],
-        "i": cluster_config["config"]["/0"]["/I"]["outputs"],  /* TODO: TRANSLATION NECCESSARY!!!! */
-        "c": cluster_config["config"]["/0"]["/C"]["elements"]
-    }
-    return matrix
+/**
+ * Map an output-centric to an input-centric description.
+ * This is basically a spare matrix transpose operation.
+ * 
+ * This works for both IBLock and UBlock descriptions, which both
+ * only allow only one connection per lane. However, by convention
+ * the firmware describes UBlock as input-centric and IBlock as
+ * output-centric. Therefore the mapping is only needed to represent
+ * the IBlock the same way as the UBlock.
+ **/
+export function output2input(output) { // : Array<Array<number> | number | null> /* size 16 */) : Array<number|null> /* size 32 */ {
+    //const max_lane = Math.max.apply(null, output.flat())
+    let input = times(32, null)
+    output.forEach((lanes, clane) => {
+        const set = lane => {
+            if(lane > input.length) throw Error(`output2input: Output centric clane out of bounds: lane ${lane} for clane ${clane}`)
+            if(lane !== undefined && lane !== null) {
+                if(input[lane] !== null) {
+                    throw Error(`output2input: Double allocation not representable by input representation.`)
+                }
+                input[lane] = clane
+            }
+        }
+        if(lanes !== undefined && lanes !== null) {
+            Array.isArray(lanes) ? lanes.forEach(set) : set(lanes)
+        }
+    })
+    return input
 }
 
-export function reduced2output(matrix: ReducedConfig): OutputCentricConfig {
+/**
+ * Inverse of @see input2output 
+ **/
+export function input2output(input, keep_arrays=false) { //: Array<number|null|undefined> /* size 32 */) : Array<Array<number> | null> /* size 16 */ {
+    let output = times_new(16, ()=>[])
+    input.forEach((clane, lane) =>{
+        if(clane !== undefined && clane !== null) {
+            if(clane > output.length) throw Error(`input2output: Input centric clane out of bounds: clane ${clane} for lane ${lane}`)
+            output[clane].push(lane)
+        }
+    })
+    // Firmware fun:
+    // it is valid to shorten [foo] to foo
+    // it is also valid to shorten [] to null
+    return keep_arrays ? output : output.map(k => {
+        if(k.length == 0) return null
+        if(k.length == 1) return k[0]
+        else return k
+    })
+}
+
+export function output2reduced(output: OutputCentricConfig): ReducedConfig {
     let cluster_config = {
+        "u": output["config"]["/0"]["/U"]["outputs"],
+        "i": output2input(output["config"]["/0"]["/I"]["outputs"]),
+        "c": output["config"]["/0"]["/C"]["elements"]
+    }
+    return cluster_config
+}
+
+export function reduced2output(cluster_config: ReducedConfig): OutputCentricConfig {
+    let output = {
         "entity": "FIXME", // <- need to set real hc.mac here
         "config": {
             "/0": {
                 "/M0": { "elements": [{ "ic": -1234, "k": 5678 }] }, // FIXME
                 "/M1": {},
-                "/U": { "outputs": matrix.u },
-                "/I": { "outputs": matrix.i }, /* TODO: TRANSLATION NECCESSARY!!!! */
-                "/C": { "elements": matrix.c },
+                "/U": { "outputs": cluster_config.u as Array<number | null> },
+                "/I": { "outputs": input2output(cluster_config.i) },
+                "/C": { "elements": cluster_config.c },
             }
         }
     }
-    return cluster_config
+    return output
 }
 
 /** Routine for computing the UCI matrix from a list of physical routes.
@@ -80,7 +130,7 @@ export function reduced2output(matrix: ReducedConfig): OutputCentricConfig {
  **/
 export const routes2matrix = (routes: Array<PhysicalRoute>): ReducedConfig => ({
     u: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.uin)).flat(),
-    i: range(16).map(clane => routes.filter(r => r.iout == clane).map(r => r.lane)).flat(),
+    i: range(32).map(lane => routes.filter(r => r.lane == lane).map(r => r.iout)).flat(),
     c: range(32).map(lane => { const c = routes.find(r => r.lane == lane); return c ? c.cval : 0; })
 });
 
