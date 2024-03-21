@@ -97,6 +97,9 @@ Make sure you have a running version of nodejs or in particular `npm`, the node 
 If you want to build the compiled code locally, run  `npm run build`.
 Afterwards, you can serve the code without any node dependency for instance with `cd dist && python -m http.server`.
 
+For documenting, we use the [TSDoc](https://tsdoc.org/) standard. For unit testing,
+we use the [vitest](https://vitest.dev/) testing framework (`npm run test`).
+
 ### Useful commands
 
 * `npm run release` -- creates a release (`git tag` + `package.json`; Gitlab-Release is done in CI)

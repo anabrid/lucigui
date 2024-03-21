@@ -23,7 +23,7 @@ const githash = execSync("git rev-parse --short HEAD").toString().trimEnd();
 const environ = process.env // loadEnv("production", process.cwd())
 const env = (key, fallback_val) => key in environ ? environ[key] : fallback_val
 
-/** See src/lib/client_defaults.ts for the Interface describing this object */
+/** @see src/lib/client_defaults.ts for the Interface describing this object */
 const client_defaults = {
   app_version: pkg.version,
   app_githash: githash,
@@ -31,6 +31,12 @@ const client_defaults = {
   
   // Used for instance in <title> elements
   app_name: "LUCIDAC-GUI",
+
+  // URLs where variants of the app are hosted
+  canonical_urls: [
+    "https://lucidac.online",
+    "http://nossl.lucidac.online",
+  ],
 
   /**
    * Builds are either
@@ -60,7 +66,8 @@ const client_defaults = {
 
 // Just an easy compile-time text inserter.
 const textfiles = {
-  'README_HTML': marked.parse(slurp("README.md"))
+  'README_HTML': marked.parse(slurp("README.md")),
+  'CHANGELOG_HTML': marked.parse(slurp("CHANGELOG.md")),
 }
 
 // https://vitejs.dev/config/

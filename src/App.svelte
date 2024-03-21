@@ -3,7 +3,7 @@ Copyright (c) 2024 anabrid GmbH
 Contact: https://www.anabrid.com/licensing/
 SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
-<script>
+<script lang="ts">
   import { setContext } from "svelte";
   import { get } from "svelte/store";
   import { slide, fade } from "svelte/transition";
@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
 
   import { toggle, slugify } from "@/lib/utils";
-  import ClientDefaults from "@/lib/client_defaults";
+  import { type GlobalConstants, enrich } from "@/lib/client_defaults";
   import { lazy_load_sentry } from "@/lib/sentry.js";
 
   import Endpoint from "@/lib/Endpoint.svelte";
@@ -27,6 +27,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Editor from "@/routes/Editor.svelte";
 
   import About, { info_modal_open } from "@/lib/About.svelte";
+
+  // mandatory parameters for starting up the application
+  export let client_defaults : GlobalConstants
+  client_defaults = enrich(client_defaults)
+  setContext("client_defaults", client_defaults)
 
   const nav = [Home, Settings, Editor, Help];
   const urls = ["/", "/settings", "/editor", "/help"];
@@ -45,7 +50,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     const route_id = urls.findIndex((e) => e == event.detail.route);
     if (route_id == -1) return;
     // inserting the device name would also be handy
-    document.title = `${titles[route_id]} (${ClientDefaults.app_name})`;
+    document.title = `${titles[route_id]} (${client_defaults.app_name})`;
 
     active_title = slugify(titles[route_id]);
   }
@@ -59,7 +64,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // this is for mobile devices, with a collapsible navigation bar
   const navbar_burger_active = toggle(true);
 
-  if (ClientDefaults.sentry_dsn) lazy_load_sentry(ClientDefaults.sentry_dsn);
+  if (client_defaults.sentry_dsn) lazy_load_sentry(client_defaults.sentry_dsn);
 
   //  const navbar_online_labels = { offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }
   //  let navbar_online_label = ""
@@ -71,7 +76,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    * It is not a store but a collection of many stores (@see Syncable<T> for
    * details).
    **/
-  const hc = new SvelteHybridController(ClientDefaults.endpoint_url);
+  const hc = new SvelteHybridController(client_defaults.endpoint_url);
 
   // expose to global window for fabulous debugging in browser console
   window.hc = hc;

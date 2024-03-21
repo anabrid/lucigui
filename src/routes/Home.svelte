@@ -12,8 +12,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 
   import { SvelteHybridController } from '@/HybridController/svelte'
-  import { hostname } from '@/lib/utils';
-  import ClientDefaults from '@/lib/client_defaults';
+  import { hostname, is_https } from '@/lib/utils';
+  import type { GlobalConstants } from "@/lib/client_defaults";
   import Endpoint from "@/lib/Endpoint.svelte"
   import DebugView from '@/views/DebugView.svelte';
 
@@ -23,6 +23,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   const hc_status = hc.status.value
   const connected = derived(hc.endpoint_status, (status) => status == "online")
   const entities = hc.entities.value
+
+  const client_defaults = getContext("client_defaults") as GlobalConstants
 
   // onMount(() => { hc.status.download() }) // needs guard against bool($endpoint), see below.
 
@@ -39,10 +41,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       <div class="columns" style="align-items: center">
         <div class="column is-half">
           <p class="title">
-            Configure {!ClientDefaults.has_default_endpoint&&!$connected?"any":"your"} luci with ease
+            Configure {!client_defaults.has_default_endpoint&&!$connected?"any":"your"} luci with ease
           </p>
           <div class="subtitle">
-            {#if !ClientDefaults.has_default_endpoint}
+            {#if !client_defaults.has_default_endpoint}
             Program circuits for re-configurable analog-digital hybrid computers.
 
             <p class="buttons" style="margin-top: 1em">
@@ -62,7 +64,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
               {:else if $endpoint_status == "failed"}
               <div class="notification is-danger">
                 <strong>Connecting to the LUCIDAC endpoint failed</strong>.
-                {#if !ClientDefaults.has_default_endpoint}
+                {#if !client_defaults.has_default_endpoint}
                 Here are a few possible reasons:
                 <ul>
                   <li>Domain name not resolvable: Try IP address instead.</li>
@@ -96,9 +98,23 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                 </p>
 
                 <p>If you want to push analog programs to a LUCIDAC, enter its web
-                  endpoint URL in the form above.
+                  endpoint URL in the form above.</p>
               </div>
+
+                {#if true || is_https(hostname)}
+                <div class="notification is-danger" transition:slide>
+                  <p>
+                    <strong>You may want to switch to a GUI version without SSL</strong>.
+                    Typically, LUCIDAC endpoints are HTTP only. However, your GUI version is
+                    hosted from HTTPS and it is not possible to connect to a HTTP endpoint
+                    from a HTTP hosted site. Have a look at <a href="#/help/canonical">other
+                    hosted versions of the lucidac-gui</a> known to this build.
+                  </p>
+                </div>
+                {/if}
               {/if}
+
+
 
               <!--
                 {#if $endpoint_status == "online" }

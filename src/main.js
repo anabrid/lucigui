@@ -11,6 +11,10 @@ if(splashscreen) splashscreen.remove()
 try {
   const app = new App({
     target: document.getElementById('app'),
+    props: {
+      // pass global variable defined in index.html
+      client_defaults: window.client_defaults
+    }
   })
 } catch(e) {
   console.error("Crash: ", e)

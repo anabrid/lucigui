@@ -17,20 +17,22 @@
 
   // Works but is... plain text.
   import { hostname } from "@/lib/utils";
-  import ClientDefaults from '@/lib/client_defaults';
+  import type { ProgramConstants } from '@/lib/client_defaults';
   import type { SvelteHybridController } from "@/HybridController/svelte";
   import { getContext } from "svelte";
 
   const hc = getContext("hc") as SvelteHybridController
   const endpoint = hc.endpoint
 
+  const client_defaults = getContext("client_defaults") as ProgramConstants
+
   let infos = {}
   $: infos = {
-    Version: ClientDefaults.app_version, // todo, would be nice to have Gitlab links
-    Commit: ClientDefaults.app_githash,
-    Date: ClientDefaults.app_build_date,
+    Version: client_defaults.app_version, // todo, would be nice to have Gitlab links
+    Commit: client_defaults.app_githash,
+    Date: client_defaults.app_build_date,
     "Hosted on": hostname,
-    "Default endpoint": ClientDefaults.endpoint || "Headless (no default endpoint)",
+    "Default endpoint": client_defaults.endpoint || "Headless (no default endpoint)",
     "Current endpoint": $endpoint || "Not connected"
   }
 
@@ -55,7 +57,7 @@
               </figure>
             </div>
             <div class="media-content">
-              <p class="title is-4">{ClientDefaults.app_name}</p>
+              <p class="title is-4">{client_defaults.app_name}</p>
               <div class="subtitle is-6">
                 A web application for managing LUCIDACs and editing
                 analog circuits.

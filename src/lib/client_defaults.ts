@@ -19,6 +19,13 @@ export interface GlobalConstants {
 
     /** Used for instance in <title> elements */
     app_name: string,
+
+    /**
+     * A list of URLs where this webapp is hosted. Useful to point the user to other
+     * instances in case of problems, in particular to HTTP-only instances.
+     * The strings shall encode URLs such as "http://foo/bar"
+     **/
+    canonical_urls?: string[],
   
     /**
      * suitable endpoint URLs are either explicit, such as "http://192.168.1.123/api"
@@ -34,7 +41,7 @@ export interface GlobalConstants {
     sentry_dsn?: string
 }
 
-const derived = (defaults: GlobalConstants) => ({
+export const derived = (defaults: GlobalConstants) => ({
     has_default_endpoint: Boolean(defaults.endpoint),
 
     /** Fully qualified application name including version */
@@ -43,8 +50,7 @@ const derived = (defaults: GlobalConstants) => ({
     endpoint_url: (()=>{ try { if(defaults.endpoint) return new URL(defaults.endpoint) } catch(e) {}})()
 })
 
-const enrich = (defaults: GlobalConstants) => ({...defaults, ...derived(defaults)})
+export type ProgramConstants = GlobalConstants & ReturnType<typeof derived>
 
-/** Singleton for more precise access */
-const client_defaults = enrich(window.client_defaults as GlobalConstants)
-export default client_defaults
+export const enrich = (defaults: GlobalConstants) : ProgramConstants => ({...defaults, ...derived(defaults)})
+

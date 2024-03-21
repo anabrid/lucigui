@@ -3,10 +3,12 @@ import {writable} from "svelte/store";
 
 export function get_hostname() {
     const { port, protocol, hostname, pathname } = window.location
-    const sport = (port != 80 || port != 443) ? `:${port}` : ""
+    const sport = port ? (port.includes(":") ? port : `:${port}`) : ""
     const spathname = (pathname != "/") ? pathname : ""
     return `${protocol}//${hostname}${sport}${spathname}`
 }
+
+export const is_https = (url: string) => /^https/.test(url)
 
 export const hostname = get_hostname()
 
@@ -41,6 +43,7 @@ export function isValidHttpUrl(string:string) {
   
     return url.protocol === "http:" || url.protocol === "https:";
 }
+
  
 // https://stackoverflow.com/a/65939108
 export function saveJsonAsFile(filename:string , dataObjToWrite:any) {

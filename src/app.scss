@@ -49,6 +49,17 @@ button.is-selected {
   color: $astronaut;
 }
 
+.content tt {
+  background-color: hsl(0, 0%, 96%); // like <pre>
+  display: inline-block;
+  padding: 2px;
+  margin: -2px 0;
+
+  .notification & {
+    background-color: hsl(0, 0%, 90%); // because/if background is same color
+  }
+}
+
 /*
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
