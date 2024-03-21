@@ -30,7 +30,7 @@ export function toggle(initState: boolean) {
     return {subscribe, toggle}
 }
 
-export const slugify = (text) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+export const slugify = (text:string) => text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 
 export function isValidHttpUrl(string:string) {
     // source: https://stackoverflow.com/a/43467144
@@ -84,7 +84,7 @@ export function loadScript(url: string, integrity?: string) {
   })
 }
 
-export function millisecondUptimeToDate(ms) {
+export function millisecondUptimeToDate(ms:number) {
   const now = new Date().getTime()
   return new Date(now - ms/1000/1000)
 }

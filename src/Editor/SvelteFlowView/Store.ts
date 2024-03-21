@@ -12,7 +12,7 @@ import { type ElementName, AssignedElement, AssignedElementPort,
 import { range, next_free, tryOr, uniqueByKey, UniqueCounter } from "@/lucicon/utils"
 import { SvelteHybridController } from '@/lucicon/svelte'
 
-import { type Writable } from 'svelte/store'
+import { type Stores, type StoresValues, type Updater, type Writable } from 'svelte/store'
 import { type Node, type Edge, type Viewport } from '@xyflow/svelte'
 
 // 3rd party: https://www.npmjs.com/package/svelte-writable-derived
@@ -91,8 +91,8 @@ export class CircuitStore {
       source = AssignedElementPort.fromStringWithPort(r.groups.source)
       target = AssignedElementPort.fromStringWithPort(r.groups.target)
     } else {
-      source = AssignedElementPort.fromStringWithPort(e.source, e.sourceHandle)
-      target = AssignedElementPort.fromStringWithPort(e.target, e.targetHandle)
+      source = AssignedElementPort.fromStringWithPort(e.source, e.sourceHandle as string|undefined)
+      target = AssignedElementPort.fromStringWithPort(e.target, e.targetHandle as string|undefined)
     }
     const sourceId = source.toString()
     const targetId = target.toString()
@@ -167,15 +167,23 @@ export interface FlowCircuitFileFormat extends CircuitFileFormat {
   SvelteFlowView?: ExportFormat
 }
 
+
+import type { Readable } from "svelte/store";
+
+
 /**
  * The svelteflow circuit store, storing edges and routes suitable for svelteflow.
  * It is derived from the LogicalRoute store and can write back thanks to the
  * mappings defined in this file.
+ * 
+ * @note the types here are correct but it is a reported upstream bug at
+ * https://github.com/PixievoltNo1/svelte-writable-derived/issues/25
  */
 export const deriveCircuitFrom = (hc: SvelteHybridController) => 
   writableDerived<Writable<LogicalConnection[]>, CircuitStore>(
     /* base    */ hc.logical_routes,
-    /* derive  */ (base, _set, update) => update(cur_derived => CircuitStore.fromRoutes(base, cur_derived)),
-    /* reflect */ (reflecting) => reflecting.toRoutes(),
+    /* derive  */ (base: LogicalConnection[], _set: any, update: (fn: Updater<CircuitStore>)=>void) =>
+                    update(prev_store => CircuitStore.fromRoutes(base, prev_store)),
+    /* reflect */ (reflecting:CircuitStore) => reflecting.toRoutes(),
     /* initial */ new CircuitStore()
   )
