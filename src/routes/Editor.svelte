@@ -136,7 +136,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             </div>
             <div class="level-item">
                 <div class="buttons has-addons">
-                    <button class="button" class:is-selected={$show_debug_graph} on:click={show_debug_graph.toggle}>Debug Graph</button>
+                    <button class="button" class:is-selected={$show_flow && $show_debug_graph} on:click={show_debug_graph.toggle}>Debug Graph</button>
                     <button class="button" class:is-selected={$show_debug_logical} on:click={show_debug_logical.toggle}>Logical</button>
                     <button class="button" class:is-selected={$show_debug_physical} on:click={show_debug_physical.toggle}>Physical</button>
                     <button class="button" class:is-selected={$show_debug_cluster_config} on:click={show_debug_cluster_config.toggle}>Cluster</button>
@@ -193,7 +193,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         </div>
         {/if}
 
-        {#if $show_debug_graph}
+        {#if flowView && $show_debug_graph}
         <div class="debug" transition:slide={{ axis: 'x' }}>
             <h2>Edges</h2>
             <DebugView store={flowView.edges} />

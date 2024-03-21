@@ -133,8 +133,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     dagreGraph.setGraph({ rankdir: "LR" });
 
-    const nodeWidth = 150
-    const nodeHeight = 30
+    const nodeWidth = 60
+    const nodeHeight = 40
 
     nodes.forEach((node) => {
       dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -165,6 +165,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $nodes = layoutedElements.nodes
     $edges = layoutedElements.edges
   }
+
+  $: $edges, $edges.forEach((e,i) => $edges[i].type = "smoothstep")
 
 </script>
 

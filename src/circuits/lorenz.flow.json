@@ -1,0 +1,686 @@
+{
+    "_meta": {
+        "title": "Manually aligned flow"
+    },
+    "SvelteFlowView": {
+        "nodes": [
+            {
+                "id": "Mul0",
+                "position": {
+                    "x": 240.77994098617256,
+                    "y": 257.2372682937595
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 240.77994098617256,
+                        "y": 257.2372682937595
+                    },
+                    "width": 58,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int0",
+                "position": {
+                    "x": 242.69371492801986,
+                    "y": 178.86110134810667
+                },
+                "origin": [
+                    0.5,
+                    0
+                ],
+                "type": "analog",
+                "data": {
+                    "rtl": false
+                },
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 242.69371492801986,
+                        "y": 178.86110134810667
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot0",
+                "position": {
+                    "x": 262.4363241351546,
+                    "y": 141.7578702093045
+                },
+                "data": {
+                    "rtl": true
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 262.4363241351546,
+                        "y": 141.7578702093045
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int1",
+                "position": {
+                    "x": 857.6728803208732,
+                    "y": 263.9593953952915
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 857.6728803208732,
+                        "y": 263.9593953952915
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot1",
+                "position": {
+                    "x": 843.7085316450712,
+                    "y": 319.6269963154458
+                },
+                "data": {
+                    "rtl": true
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 843.7085316450712,
+                        "y": 319.6269963154458
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Int2",
+                "position": {
+                    "x": 423.033500804151,
+                    "y": 256.7445090894778
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 423.033500804151,
+                        "y": 256.7445090894778
+                    },
+                    "width": 51,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot2",
+                "position": {
+                    "x": 412.41953993039795,
+                    "y": 321.1231182949589
+                },
+                "data": {
+                    "rtl": true
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 412.41953993039795,
+                        "y": 321.1231182949589
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot3",
+                "position": {
+                    "x": 105.45402144160062,
+                    "y": 250.17661109255997
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 105.45402144160062,
+                        "y": 250.17661109255997
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot4",
+                "position": {
+                    "x": 194.7842080190453,
+                    "y": 394.4942894754558
+                },
+                "data": {
+                    "rtl": true
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 194.7842080190453,
+                        "y": 394.4942894754558
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot5",
+                "position": {
+                    "x": 284.2201657065323,
+                    "y": 256.0744315290681
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 284.2201657065323,
+                        "y": 256.0744315290681
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot6",
+                "position": {
+                    "x": 526.3327252000538,
+                    "y": 256.1817116218707
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 526.3327252000538,
+                        "y": 256.1817116218707
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Mul1",
+                "position": {
+                    "x": 649.0641988478385,
+                    "y": 263.91566190991097
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 649.0641988478385,
+                        "y": 263.91566190991097
+                    },
+                    "width": 58,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Const5",
+                "position": {
+                    "x": 511.4837387782368,
+                    "y": 360.923417950885
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 511.4837387782368,
+                        "y": 360.923417950885
+                    },
+                    "width": 79,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot7",
+                "position": {
+                    "x": 604.0617222075836,
+                    "y": 360.25334039047533
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 604.0617222075836,
+                        "y": 360.25334039047533
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot8",
+                "position": {
+                    "x": 489.45206237392426,
+                    "y": 151.9153357897028
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 489.45206237392426,
+                        "y": 151.9153357897028
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot9",
+                "position": {
+                    "x": 740.302027156366,
+                    "y": 263.28931783488173
+                },
+                "data": {
+                    "rtl": false
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 740.302027156366,
+                        "y": 263.28931783488173
+                    },
+                    "width": 62,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            },
+            {
+                "id": "Pot10",
+                "position": {
+                    "x": 327.078732569162,
+                    "y": 104.48836593853895
+                },
+                "data": {
+                    "rtl": true
+                },
+                "type": "analog",
+                "computed": {
+                    "positionAbsolute": {
+                        "x": 327.078732569162,
+                        "y": 104.48836593853895
+                    },
+                    "width": 69,
+                    "height": 40
+                },
+                "selected": false,
+                "dragging": false
+            }
+        ],
+        "edges": [
+            {
+                "id": "0",
+                "source": "Int0",
+                "target": "Pot0",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "1",
+                "source": "Pot0",
+                "target": "Int0",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "2",
+                "source": "Int1",
+                "target": "Pot1",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "3",
+                "source": "Pot1",
+                "target": "Int1",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "4",
+                "source": "Int2",
+                "target": "Pot2",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "5",
+                "source": "Pot2",
+                "target": "Int2",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "6",
+                "source": "Int0",
+                "target": "Pot3",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "7",
+                "source": "Pot3",
+                "target": "Mul0",
+                "sourceHandle": "out",
+                "targetHandle": "a",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "8",
+                "source": "Int1",
+                "target": "Pot4",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "9",
+                "source": "Pot4",
+                "target": "Mul0",
+                "sourceHandle": "out",
+                "targetHandle": "b",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "10",
+                "source": "Mul0",
+                "target": "Pot5",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "11",
+                "source": "Pot5",
+                "target": "Int2",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "12",
+                "source": "Int2",
+                "target": "Pot6",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "13",
+                "source": "Pot6",
+                "target": "Mul1",
+                "sourceHandle": "out",
+                "targetHandle": "a",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "14",
+                "source": "Const5",
+                "target": "Pot7",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "15",
+                "source": "Pot7",
+                "target": "Mul1",
+                "sourceHandle": "out",
+                "targetHandle": "a",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "16",
+                "source": "Int0",
+                "target": "Pot8",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "17",
+                "source": "Pot8",
+                "target": "Mul1",
+                "sourceHandle": "out",
+                "targetHandle": "b",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "18",
+                "source": "Mul1",
+                "target": "Pot9",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "19",
+                "source": "Pot9",
+                "target": "Int1",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "20",
+                "source": "Int1",
+                "target": "Pot10",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            },
+            {
+                "id": "21",
+                "source": "Pot10",
+                "target": "Int0",
+                "sourceHandle": "out",
+                "targetHandle": "in",
+                "type": "smoothstep",
+                "selected": false
+            }
+        ],
+        "viewport": {
+            "x": 69.71761109063505,
+            "y": 45.886846196364615,
+            "zoom": 1.4923645546174067
+        }
+    },
+    "ClusterConfig": {
+        "u": [
+            8,
+            9,
+            10,
+            8,
+            9,
+            0,
+            10,
+            8,
+            1,
+            9
+        ],
+        "i": [
+            8,
+            9,
+            10,
+            0,
+            1,
+            10,
+            2,
+            3,
+            9,
+            8
+        ],
+        "c": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        "MInt": [
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            },
+            {
+                "ic": 0,
+                "k": 1000
+            }
+        ],
+        "Ualt": {
+            "signals": [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+            ]
+        }
+    }
+}

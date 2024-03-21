@@ -1,5 +1,6 @@
 <script lang="ts">
-    import lorentz from "@/circuits/lorenz.routes.json"
+    import lorenz from "@/circuits/lorenz.routes.json"
+    import lorenz_manually from "@/circuits/lorenz.flow.json"
     import test from "@/circuits/mutual-test.flow.json"
 
     // Function to be called to load stuff
@@ -24,20 +25,40 @@
         <div class="media-content">
           <div class="content">
             <p>
-              <strong>Lorenz attractor</strong> <small>(json)</small>
+              <strong>Lorenz attractor</strong> <small>(matrix)</small>
               <br>
               Simple three-dimensional attractor and standard example for demonstrating
               analog computers.
             </p>
           </div>
           <div class="buttons are-small">
-             <a on:click={load(lorentz)} class="button is-primary is-link">Load Lorenz</a>
+             <a on:click={load(lorenz)} class="button is-primary is-link">Load Lorenz</a>
              <a class="button" href="https://analogparadigm.com/downloads/alpaca_2.pdf" target="_blank">
                 Read more
              </a>
           </div>
         </div>
     </article>
+
+    <article class="media">
+      <figure class="media-left">
+        <p class="image is-64x64">
+          <img src="example-thumb-lorenz.svg">
+        </p>
+      </figure>
+      <div class="media-content">
+        <div class="content">
+          <p>
+            <strong>Lorenz attractor</strong> <small>(manually)</small>
+            <br>
+            The same but with a manually drawn circuit.
+          </p>
+        </div>
+        <div class="buttons are-small">
+           <a on:click={load(lorenz_manually)} class="button is-primary is-link">Load Lorenz</a>
+        </div>
+      </div>
+  </article>
 
     <article class="media">
         <figure class="media-left">

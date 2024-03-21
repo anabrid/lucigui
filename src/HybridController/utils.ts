@@ -35,6 +35,13 @@ export function union<T>(a:Array<T>,b:Array<T>) : Array<T> {return [...new Set([
 /** Maps {A:a, B:b} to { a:A, b:B } */
 export const reverse = (obj : Object) => Object.fromEntries(Object.entries(obj).map(kv=>kv.reverse()))
 
+/** Unique array entries by property key.
+ * Think of [{id:"foo", ...}, {id:"foo", ... }, {id:"bar", ...}] -> [{id:foo,...},{id:bar,...}]
+ */
+export function uniqueByKey<T>(array:T[], propertyName:string) {
+    return array.filter((e, i) => array.findIndex(a => a[propertyName] === e[propertyName]) === i);
+ }
+
 export class UniqueCounter {
     count: number;
     constructor(init = 0) { this.count = init }

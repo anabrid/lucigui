@@ -86,9 +86,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   // debugging
   hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val));
-  hc.endpoint_status.subscribe((val) =>
-    console.info("hc.endpoint_status = ", val),
-  );
+  hc.endpoint_status.subscribe((val) => console.info("hc.endpoint_status = ", val));
 </script>
 
 {#if $navbar_visible}
@@ -162,7 +160,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <div class="navbar-item">
               <strong>Endpoint</strong>
             </div>
-            <div class="navbar-item" style="white-space: wrap">
+            <div class="navbar-item" style="white-space: normal">
               <p>
                 You can use this widget to control the connection to a LUCIDAC
                 endpoint. If you don't have a LUCIDAC, you can still use some

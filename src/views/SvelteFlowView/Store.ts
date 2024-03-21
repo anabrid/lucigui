@@ -9,7 +9,7 @@
 
 import { type ElementName, AssignedElement, AssignedElementPort,
   type LogicalConnection, type IntState, type PotState, type CircuitFileFormat } from '@/HybridController/types'
-import { range, next_free, tryOr, UniqueCounter } from "@/HybridController/utils"
+import { range, next_free, tryOr, uniqueByKey, UniqueCounter } from "@/HybridController/utils"
 import { SvelteHybridController } from '@/HybridController/svelte'
 
 import { type Writable } from 'svelte/store'
@@ -123,20 +123,20 @@ export class CircuitStore {
   }
 
   static fromRoutes(routes: LogicalConnection[], prev: CircuitStore): CircuitStore {
-    console.log("lucidac2graph starting with ", routes);
+    console.log("CircuitStore.fromRoutes ", routes);
     const prev_nodes = prev ? prev.nodes : [];
     try {
       // A Set of node ids, such as "Mul0"
       const existing_nodes = new Set(prev_nodes.map(n => n.id))
   
-      const new_nodes = routes.flatMap((/*element*/lr, /*idx*/_lane) => {
+      const new_nodes = uniqueByKey(routes.flatMap((/*element*/lr, /*idx*/_lane) => {
           const source_str = lr.source.toString()
           const target_str = lr.target.toString()
           return [
             existing_nodes.has(source_str) ? undefined : CircuitStore.logical2node(lr.source),
             existing_nodes.has(target_str) || source_str == target_str ? undefined : CircuitStore.logical2node(lr.target)
           ]
-        }).filter(k => k !== undefined) as CircuitNode[]
+        }).filter(k => k !== undefined) as CircuitNode[], "id")
 
       //console.info("lucidac2graph success: ", ret_val)
       return new CircuitStore(
@@ -150,6 +150,7 @@ export class CircuitStore {
   }
 
   toRoutes() : LogicalConnection[] {
+    console.log("CircuitStore.toRoutes ", this.nodes, this.edges);
     // This is also called when dragging stuff.
     // Should probably debounce in order to reduce load
     const routes = this.edges.map((e) => this.edge2logical(e))
