@@ -1,5 +1,9 @@
+// Copyright (c) 2024 anabrid GmbH
+// Contact: https://www.anabrid.com/licensing/
+// SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+
 import { expect, test } from 'vitest'
-import * as map from './programming'
+import * as map from './mappings'
 import * as utils from './utils'
 
 import lorenz from '../circuits/lorenz.routes.json'

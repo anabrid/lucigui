@@ -19,7 +19,7 @@ import {
     config2routing, routing2config,
     logical2physical,
     physical2logical
-} from './programming'
+} from './mappings'
 import { HybridController, type endpoint_reachability  } from './connection';
 
 /**

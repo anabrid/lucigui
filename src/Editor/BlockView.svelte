@@ -19,7 +19,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     import { SvelteHybridController } from "@/lucicon/svelte";
     import { xrange } from "@/lucicon/utils"
     import { nlanes, ncrosslanes, type InformationDirection } from "@/lucicon/types"
-    import { StandardLUCIDAC } from "@/lucicon/programming";
+    import { StandardLUCIDAC } from "@/lucicon/mappings";
 
     import { toggle } from '@/lib/utils';
 

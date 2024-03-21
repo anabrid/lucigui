@@ -9,28 +9,30 @@ interface. This is where this application differs most.
 
 ## Main Features
 
-- Can be used while being connected to a LUCIDAC but also in "headless" use, able to connect to any
-  suitable LUCIDAC or to no LUCIDAC at all.
+- Talks to LUCIDACs via HTTP REST API. Requires suitable LUCIDAC firmware branch.
+- Can be used while being connected to a LUCIDAC but also in **headless mode**, where most functions
+  are still available. The client can connect to any suitable LUCIDAC or no LUCIDAC at all.
 - When connected to a LUCIDAC, allows to
   - display basic system information (such as firmware version, uptime, etc.)
   - show and edit persistent microcontroller configuration (networking, access control, etc)
-  - do a factory reset, upgrade the firmware
+  - (planned) do a factory reset, upgrade the firmware
   - provide an easy access to outgoing help links to the system documentation and programming guides
 - As a unique feature, it powers a powerful **visual programming experience** for configuring the
   analog wiring in the LUCIDAC straight out of the browser, featuring various completely synchronized
   and editable *views*, including
   - a graphical circuit editor
   - a graphical matrix editor
-  - and probably a DDA code editor in the future
-- The programmer is completed with a included set of example circuits.
+  - (planned) probably a DDA code editor in the future
+- Both settings and circuit configuration can be imported and exported as JSON files.
+- The application ships with a built-in set of example circuits as well as help texts.
 
 ## About the code
 
 The code was written in [Typescript](https://www.typescriptlang.org/), which compiles to Javascript,
 the defacto programming language for applications running in web browsers. It ships with a standalone
-Typescript hybrid controller client (at the single file `src/lib/HybridController.ts`) which serves
+Typescript hybrid controller client called `lucicon` which serves
 as a **javascript client for the JSONL lucidac protocol**.
-It can also be used in other Javascript/Typescript clients in any modern Javascript ecosystem such as 
+This client can also be used in other Javascript/Typescript clients in any modern Javascript ecosystem such as 
 [node](https://nodejs.org/) or [deno](https://deno.com/).
 
 The actual **SPA web application** is using the precompiled reactive web framework [Svelte](https://svelte.dev)

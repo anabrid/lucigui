@@ -1,4 +1,10 @@
 <!--
+Copyright (c) 2024 anabrid GmbH
+Contact: https://www.anabrid.com/licensing/
+SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+-->
+
+<!--
  This component represents an "About" panel as a modal.
  It can be opened by other components by importing something like
 

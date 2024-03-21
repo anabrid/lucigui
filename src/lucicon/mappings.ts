@@ -2,20 +2,6 @@
 // Contact: https://www.anabrid.com/licensing/
 // SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
-/**
- * @file The LUCIDAC Hybrid Controller, Typescript implementation
- * 
- * A lean and mean minimal asynchronous LUCIDAC HybridController client
- * library in modern ECMAScript.
- * 
- * This file is written in TypeScript but contains *no* dependency to any Svelte
- * code and also *no* dependencies to any other code within this repository.
- * It is *standalone* with minimal dependencies to nodejs.
- * 
- * A number of stores depend on codes written in this file, for instance the
- * HybridControllerStores.ts or the FlowView/Store.ts.
- **/
-
 import {
     AssignedElementPort,
     Const,
