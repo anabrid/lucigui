@@ -1,8 +1,8 @@
 <script lang="ts">
-    import lorenz from "@/circuits/lorenz.routes.json"
-    import lorenz_manually from "@/circuits/lorenz.flow.json"
-    import test from "@/circuits/mutual-test.flow.json"
-    import hyperjerk from "@/circuits/hyperjerk.flow.json"
+    import lorenz from "@/Editor/circuits/lorenz.routes.json"
+    import lorenz_manually from "@/Editor/circuits/lorenz.flow.json"
+    import test from "@/Editor/circuits/mutual-test.flow.json"
+    import hyperjerk from "@/Editor/circuits/hyperjerk.flow.json"
 
     // Function to be called to load stuff
     export let load : (any) => void

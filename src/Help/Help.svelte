@@ -7,9 +7,9 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import {fade} from 'svelte/transition'
    import { link, querystring } from "svelte-spa-router";
 
-   import devnote from "@/help-messages/devnote.html?raw"
-   import starting from "@/help-messages/getting-started.html?raw"
-   import Canonical from "@/help-messages/canonical.svelte"
+   import devnote from "./topics/devnote.html?raw"
+   import starting from "./topics/getting-started.html?raw"
+   import Canonical from "./topics/canonical.svelte"
 
    const topics = [
       {

@@ -22,7 +22,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     }
 </script>
 <script lang="ts">
-    import FlowView from '@/views/SvelteFlowView/Main.svelte';
+    import FlowView from '@/Editor/SvelteFlowView/Main.svelte';
     import { SvelteFlowProvider } from '@xyflow/svelte';
 
     export let view

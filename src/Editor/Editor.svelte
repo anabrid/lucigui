@@ -11,15 +11,15 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
    import { faFileExport, faFileImport, faExpand, faDownload, faUpload, faCircleNodes, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 
-   import BlockView from '@/views/BlockView.svelte'
-   import DeviceTree from '@/views/DeviceTree.svelte'
-   import FlowView from '@/views/SvelteFlowView/Provider.svelte'
-   import FlowViewMain from "@/views/SvelteFlowView/Main.svelte"
-   import DebugView from '@/views/DebugView.svelte';
-   import ExampleCircuits from '@/views/ExampleCircuits.svelte'
+   import BlockView from './BlockView.svelte'
+   import DeviceTree from '@/lib/DeviceTree.svelte'
+   import FlowView from './SvelteFlowView/Provider.svelte'
+   import FlowViewMain from "./SvelteFlowView/Main.svelte"
+   import DebugView from '@/lib/Debug.svelte';
+   import ExampleCircuits from './ExampleCircuits.svelte'
 
    import { SvelteHybridController } from '@/HybridController/svelte'
-   import { type FlowCircuitFileFormat } from "@/views/SvelteFlowView/Store";
+   import { type FlowCircuitFileFormat } from "./SvelteFlowView/Store";
     
    const hc = getContext("hc") as SvelteHybridController
    const hc_circuit_avail = hc.config.status

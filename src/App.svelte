@@ -14,19 +14,19 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { type GlobalConstants, enrich } from "@/lib/client_defaults";
   import { lazy_load_sentry } from "@/lib/sentry.js";
 
-  import Endpoint from "@/lib/Endpoint.svelte";
+  import Endpoint from "@/Home/Endpoint.svelte";
   import { SvelteHybridController } from "@/HybridController/svelte";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faLink, faLinkSlash } from "@fortawesome/free-solid-svg-icons";
 
-  import Home from "@/routes/Home.svelte";
-  import Help from "@/routes/Help.svelte";
-  import Settings from "@/routes/Settings.svelte";
-  import Editor from "@/routes/Editor.svelte";
+  import Home from "@/Home/Home.svelte";
+  import Help from "@/Help/Help.svelte";
+  import Settings from "@/Settings/Settings.svelte";
+  import Editor from "@/Editor/Editor.svelte";
 
-  import About, { info_modal_open } from "@/lib/About.svelte";
+  import About, { info_modal_open } from "@/Home/About.svelte";
 
   // mandatory parameters for starting up the application
   export let client_defaults : GlobalConstants
