@@ -59,8 +59,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             </div>
         </div>
         <div>
-            <Handle type="target" position={data.rtl ? Position.Left : Position.Right} id="in" {isConnectable} />
-            <Handle type="source" position={data.rtl ? Position.Right : Position.Left}  id="out" {isConnectable} />
+            <Handle type="target" position={data.rtl ? Position.Right : Position.Left} id="in" {isConnectable} />
+            <Handle type="source" position={data.rtl ? Position.Left : Position.Right}  id="out" {isConnectable} />
         </div>
     {:else}
     <div class="node-box">
