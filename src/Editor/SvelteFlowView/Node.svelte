@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    import { faLeftRight } from '@fortawesome/free-solid-svg-icons'
 
     import { type NodeData } from './Store';
-    import { Handle, Position, type NodeProps } from "@xyflow/svelte";
+    import { Handle, Position, type NodeProps, useUpdateNodeInternals } from "@xyflow/svelte";
     import { AssignedElement } from "@/lucicon/types";
 
     type $$Props = NodeProps<NodeData>;
@@ -28,6 +28,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 //    export let data: $$Props["data"] = { rtl: false }
 
+    const updateNodeInternals = useUpdateNodeInternals();
+
     const logicalElement = AssignedElement.fromString(id);
     const desc = logicalElement.type()
 
@@ -35,6 +37,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         if(!data) data = {}
         if(!("rtl" in data)) data.rtl = false
         data = data
+        updateNodeInternals(id)
     }
 
     // TODO: Mark invalid elements, ie. not mappable on physical elements
@@ -43,8 +46,6 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 <div class="node" class:rtl={data.rtl} class:ltr={!data.rtl} class:invalid={!valid} class:selected={selected}>
     {#if desc.name == "Pot"}
-        <Handle type="target" position={data.rtl ? Position.Right : Position.Left} id="in" {isConnectable} />
-        <Handle type="source" position={data.rtl ? Position.Left : Position.Right}  id="out" {isConnectable} />
         <div class="round-node-box">
             <div>
                 {#if selected}
@@ -56,6 +57,10 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
                     {/if}
                 {/if}
             </div>
+        </div>
+        <div>
+            <Handle type="target" position={data.rtl ? Position.Left : Position.Right} id="in" {isConnectable} />
+            <Handle type="source" position={data.rtl ? Position.Right : Position.Left}  id="out" {isConnectable} />
         </div>
     {:else}
     <div class="node-box">
@@ -149,7 +154,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
             <span>Mirror</span>
         </button>
     {:else}
-        {#if desc.name == "Int" && data.ic}
+        {#if desc.name == "Int" && data && data.ic}
         <div class="above-panel">
             {data.ic}
         </div>
