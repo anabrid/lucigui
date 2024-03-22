@@ -128,130 +128,126 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     </div>
     {/if}
 
-    <div class="tile is-ancestor">
-        <div class="tile is-parent is-vertical">
-            <div class="tile is-child">
-                <div class="box">
-                    <h2 class="title is-5">Personalization and Managament</h2>
-                    <p class="subtitle is-5">These custom settings are only displayed to clients.</p>
+    <div class="columns">
+        <div class="column is-half">
+            <div class="box">
+                <h2 class="title is-5">Personalization and Managament</h2>
+                <p class="subtitle is-5">These custom settings are only displayed to clients.</p>
 
-                    <Setting name="Contact name" path={["custom", "contact"]}>
-                        Name of owner or mainly responsible user of device.
-                    </Setting>
+                <Setting name="Contact name" path={["custom", "contact"]}>
+                    Name of owner or mainly responsible user of device.
+                </Setting>
 
-                    <Setting name="Location" path={["custom", "location"]}>
-                        Location of device
-                    </Setting>
-                </div>
-
-
-                <div class="box">
-                    <h2 class="title is-5">Networking: Basics</h2>
-                    <p class="subtitle is-5">All these settings describe basic TCP/IPv4 networking.</p>
-
-                    <Setting
-                        name="DHCP"
-                        type="select"
-                        options={{ "Use DHCP": true , "Use static IP": false }}
-                        requires_reboot
-                        path={["ethernet", "use_dhcp"]}
-                    >
-                        Whether to use DHCP for automatic IP adress configuration.
-                    </Setting>
-
-                    <Setting
-                        name="Hostname"
-                        type="input"
-                        path={["ethernet", "hostname"]}
-                    >
-                        Hostname of device, used for DHCP and for display purposes
-                    </Setting>
-                </div>
-
-                {#if section_static_ip_visible}
-                <div class="box" transition:slide={{ duration: 300, axis: 'y' }}>
-                    <h2 class="title is-5">Networking: Static Configuration</h2>
-                    <p class="subtitle is-5">The following settings are only relevant because DHCP is not used.</p>
-
-                    <Setting name="IP Address" path={["ethernet", "static_ipaddr"]}>Static IPv4 Address of the device.</Setting>
-                    <Setting name="Netmask" path={["ethernet", "static_netmask"]}>Static IPv4 Netmask.</Setting>
-                    <Setting name="Gateway" path={["ethernet", "static_gw"]}>Static IPv4 Gateway address.</Setting>
-                    <Setting name="DNS Server" path={["ethernet", "static_dns"]}>Static IPv4 DNS address. Only one DNS server accepted.</Setting>
-                </div>
-                {/if}
-
-                {#if $advanced}
-                <div class="box">
-                    <h2 class="title is-5">Networking: Advanced</h2>
-                    <p class="subtitle is-5">Change these settings only if you know what you do.</p>
-
-                    <Setting
-                        name="MAC address"
-                        type="input"
-                        path={["ethernet", "mac"]}
-                    >
-                        Ethernet MAC address of the device in the format
-                        <tt>AA-BB-CC-DD-EE-FF</tt>. It is suggested not to change this setting
-                        if there is no pressing need. Changing this address is helpful for instance for
-                        certain DHCP configurations.
-                    </Setting>
-
-                    <Setting
-                        name="TCP Port"
-                        type="number"
-                        path={["ethernet", "server_port"]}
-                    >
-                        TCP/IP port of default raw TCP/IP JSONL service.
-                        Valid is any number bigger 0 and smaller 2^16.
-                    </Setting>
-
-                    <Setting
-                        name="Webserver"
-                        type="radio"
-                        options={{ "Enable embedded webserver": true , "Disable embedded webserver": false }}
-                        path={["ethernet", "use_webserver"]}
-                    >
-                        Whether to use activate the internal webserver in the LUCIDAC or not.
-                        Attention: When you disable the webserver, this GUI is no more usable.
-                    </Setting>
-                </div>
-                {/if}
+                <Setting name="Location" path={["custom", "location"]}>
+                    Location of device
+                </Setting>
             </div>
+
+
+            <div class="box">
+                <h2 class="title is-5">Networking: Basics</h2>
+                <p class="subtitle is-5">All these settings describe basic TCP/IPv4 networking.</p>
+
+                <Setting
+                    name="DHCP"
+                    type="select"
+                    options={{ "Use DHCP": true , "Use static IP": false }}
+                    requires_reboot
+                    path={["ethernet", "use_dhcp"]}
+                >
+                    Whether to use DHCP for automatic IP adress configuration.
+                </Setting>
+
+                <Setting
+                    name="Hostname"
+                    type="input"
+                    path={["ethernet", "hostname"]}
+                >
+                    Hostname of device, used for DHCP and for display purposes
+                </Setting>
+            </div>
+
+            {#if section_static_ip_visible}
+            <div class="box" transition:slide={{ duration: 300, axis: 'y' }}>
+                <h2 class="title is-5">Networking: Static Configuration</h2>
+                <p class="subtitle is-5">The following settings are only relevant because DHCP is not used.</p>
+
+                <Setting name="IP Address" path={["ethernet", "static_ipaddr"]}>Static IPv4 Address of the device.</Setting>
+                <Setting name="Netmask" path={["ethernet", "static_netmask"]}>Static IPv4 Netmask.</Setting>
+                <Setting name="Gateway" path={["ethernet", "static_gw"]}>Static IPv4 Gateway address.</Setting>
+                <Setting name="DNS Server" path={["ethernet", "static_dns"]}>Static IPv4 DNS address. Only one DNS server accepted.</Setting>
+            </div>
+            {/if}
+
+            {#if $advanced}
+            <div class="box">
+                <h2 class="title is-5">Networking: Advanced</h2>
+                <p class="subtitle is-5">Change these settings only if you know what you do.</p>
+
+                <Setting
+                    name="MAC address"
+                    type="input"
+                    path={["ethernet", "mac"]}
+                >
+                    Ethernet MAC address of the device in the format
+                    <tt>AA-BB-CC-DD-EE-FF</tt>. It is suggested not to change this setting
+                    if there is no pressing need. Changing this address is helpful for instance for
+                    certain DHCP configurations.
+                </Setting>
+
+                <Setting
+                    name="TCP Port"
+                    type="number"
+                    path={["ethernet", "server_port"]}
+                >
+                    TCP/IP port of default raw TCP/IP JSONL service.
+                    Valid is any number bigger 0 and smaller 2^16.
+                </Setting>
+
+                <Setting
+                    name="Webserver"
+                    type="radio"
+                    options={{ "Enable embedded webserver": true , "Disable embedded webserver": false }}
+                    path={["ethernet", "use_webserver"]}
+                >
+                    Whether to use activate the internal webserver in the LUCIDAC or not.
+                    Attention: When you disable the webserver, this GUI is no more usable.
+                </Setting>
+            </div>
+            {/if}
         </div>
-        <div class="tile is-parent is-vertical">
-            <div class="tile is-child">
-                <div class="box">
-                    <h2 class="title is-5">Access restrictions</h2>
-                    <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
+        <div class="column is-half">
+            <div class="box">
+                <h2 class="title is-5">Access restrictions</h2>
+                <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
 
-                    <Setting name="User/Password" type="radio" path={["user", "enable_whatever"]}
-                        options={{ "Require login with username/password": true , "Grant anybody with access administrator rights": false }}>
-                        Disabling the user/password access system is only recommended in safe networks
-                        such as home networks, internal ad-hoc networks and restricted company subnets.
-                    </Setting>
+                <Setting name="User/Password" type="radio" path={["user", "enable_whatever"]}
+                    options={{ "Require login with username/password": true , "Grant anybody with access administrator rights": false }}>
+                    Disabling the user/password access system is only recommended in safe networks
+                    such as home networks, internal ad-hoc networks and restricted company subnets.
+                </Setting>
 
-                    <Setting name="Firewall" type="checkbox"
-                        legend="Use simple Whitelist/Blacklist based firewall"
-                        path={["whatever", "fixme"]}
-                        >
-                        Based on connecting IP addresses.
-                        <em>Warning</em>: Can lock out.
-                    </Setting>
+                <Setting name="Firewall" type="checkbox"
+                    legend="Use simple Whitelist/Blacklist based firewall"
+                    path={["whatever", "fixme"]}
+                    >
+                    Based on connecting IP addresses.
+                    <em>Warning</em>: Can lock out.
+                </Setting>
 
-                    <!-- third setting: CORS -->
-                </div>
+                <!-- third setting: CORS -->
+            </div>
 
 
-                <div class="box">
-                    <h2 class="title is-5">Access restrictions: User/Password store</h2>
-                    <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
+            <div class="box">
+                <h2 class="title is-5">Access restrictions: User/Password store</h2>
+                <p class="subtitle is-5">Control who can access the LUCIDAC in the network</p>
 
-                    <!-- TODO: This will never show up the "virtual" admin user. Visual workaround would be nice -->
+                <!-- TODO: This will never show up the "virtual" admin user. Visual workaround would be nice -->
 
-                    <!-- TODO: Component that displays table username/password with add/remove rows -->
-                    <Setting name="Users" type="user-pass" path={["whatever", "fixme"]}>
-                    </Setting>
-                </div>
+                <!-- TODO: Component that displays table username/password with add/remove rows -->
+                <Setting name="Users" type="user-pass" path={["whatever", "fixme"]}>
+                </Setting>
             </div>
         </div>
     </div>
