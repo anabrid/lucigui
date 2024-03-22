@@ -56,7 +56,7 @@ const client_defaults = {
    * 
    * (Note that any env default here is most likely a relict from development)
    **/
-  endpoint: env("ENDPOINT", "http://lucidac-17-40-F4.fritz.box/api"),
+  endpoint: env("ENDPOINT", "/api"),
 
   // Data source name for Senitry performance monitor
   sentry_dsn: "https://1945f70e4e7a79fda4bcc0b6e321d1c7@sentry.anabrid.dev/2"

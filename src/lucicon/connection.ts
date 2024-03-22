@@ -1,3 +1,7 @@
+// Copyright (c) 2024 anabrid GmbH
+// Contact: https://www.anabrid.com/licensing/
+// SPDX-License-Identifier: MIT OR GPL-2.0-or-later
+
 import { v4 as uuid } from 'uuid';
 import { type SendEnvelope, type RecvEnvelope } from './types'
 
