@@ -31,7 +31,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   let gettingStarted = false
 
   // Download status whenever endpoint changes (to non-null).
-  $: $endpoint, $endpoint && hc.status.download()
+  $: $endpoint, $endpoint && hc.whenConnected().then(()=>hc.status.download())
 
   const stats = derived(hc.status.value, (status)=> ([
       {

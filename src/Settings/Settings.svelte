@@ -19,7 +19,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
     // onMount(() => { hc.settings.download() }) // next line should do it too, is guarded against bool($endpoint)
     // Download settings whenever endpoint changes (to non-null).
-    $: $endpoint, $endpoint && hc.settings.download()
+    $: $endpoint, $endpoint && hc.whenConnected().then(()=>hc.settings.download())
 
     // The settings editor is basically a big input form for delayed editing
     // on a complex (JSON) object.

@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 -->
 <script lang="ts">
     import { SvelteHybridController, bufferedStore } from "@/lucicon/svelte";
-    import { type endpoint_reachability } from "@/lucicon/connection"
+    import { type connectionState } from "@/lucicon/connection"
     import { isValidHttpUrl } from "@/lib/utils"
     import { getContext } from "svelte";
 
@@ -34,7 +34,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
     $: url_valid = isValidHttpUrl($new_endpoint)
 
     // this are all the different states this component can be in, just for tracking.
-    type component_state = "editing"|"invalid"|endpoint_reachability
+    type component_state = "editing"|"invalid"|connectionState
 
     let leftButtonClasses = ""
     let rightButtonClasses = ""

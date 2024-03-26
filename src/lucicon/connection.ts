@@ -3,15 +3,26 @@
 // SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 import { v4 as uuid } from 'uuid';
-import { type SendEnvelope, type RecvEnvelope } from './types'
+import type { SendEnvelope, RecvEnvelope, OutputCentricConfig } from './types'
 
-export type endpoint_reachability = "offline" | "connecting" | "online" | "failed"
+const noop = () => new Promise<void>((resolve, reject) => resolve())
+
+// compare with websocket readyStates: CONNECTING  | OPEN | CLOSING | CLOSED
+export type connectionState = "offline" | "connecting" | "online" | "failed"
+
+export type messageErrorTypes = "SyntaxError"|"NonAssignableMessage"
 
 /**
  * The actual HybridController client class for the LUCIDAC.
+ * 
+ * This Javascript/Typescript based Hybridcontroller uses the Websocket
+ * protocol or server, respectively, to connect to a LUCIDAC. This is because
+ * it is intended to be used from a browser environment. Of course one could
+ * also come up with a 
+ * 
  * Usage is like:
  * 
- *   const hc = new HybridController(new URL("http://1.2.3.4:5678/api"))
+ *   const hc = new HybridController(new URL("ws://1.2.3.4:5678/websocket"))
  *   await hc.query("status")
  * 
  * Note that this class is stateless, i.e. there is no connection hold.
@@ -19,33 +30,90 @@ export type endpoint_reachability = "offline" | "connecting" | "online" | "faile
  * anytime.
  **/
 export class HybridController {
-    /** You should set the endpoint by using connect() */
-    endpoint?: URL;
-    mac?: string; ///< Mac address, determined by get_entities()
+    /** Mac address, determined by get_entities() */
+    mac?: string
+    /** the websocket, if connected */
+    ws?: WebSocket
 
-    /** Stores most recent information about endpoint reachability, updated by query() */
-    endpoint_status: endpoint_reachability = "offline"
+    /** Allows to callback when endpoint status changes
+     * @TODO Should be probably an Event / or subscribable
+    */
+    onConnectionChange? : (new_state: connectionState) => void
 
-    /** Allows to callback when endpoint status changes */
-    endpoint_status_update? : () => void
+    /**
+     * Callback for incoming messages which cannot be treated.
+     * Not dispatched on connection or websocket failures.
+     * (For future: Not dispatched on custom unexpected out-of-band message types.)
+     * 
+     * @todo Use bindable events
+     **/
+    onMessageError? : (type: messageErrorTypes, data:any) => void
 
-    private set_endpoint_status(msg: endpoint_reachability) {
-        this.endpoint_status = msg
-        console.info("HybridController.set_endpoint_status", msg, this.endpoint_status_update)
-        if(this.endpoint_status_update) this.endpoint_status_update()
-    }
+    /**
+     * Mapping request ids to response promises
+     * Note that the key typically is a string-encoded UUID but it is enforced neither
+     * by client nor server.
+     */
+    private expected_responses = new Map<string, (data:RecvEnvelope)=>void >()
 
     constructor(endpoint? : URL) {
         if(endpoint) this.connect(endpoint)
+        else if(this.onConnectionChange) this.onConnectionChange("offline")
     }
 
     /// raises error if connection fails
     async connect(endpoint: URL) {
-        this.endpoint = endpoint
-        return this.get_entities() // defines this.mac
+        if(endpoint.protocol == "tcp")
+            throw new Error("Raw TCP protocols (for usage in node.js) not yet supported, left as an exercise to the reader")
+
+        if(this.is_connected()) await this.disconnect()
+
+        if(this.onConnectionChange) this.onConnectionChange("connecting")
+
+        this.ws = new WebSocket(endpoint)
+        const that = this
+
+        this.ws!.addEventListener("message", (event) => {
+            let data : RecvEnvelope
+            try {
+                data = JSON.parse(event.data)
+            } catch(e) {
+                const err = e as SyntaxError
+                if(that.onMessageError) that.onMessageError("SyntaxError", err)
+                return
+            }
+
+            if("id" in data && data.id && that.expected_responses.has(data.id)) {
+                that.expected_responses.get(data.id)!(data)
+            } else {
+                if(that.onMessageError) that.onMessageError("NonAssignableMessage", data)
+            }
+        })
+
+        return new Promise<void>((resolve, reject) => {
+            that.ws!.addEventListener("open", (event) => {
+                if(that.onConnectionChange) that.onConnectionChange("online")
+                resolve()
+            }, { once: true })
+            that.ws!.addEventListener("error", (event) => {
+                if(that.onConnectionChange) that.onConnectionChange("failed")
+                reject(event)
+            }, { once: true })
+        });
+
+        // in the REST past we used to make this kind of "test query"
+        // which also set the connectoion to failure. 
+        // return this.get_entities() // defines this.mac
     }
 
-    is_connectable() { return Boolean(this.endpoint); }
+    async disconnect() {
+        this.ws?.close()
+        this.expected_responses.clear()
+        // TODO: Properly wait until closed...
+        if(this.onConnectionChange) this.onConnectionChange("offline")
+    }
+
+    is_connected() { return Boolean(this.ws) }
 
     /**
      * Synchronous query-reply call to the HybridController.
@@ -55,7 +123,7 @@ export class HybridController {
      * That is, the return value shall always be the msg object.
      */
     async query(msg_type: string, msg = {}) {
-        console.info("HybridController: query", this, msg)
+        console.info("HybridController: query", msg_type, this, msg)
         const envelope_sent = {
             id: uuid(),
             type: msg_type,
@@ -82,10 +150,17 @@ export class HybridController {
     async query_envelope(envelope_sent: SendEnvelope) : Promise<RecvEnvelope> {
         const json_sent = JSON.stringify(envelope_sent);
 
-        if(!this.is_connectable())
-            throw new Error("Requiring an endpoint to be set")
+        if(!this.ws)
+            throw new Error("Requires an established connection, but no endpoint set.")
 
-        if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
+        if(this.ws.readyState != WebSocket.OPEN) {
+            throw new Error(`Requires an established connection, but it is in state ${this.ws.readyState}`)
+        }
+
+        //if(!this.is_connectable())
+        //    throw new Error("Requiring an endpoint to be set")
+
+        /*if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
             this.set_endpoint_status("connecting")
         }
 
@@ -102,10 +177,15 @@ export class HybridController {
             throw new Error(`HybridController XHR failed, wanted to send ${json_sent}, received ${resp.text()}`)
         } else {
             this.set_endpoint_status("online")
-        }
+        }*/
 
-        const envelope_recv = await resp.json()
-        return envelope_recv
+        const delayedResponse = new Promise<RecvEnvelope>((resolve, reject) => {
+            this.expected_responses.set(envelope_sent.id, (data:RecvEnvelope) => resolve(data))
+        })
+
+        this.ws.send(json_sent)
+
+        return delayedResponse
     }
 
     async get_entities() {

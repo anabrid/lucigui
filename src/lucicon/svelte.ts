@@ -20,7 +20,7 @@ import {
     logical2physical,
     physical2logical
 } from './mappings'
-import { HybridController, type endpoint_reachability  } from './connection';
+import { HybridController, type connectionState  } from './connection';
 
 /**
  * @file
@@ -203,6 +203,7 @@ class Syncable<T> {
  **/
 export class SvelteHybridController {
     private remote = new HybridController()
+    
 
     // TODO:
     // Consider using the mockup messages like default_messages.get_settings
@@ -237,29 +238,36 @@ export class SvelteHybridController {
      * Learn about the endpoint reachability the svelte way, fully
      * synchronized with the "dumb" remote.endpoint_status.
      **/
-    endpoint_status = writable<endpoint_reachability>("offline")
+    endpoint_status = writable<connectionState>("offline")
+
+    private connect_promise? : Promise<void>
 
     /**
      * Internally handles connection and disconnection (endpoint=null)
      * Use $endpoint=<whatever> for public API.
      **/
-    private connect(endpoint?: URL ){
+    private connect(endpoint?: URL){
         this.status.reset()
         this.entities.reset()
         this.config.reset()
         this.settings.reset()
 
-        this.remote.endpoint = endpoint // manual double bind ;)
-        // we don't call this.remote.connect() but instead
-        // let the entities store gather the get_entities result,
-        // ie. do this way the same as this.remote.connect() does.
-        if(endpoint) this.entities.download()
+        if(endpoint) {
+            this.connect_promise = this.remote.connect(endpoint)
+        } else {
+            this.remote.disconnect()
+        }
+    }
+
+    /** Do actions when connected. */
+    whenConnected() {
+        return this.connect_promise ?? Promise.resolve()
     }
         
     constructor(endpoint? : URL) {
-        this.remote.endpoint_status_update = () => this.endpoint_status.set(this.remote.endpoint_status)
-        if(endpoint) this.endpoint.set(endpoint)
+        this.remote.onConnectionChange = (new_val) => this.endpoint_status.set(new_val)
         this.endpoint.subscribe(e => this.connect(e))
+        if(endpoint) this.endpoint.set(endpoint)
     }
 
 
