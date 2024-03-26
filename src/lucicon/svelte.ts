@@ -246,9 +246,6 @@ export class SvelteHybridController {
      **/
     endpoint_status = writable<connectionState>("offline")
 
-    private connect_promise? : Promise<void>
-
-
     /**
      * When logged in, this is not an empty string, otherwise it is.
      **/
@@ -266,7 +263,9 @@ export class SvelteHybridController {
         this.settings.reset()
 
         if(endpoint) {
-            this.connect_promise = this.remote.connect(endpoint)
+            this.connect_promise = this.remote.connect(endpoint).catch(e => {
+                console.error("SvelteHybridController.connect failed for ", endpoint, " reason: ", e)
+            })
         } else {
             this.remote.disconnect()
         }
@@ -276,6 +275,7 @@ export class SvelteHybridController {
     whenConnected() {
         return this.connect_promise ?? Promise.resolve()
     }
+    private connect_promise? : Promise<void>
         
     constructor(endpoint? : URL) {
         this.remote.onConnectionChange = (new_val) => this.endpoint_status.set(new_val)

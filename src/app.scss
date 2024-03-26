@@ -6,15 +6,37 @@
 
 // anabrid colors
 $astronaut: #2b307b;
+$astronaut-40: #aaacca; // 40% saturation
 $electric-green: #00ff55;
 $vivid-violet: #b805c1;
 $daisy-bush: #5b1aae;
 $laser-lemon: #fcff5a;
 
+// colors in parts
+$astronaut-h: 236deg;
+$astronaut-s: 65%;
+$astronaut-v: 48%;
+
 @use 'bulma/sass' with (
   $primary: $astronaut,
-  $link: $astronaut
+  $link: $astronaut,
+  $blue: $astronaut
 );
+
+// instead of sass variables one can also use css variables...
+
+:root {
+  --bulma-primary-h: #{$astronaut-h};
+  --bulma-primary-s: #{$astronaut-s};
+  --bulma-primary-v: #{$astronaut-v};
+
+  --bulma-primary: #{$astronaut};
+  --bulma-link: #{$astronaut};
+
+  --bulma-primary-on-dark: #{$electric-green};
+  --bulma-link-on-dark: #{$electric-green};
+}
+
 
 // A vertical container where the last child grows at least the browser size.
 .flex-grow {
@@ -77,4 +99,12 @@ input[type="number"].hide_spin {
 .has-content .navbar-dropdown .navbar-item,
 .has-content.navbar-dropdown  .navbar-item {
   white-space: normal;
+}
+
+// dark mode things
+@media (prefers-color-scheme: dark) {
+  #navbar-logo {
+    // this is not ideal but better then nothing
+    filter: brightness(2.9)
+  }
 }
