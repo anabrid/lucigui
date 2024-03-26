@@ -9,7 +9,7 @@ interface. This is where this application differs most.
 
 ## Main Features
 
-- Talks to LUCIDACs via HTTP REST API. Requires suitable LUCIDAC firmware branch.
+- Talks to LUCIDACs via HTTP ~~REST API~~ Websockets. Requires suitable LUCIDAC firmware branch.
 - Can be used while being connected to a LUCIDAC but also in **headless mode**, where most functions
   are still available. The client can connect to any suitable LUCIDAC or no LUCIDAC at all.
 - When connected to a LUCIDAC, allows to
@@ -25,6 +25,21 @@ interface. This is where this application differs most.
   - (planned) probably a DDA code editor in the future
 - Both settings and circuit configuration can be imported and exported as JSON files.
 - The application ships with a built-in set of example circuits as well as help texts.
+
+## Usage: On the notation of endpoints
+
+A TCP/IP socket "endpoint" is characterized by an IP-address/hostname and a port, for instance
+`192.168.1.2` and `573`. This standard is of course also used in traditional LUCIDAC JSON-Lines "raw TCP protocol"
+clients. In contrast, this client uses HTTP websockets which define their endpoints as URLs. In websocket world,
+these URLs have the schema `ws` or `wss` (if SSL is used). As LUCIDACs currently do not support SSL, `ws`
+is the only supported schema. The websocket URL is basically what comes out when your replace the `http`
+in something like `http://192.168.1.2/some/path` with `ws`. The path in the URL is, by definition, always
+`/websocket` in the embedded LUCIDAC webserver. However, it can (in future) also be explored by the network
+status query or settings.
+
+Furthermore, if you want to connect to a LUCIDAC without websocket support, you can elevate the protocol
+by yourself. This works the same as a serial2tcp converter/proxy. Suitable codes shall presented here in the
+future.
 
 ## About the code
 
@@ -60,17 +75,19 @@ SPA provides the following benefits:
 - It also opens the world for javascript analog programming. People could also do this with node.js and friends,
   but with a real HTTP endpoint it is easier and more convenient.
 
-The *HTTP endpoint* is a simple adapter which *elevates* the JSONL "raw" TCP/IP protocol ontop of HTTP/1.1.
-The LUCIDAC-embedded webserver does only need to serve a few static files.
+The *HTTP endpoint* is a simple adapter which *elevates* the JSONL "raw" TCP/IP protocol via HTTP/1.1
+to the websocket protocol. The LUCIDAC-embedded webserver serves a few static files and allows the HTTP
+protocol upgrade. Note that both JSONL and websockets are message oriented protocols which allow true bidirectional
+communication, so there is little work involved matching these two protocols.
 
 The following design decision have been made in terms of security:
 
 - As a guiding principle, the firmware webserver has no HTTPS, which is always dysfunctional in non-public
-  networks. As websockets require HTTPS, they cannot be used.
-- **Cross-Origin Resource Sharing** (CORS) is the primary security measure for protecting the LUCIDAC HTTP
+  networks.
+-**Cross-Origin Resource Sharing** (CORS) is the primary security measure for protecting the LUCIDAC HTTP
   endpoint against unwanted access. It is one more configuration option for the LUCIDAC networking.
-- The simple user-password access system is also elevated on HTTP and exponential back off for failed logins
-  shall be implemented (this is out of scope for the lucidac-gui client).
+- The simple user-password access system is straightforwardly elevated on the websocket protocol and exponential
+  back off for failed logins shall be implemented (this is out of scope for the lucidac-gui client).
 
 ## Deployment strategies
 
