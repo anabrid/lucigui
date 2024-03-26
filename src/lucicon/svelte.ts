@@ -202,8 +202,14 @@ class Syncable<T> {
  *       accessible in all nested *.svelte files as getContext("hc").
  **/
 export class SvelteHybridController {
-    private remote = new HybridController()
-    
+    /**
+     * @note
+     * The underlying HC instance used to be private because
+     * almost all functionality is covered by the SvelteHybridController.
+     * Use the remote instance only in rare cases not covered by this
+     * svelte frontend.
+     **/
+    remote = new HybridController()
 
     // TODO:
     // Consider using the mockup messages like default_messages.get_settings
@@ -242,6 +248,13 @@ export class SvelteHybridController {
 
     private connect_promise? : Promise<void>
 
+
+    /**
+     * When logged in, this is not an empty string, otherwise it is.
+     **/
+    username = writable<string>("")
+
+
     /**
      * Internally handles connection and disconnection (endpoint=null)
      * Use $endpoint=<whatever> for public API.
@@ -268,6 +281,12 @@ export class SvelteHybridController {
         this.remote.onConnectionChange = (new_val) => this.endpoint_status.set(new_val)
         this.endpoint.subscribe(e => this.connect(e))
         if(endpoint) this.endpoint.set(endpoint)
+    }
+
+    async login(username:string, password:string) {
+        await this.remote.login(username, password)
+        // login succeeded if this line happens
+        this.username.set(username)
     }
 
 

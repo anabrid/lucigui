@@ -71,3 +71,10 @@ input[type="number"].hide_spin {
   /* firefox */
   -moz-appearance: textfield;
 }
+
+/* overwrite bulma's rule
+   .navbar-dropdown .navbar-item { white-space: nowrap } */
+.has-content .navbar-dropdown .navbar-item,
+.has-content.navbar-dropdown  .navbar-item {
+  white-space: normal;
+}

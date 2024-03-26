@@ -14,19 +14,19 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import { type GlobalConstants, enrich } from "@/lib/client_defaults";
   import { lazy_load_sentry } from "@/lib/sentry.js";
 
+  import Login from "@/Home/Login.svelte";
+  import About, { info_modal_open } from "@/Home/About.svelte";
   import Endpoint from "@/Home/Endpoint.svelte";
   import { SvelteHybridController } from "./lucicon/svelte";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
 
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faLink, faLinkSlash } from "@fortawesome/free-solid-svg-icons";
+  import { faLink, faLinkSlash, faUser } from "@fortawesome/free-solid-svg-icons";
 
   import Home from "@/Home/Home.svelte";
   import Help from "@/Help/Help.svelte";
   import Settings from "@/Settings/Settings.svelte";
   import Editor from "@/Editor/Editor.svelte";
-
-  import About, { info_modal_open } from "@/Home/About.svelte";
 
   // mandatory parameters for starting up the application
   export let client_defaults : GlobalConstants
@@ -66,10 +66,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   if (client_defaults.sentry_dsn) lazy_load_sentry(client_defaults.sentry_dsn);
 
-  //  const navbar_online_labels = { offline: "Headless", connecting: "Connecting...", online: "Connected", failed: "Connection failure" }
-  //  let navbar_online_label = ""
-  //  $: navbar_online_label = navbar_online_labels[$endpoint_status]
   const navbar_show_endpoint_widget = toggle(false);
+  const navbar_show_login_widget = toggle(false);
 
   /**
    * This is the Svelte-flaveoured HybridController global app singleton.
@@ -88,6 +86,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   // aliasing neccessary for svelte reactivity
   const endpoint = hc.endpoint;
   const endpoint_status = hc.endpoint_status;
+  const username = hc.username
 
   // debugging
   hc.endpoint.subscribe((val) => console.info("hc.endpoint = ", val));
@@ -133,8 +132,8 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         {/each}
       </div>
       <div class="navbar-end">
-        <div class="navbar-item has-dropdown is-hoverable">
-          <a on:click={navbar_show_endpoint_widget.toggle} class="navbar-link">
+        <div class="navbar-item has-dropdown is-hoverable" class:is-active={$navbar_show_endpoint_widget}>
+          <a on:click={navbar_show_endpoint_widget.toggle} class="navbar-link" class:is-active={$navbar_show_endpoint_widget}>
             <span class="icon">
               {#if $endpoint_status == "offline"}<FontAwesomeIcon
                   icon={faLinkSlash}
@@ -161,11 +160,11 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
               }[$endpoint_status]}</span
             >
           </a>
-          <div class="navbar-dropdown is-right" style="width: 30em">
+          <div class="navbar-dropdown is-right has-content" style="width: 30em;">
             <div class="navbar-item">
               <strong>Endpoint</strong>
             </div>
-            <div class="navbar-item" style="white-space: normal">
+            <div class="navbar-item">
               <p>
                 You can use this widget to control the connection to a LUCIDAC
                 endpoint. If you don't have a LUCIDAC, you can still use some
@@ -178,8 +177,29 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
           </div>
         </div>
         {#if $endpoint_status == "online"}
-          <div class="navbar-item">
-            <a class="navbar-item">Login</a>
+          <div class="navbar-item has-dropdown is-hoverable" class:is-active={$navbar_show_login_widget}>
+            <a on:click={navbar_show_login_widget.toggle} class="navbar-link" class:is-active={$navbar_show_login_widget}>
+              <span class="icon">
+                <FontAwesomeIcon icon={faUser} />
+              </span>
+              <span>
+                {$username ? $username : "Login"}
+              </span>
+            </a>
+            <div class="navbar-dropdown is-right has-content" style="width: 30em">
+              <div class="navbar-item">
+                <strong>Login</strong>
+              </div>
+              <div class="navbar-item">
+                <p>
+                  If your LUCIDAC has user access control enabled, you can
+                  login here.
+                </p>
+              </div>
+              <div class="navbar-item">
+                <Login />
+              </div>
+            </div>
           </div>
         {/if}
         <div class="navbar-item">

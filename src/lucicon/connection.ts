@@ -18,16 +18,17 @@ export type messageErrorTypes = "SyntaxError"|"NonAssignableMessage"
  * This Javascript/Typescript based Hybridcontroller uses the Websocket
  * protocol or server, respectively, to connect to a LUCIDAC. This is because
  * it is intended to be used from a browser environment. Of course one could
- * also come up with a 
+ * also come up with a "raw TCP JSONL transport". Somebody who wants to make
+ * the client work in nodejs/deno world (despite you could still use websockets
+ * there) may expand the code accordingly.
  * 
  * Usage is like:
  * 
- *   const hc = new HybridController(new URL("ws://1.2.3.4:5678/websocket"))
+ *   const hc = new HybridController(new URL("ws://1.2.3.4/websocket"))
  *   await hc.query("status")
- * 
- * Note that this class is stateless, i.e. there is no connection hold.
- * This is because HTTP itself is stateless. You can change the endpoint
- * anytime.
+ *
+ * The class has a couple of hooks for callbacks.
+ * @todo extend them towards a pubsub scheme if neccessary.
  **/
 export class HybridController {
     /** Mac address, determined by get_entities() */
@@ -35,17 +36,13 @@ export class HybridController {
     /** the websocket, if connected */
     ws?: WebSocket
 
-    /** Allows to callback when endpoint status changes
-     * @TODO Should be probably an Event / or subscribable
-    */
+    /** Allows to callback when endpoint status changes */
     onConnectionChange? : (new_state: connectionState) => void
 
     /**
      * Callback for incoming messages which cannot be treated.
      * Not dispatched on connection or websocket failures.
      * (For future: Not dispatched on custom unexpected out-of-band message types.)
-     * 
-     * @todo Use bindable events
      **/
     onMessageError? : (type: messageErrorTypes, data:any) => void
 
@@ -113,6 +110,12 @@ export class HybridController {
         if(this.onConnectionChange) this.onConnectionChange("offline")
     }
 
+    async reconnect() {
+        if(!this.ws)
+            throw new Error("Can only reconnect if I was connected before")
+        this.connect(new URL(this.ws.url))
+    }
+
     is_connected() { return Boolean(this.ws) }
 
     /**
@@ -135,17 +138,17 @@ export class HybridController {
             const json_recv = JSON.stringify(envelope_recv)
             throw new Error(`HybridController returned error, sent ${JSON.stringify(envelope_sent)}, received ${json_recv}`)
         }
-        if (envelope_recv['type'] == envelope_sent['type']) {
-            return envelope_recv['msg'];
-        } else {
-            console.error("HybridController: Deviation from Query-Response principle. Sent this:", envelope_sent, "Received unexpected return message:", envelope_recv)
-            return envelope_recv
-        }
+
+        return envelope_recv.msg
     }
 
     /**
      * Synchronous query-reply call to the HybridController, at envelope level.
      * You may want to use the higher level @see query method instead.
+     * 
+     * Note: This method guarantees that envelope_sent.id == envelope_recv.id
+     * and envelope_sent.type == envelope_recv.type. This is due to the
+     * response buffer.
      */
     async query_envelope(envelope_sent: SendEnvelope) : Promise<RecvEnvelope> {
         const json_sent = JSON.stringify(envelope_sent);
@@ -153,40 +156,45 @@ export class HybridController {
         if(!this.ws)
             throw new Error("Requires an established connection, but no endpoint set.")
 
-        if(this.ws.readyState != WebSocket.OPEN) {
+        if(this.ws.readyState != WebSocket.OPEN)
             throw new Error(`Requires an established connection, but it is in state ${this.ws.readyState}`)
-        }
 
-        //if(!this.is_connectable())
-        //    throw new Error("Requiring an endpoint to be set")
-
-        /*if(this.endpoint_status == "failed" || this.endpoint_status == "offline") {
-            this.set_endpoint_status("connecting")
-        }
-
-        const resp = await fetch(this.endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: json_sent
-        })
-
-        if (!resp.ok) {
-            this.set_endpoint_status("failed")
-            throw new Error(`HybridController XHR failed, wanted to send ${json_sent}, received ${resp.text()}`)
-        } else {
-            this.set_endpoint_status("online")
-        }*/
-
-        const delayedResponse = new Promise<RecvEnvelope>((resolve, reject) => {
-            this.expected_responses.set(envelope_sent.id, (data:RecvEnvelope) => resolve(data))
-        })
-
+        const delayedResponse = new Promise<RecvEnvelope>((resolve, reject) =>
+            this.expected_responses.set(envelope_sent.id, (envelope_recv:RecvEnvelope) => {
+                "error" in envelope_recv ? reject(envelope_recv) : resolve(envelope_recv)
+            }))
         this.ws.send(json_sent)
-
         return delayedResponse
     }
+
+    /* The actual "high level" encapsulated calls begin here */
+
+    /**
+     * Performs a login operation.
+     * Errors can and will occur as exceptions.
+     * 
+     * @note
+     * One of the possible error codes is @see ERROR_LOGIN_NOT_NECCESSARY
+     * which means the auth system is disabled and no login is neccessary.
+     **/
+    async login(user:string, password: string) {
+        return await this.query("login", { user, password })
+    }
+
+    static readonly ERROR_LOGIN_NOT_NECCESSARY = 3110
+
+    /**
+     * The simple user::auth::UserPasswordAuthentification in the firmware
+     * does not support logout, so we simulate it with reconnecting.
+     * This method does not even check whether we are actually logged in.
+     */
+    async logout() { this.reconnect(); }
+
+    /** User-configurable permanent microcontroller settings */
+    async get_settings() { return await this.query("get_settings") }
+
+    async update_settings(partial_new_settings:object) {
+        return await this.query("update_settings", partial_new_settings) }
 
     async get_entities() {
         const entities_msg = await this.query("get_entities")

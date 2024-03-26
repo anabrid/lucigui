@@ -65,7 +65,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
         offline() { submit() },
         connecting() { window.alert("Ha. Currently things are not cancable.")  },
         online() { window.alert("Will implement ping function in future") },
-        failed() { /* could call hc.connect(null, true); */ window.alert("not now") }
+        failed() { hc.remote.reconnect() }
     }
 
     const leftButtonAction = () => {}
