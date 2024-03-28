@@ -251,6 +251,8 @@ export class SvelteHybridController {
      **/
     username = writable<string>("")
 
+    /** Do actions when connected. */
+    whenConnected = Promise.resolve()
 
     /**
      * Internally handles connection and disconnection (endpoint=null)
@@ -262,20 +264,17 @@ export class SvelteHybridController {
         this.config.reset()
         this.settings.reset()
 
+        const timeout = 2 // do not wait more then 2 seconds
+
         if(endpoint) {
-            this.connect_promise = this.remote.connect(endpoint).catch(e => {
+            this.whenConnected = this.remote.connect(endpoint).catch(e => {
                 console.error("SvelteHybridController.connect failed for ", endpoint, " reason: ", e)
+                this.endpoint_status.set("failed")
             })
         } else {
             this.remote.disconnect()
         }
     }
-
-    /** Do actions when connected. */
-    whenConnected() {
-        return this.connect_promise ?? Promise.resolve()
-    }
-    private connect_promise? : Promise<void>
         
     constructor(endpoint? : URL) {
         this.remote.onConnectionChange = (new_val) => this.endpoint_status.set(new_val)

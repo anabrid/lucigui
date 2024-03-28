@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
 import { zip } from "@/lucicon/utils";
-import {writable} from "svelte/store";
-
+import { readable, writable } from "svelte/store";
 
 export function get_hostname() {
     const { port, protocol, hostname, pathname } = window.location

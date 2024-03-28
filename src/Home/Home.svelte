@@ -24,14 +24,14 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   const connected = derived(hc.endpoint_status, (status) => status == "online")
   const entities = hc.entities.value
 
-  const client_defaults = getContext("client_defaults") as GlobalConstants
+  const client_defaults = getContext("client_defaults") as ProgramConstants
 
   // onMount(() => { hc.status.download() }) // needs guard against bool($endpoint), see below.
 
   let gettingStarted = false
 
   // Download status whenever endpoint changes (to non-null).
-  $: $endpoint, $endpoint && hc.whenConnected().then(()=>hc.status.download())
+  $: $endpoint, $endpoint && hc.whenConnected.then(()=>hc.status.download(), ()=>{/* not connected - do nothing. */})
 
   const stats = derived(hc.status.value, (status)=> ([
       {

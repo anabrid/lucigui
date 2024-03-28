@@ -51,7 +51,19 @@ export const derived = (defaults: GlobalConstants) => ({
     /** Fully qualified application name including version */
     app_name_and_version: `${defaults.app_name}/${defaults.app_version}+${defaults.app_githash}`,
 
-    endpoint_url: (()=>{ try { if(defaults.endpoint) return new URL(defaults.endpoint) } catch(e) {}})()
+    /**
+     * Endpoint URL as String.
+     * This resolves also relative endpoints such as "/foo" to an absolute one.
+     * This also, for convenience, replaces http:// and https:// endpoints with their
+     * equivalent ws:// and wss:// ones.
+     */
+    endpoint_url: (()=>{ try {
+        if(defaults.endpoint) {
+            const candidate = new URL(defaults.endpoint, document.location.toString())
+            if(/^https?/.test(candidate.protocol)) candidate.protocol = candidate.protocol.replace("http", "ws")
+            return candidate
+        }
+    } catch(e) {}})()
 })
 
 export type ProgramConstants = GlobalConstants & ReturnType<typeof derived>

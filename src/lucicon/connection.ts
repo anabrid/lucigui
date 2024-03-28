@@ -58,10 +58,19 @@ export class HybridController {
         else if(this.onConnectionChange) this.onConnectionChange("offline")
     }
 
-    /// raises error if connection fails
+    /**
+     * In case of error, this will throw.
+     */
     async connect(endpoint: URL) {
-        if(endpoint.protocol == "tcp")
+        // using regexp instead of string equality because it seems that sometimes
+        // the URL.protocol reads like "http:" and somethimes "http"
+
+        if(/^tcp/.test(endpoint.protocol))
             throw new Error("Raw TCP protocols (for usage in node.js) not yet supported, left as an exercise to the reader")
+
+        if(/^https?/.test(endpoint.protocol)) {
+            throw new Error("HTTP REST endpoints are no more supported, please use ws:// protocol for websockets.")
+        }
 
         if(this.is_connected()) await this.disconnect()
 
@@ -87,6 +96,11 @@ export class HybridController {
             }
         })
 
+        this.ws!.addEventListener("close", () => {
+            if(that.onConnectionChange) that.onConnectionChange("offline")
+        })
+
+        // inform if connection closes unintentionally
         return new Promise<void>((resolve, reject) => {
             that.ws!.addEventListener("open", (event) => {
                 if(that.onConnectionChange) that.onConnectionChange("online")
@@ -103,14 +117,14 @@ export class HybridController {
         // return this.get_entities() // defines this.mac
     }
 
-    async disconnect() {
+    disconnect() {
         this.ws?.close()
         this.expected_responses.clear()
         // TODO: Properly wait until closed...
         if(this.onConnectionChange) this.onConnectionChange("offline")
     }
 
-    async reconnect() {
+    reconnect() {
         if(!this.ws)
             throw new Error("Can only reconnect if I was connected before")
         this.connect(new URL(this.ws.url))

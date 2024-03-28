@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import active from "svelte-spa-router/active";
 
   import { toggle, slugify } from "@/lib/utils";
-  import { type GlobalConstants, enrich } from "@/lib/client_defaults";
+  import { type GlobalConstants, enrich, type ProgramConstants } from "@/lib/client_defaults";
   import { lazy_load_sentry } from "@/lib/sentry.js";
 
   import Login from "@/Home/Login.svelte";
@@ -19,6 +19,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Endpoint from "@/Home/Endpoint.svelte";
   import { SvelteHybridController } from "./lucicon/svelte";
   //import SystemAvailability from './lib/SystemAvailability.svelte';
+  import { zip } from "./lucicon/utils";
 
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faLink, faLinkSlash, faUser } from "@fortawesome/free-solid-svg-icons";
@@ -29,16 +30,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
   import Editor from "@/Editor/Editor.svelte";
 
   // mandatory parameters for starting up the application
-  export let client_defaults : GlobalConstants
+  export let client_defaults : ProgramConstants
   client_defaults = enrich(client_defaults)
   setContext("client_defaults", client_defaults)
 
   const nav = [Home, Settings, Editor, Help];
   const urls = ["/", "/settings", "/editor", "/help"];
   const titles = ["Home", "Settings", "Editor", "Getting Started"];
+  let routes = Object.fromEntries(zip(urls, nav));
+  console.log("ROUTES ", routes)
 
-  const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
-  let routes = Object.fromEntries(zip([urls, nav]));
 
   // add some special rules
   routes["/help/:topic?"] = Help;
@@ -74,7 +75,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
    * It is not a store but a collection of many stores (@see Syncable<T> for
    * details).
    **/
-  const hc = new SvelteHybridController(client_defaults.endpoint_url);
+  const hc = new SvelteHybridController();
 
   // expose to global window for fabulous debugging in browser console
   window.hc = hc;
@@ -82,6 +83,16 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
 
   // expose to all child components
   setContext("hc", hc);
+
+  // try to connect to defaults. If it does not work out, it's ok.
+  /*
+  try {
+    if(client_defaults.endpoint_url)
+      hc.endpoint.set(client_defaults.endpoint_url)
+  } catch(e) {
+    console.error("App cannot initially connect to given endpoint URL: ", client_defaults.endpoint_url)
+  }
+  */
 
   // aliasing neccessary for svelte reactivity
   const endpoint = hc.endpoint;
@@ -127,7 +138,7 @@ SPDX-License-Identifier: MIT OR GPL-2.0-or-later
       class:is-active={!$navbar_burger_active}
     >
       <div class="navbar-start">
-        {#each zip([urls, titles]) as [href, title]}
+        {#each zip(urls, titles) as [href, title]}
           <a {href} use:link use:active={{className:"is-active"}} class="navbar-item">{title}</a>
         {/each}
       </div>
