@@ -84,32 +84,45 @@ The following design decision have been made in terms of security:
 
 - As a guiding principle, the firmware webserver has no HTTPS, which is always dysfunctional in non-public
   networks.
--**Cross-Origin Resource Sharing** (CORS) is the primary security measure for protecting the LUCIDAC HTTP
+- **Cross-Origin Resource Sharing** (CORS) is the primary security measure for protecting the LUCIDAC HTTP
   endpoint against unwanted access. It is one more configuration option for the LUCIDAC networking.
-- The simple user-password access system is straightforwardly elevated on the websocket protocol and exponential
-  back off for failed logins shall be implemented (this is out of scope for the lucidac-gui client).
+- The simple user-password access system is straightforwardly elevated on the websocket protocol.
 
-## Deployment strategies
+### License
+
+This is an open source code released under *MIT OR GPL* license. The code is copyright
+by anabrid, see https://www.anabrid.com/licensing/ or [LICENSE.md](LICENSE.md) for details.
+
+### Code managament
+
+We currently follow this model:
+
+* "Vendor code" comes from https://lab.analogparadigm.com/lucidac/software/lucidac-gui
+  where there is also an issue tracker and the continous integration.
+* Open source release happens at https://github.com/anabrid/lucidac-gui as a gitlab-to-github mirror
+  which however only covers the git repository, not the issues and CI. This is not perfect, but
+  allows people to fork, open issues and even put push requests anyway.
+
+### Deployment strategies
 
 There are two deployment routes:
 
-- The headless "variant" of the code built and uploaded to https://lucidac-gui.anabrid.dev/ by Gitlab-CI.
+- The headless "variant" of the code built and uploaded to https://lucidac.online/ by Gitlab-CI.
 - The LUCIDAC "variant" is made available as Gitlab-CI build artifacts and integrated into the firmware
   at firmware build time. This is made by embedding individual gzipped files as bytestring objects.
 
+The different behaviour is steered by variables defined at "svelte startup time" in the [index.html](index.html)
+file. Therefore, in principle only one svelte built is neccessary for the two variants, despite this is
+implemented as two different build in [.gitlab-ci.yml](.gitlab-ci.yml) for convenience.
+
 Gzipped code size of the compiled project is currently about 500kB. We strongly try to keep this as low
 as possible (the magical barrier is 1MB of zipped build size).
-
-## License
-
-This is an open source code released under *MIT OR GPL* license. The code is copyright
-by anabrid, see https://www.anabrid.com/licensing/ for details.
 
 ## Getting started as developer
 
 Make sure you have a running version of nodejs or in particular `npm`, the node package manager.
 
-* Clone the repository from https://lab.analogparadigm.com/lucidac/software/lucidac-gui 
+* Clone the repository (for instance from https://github.com/anabrid/lucidac-gui)
 * Go to the repository root directory and run `npm install` in order to install the project dependencies locally.
 * In order to start the development webserver and open your web browser: `npm run dev --open`
 
@@ -141,5 +154,3 @@ and similar. Note that you can also load ECMASCript modules via something like
 var hc; import("http://localhost:5173/src/HybridController/connection.ts").then(module => { hc = module; })
 await hc.query("status)
 ```
-
-Also have a look at our issue tracker at https://lab.analogparadigm.com/lucidac/software/lucidac-gui/-/issues
