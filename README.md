@@ -1,4 +1,4 @@
-# lucigui: A GUI for the analog-digitall hybrid computer LUCIDAC
+# lucigui: A GUI for the analog-digital hybrid computer LUCIDAC
 
 lucigui is a Svelte based JavaScript Single Page Web Application for [LUCIDAC](https://anabrid.com/lucidac).
 LUCIDAC lacks the classical analog computer cable-based interface, and this is the first graphical
