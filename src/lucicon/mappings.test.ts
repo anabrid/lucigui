@@ -6,7 +6,7 @@ import { expect, test } from 'vitest'
 import * as map from './mappings'
 import * as utils from './utils'
 
-import lorenz from '../circuits/lorenz.routes.json'
+import lorenz from '../Editor/circuits/lorenz.routes.json'
 
 test('output2input(input2output(A))=A', () => {
     const U = [
