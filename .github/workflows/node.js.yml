@@ -28,6 +28,7 @@ jobs:
       with:
         name: Static Bundle
         path: dist/
+    - run: zip -r lucigui-bundle.zip dist/*
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -35,4 +36,4 @@ jobs:
         prerelease: true
         title: "Development Build"
         files: |
-           dist/*
+           lucigui-bundle.zip
