@@ -1,4 +1,8 @@
-# lucidac-gui: A Svelte based JavaScript Single Page Web Application for LUCIDAC
+# lucigui: A GUI for the analog-digitall hybrid computer LUCIDAC
+
+lucigui is a Svelte based JavaScript Single Page Web Application for [LUCIDAC](https://anabrid.com/lucidac).
+LUCIDAC lacks the classical analog computer cable-based interface, and this is the first graphical
+interface for a reprogrammable analog computer.
 
 This is the README file for the Svelte based single page web application (SPA) to configure and
 program the LUCIDAC, called **lucidac-gui**. The application behaves "just as another"
